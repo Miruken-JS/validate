@@ -1,117 +1,5 @@
-import {Protocol,StrictProtocol,$isNothing,Base,MetaMacro,$isFunction,$isPromise} from 'miruken-core';
-import {CallbackHandler,$composer} from 'mirukren-callback';
-import {$define} from 'miruken-callback';
-
-/**
- * Protocol for validating objects.
- * @class Validating
- * @extends miruken.Protocol
- */        
-export const Validating = Protocol.extend({
-    /**
-     * Validates the object in the scope.
-     * @method validate 
-     * @param   {Object} object     -  object to validate
-     * @param   {Object} scope      -  scope of validation
-     * @param   {Object} [results]  -  validation results
-     * @returns {miruken.validate.ValidationResult}  validation results.
-     */
-    validate(object, scope, results) {},
-    /**
-     * Validates the object asynchronously in the scope.
-     * @method validateAsync
-     * @param   {Object} object     - object to validate
-     * @param   {Object} scope      - scope of validation
-     * @param   {Object} [results]  - validation results
-     * @returns {Promise} promise of validation results.
-     * @async
-     */
-    validateAsync(object, scope, results) {}
-});
-
-/**
- * Protocol for validating objects strictly.
- * @class Validator
- * @extends miruken.StrictProtocol
- * @uses miruken.validate.Validating
- */        
-export const Validator = StrictProtocol.extend(Validating);
-
-/**
- * CallbackHandler for performing validation.
- * <p>
- * Once an object is validated, it will receive a **$validation** property containing the validation results.
- * </p>
- * @class ValidationCallbackHandler
- * @extends miruken.callback.CallbackHandler
- * @uses miruken.validate.Validator
- * @uses miruken.validate.Validating
- */        
-export const ValidationCallbackHandler = CallbackHandler.extend(Validator, {
-    validate(object, scope, results) {
-        if ($isNothing(object)) {
-            throw new TypeError("Missing object to validate.");
-        }
-        const validation = new Validation(object, false, scope, results);
-        $composer.handle(validation, true);
-        results = validation.results;
-        _bindValidationResults(object, results);
-        _validateThat(validation, null, $composer);
-        return results;
-    },
-    validateAsync(object, scope, results) {
-        if ($isNothing(object)) {
-            throw new TypeError("Missing object to validate.");
-        }            
-        const validation = new Validation(object, true, scope, results),
-              composer   = $composer;
-        return composer.deferAll(validation).then(() => {
-            results = validation.results;
-            _bindValidationResults(object, results);
-            var asyncResults = [];
-            _validateThat(validation, asyncResults, composer);
-            return asyncResults.length > 0
-                 ? Promise.all(asyncResults).return(results)
-                 : results;
-        });
-    }
-});
-
-function _validateThat(validation, asyncResults, composer) {
-    const object = validation.object;
-    for (let key in object) {
-        if (key.lastIndexOf('validateThat', 0) == 0) {
-            const validator   = object[key],
-                  returnValue = validator.call(object, validation, composer);
-            if (asyncResults && $isPromise(returnValue)) {
-                asyncResults.push(returnValue);
-            }
-        }
-    }
-}
-
-function _bindValidationResults(object, results) {
-    Object.defineProperty(object, '$validation', {
-        enumerable:   false,
-        configurable: true,
-        writable:     false,
-        value:        results
-    });
-}
-
-CallbackHandler.implement({
-    $valid(target, scope) {
-        return this.aspect((_, composer) => {
-            return Validator(composer).validate(target, scope).valid;
-        });
-    },
-    $validAsync(target, scope) {
-        return this.aspect( (_, composer) => {
-            return Validator(composer).validateAsync(target, scope)
-                .then(results => results.valid);
-        });
-    }
-});
+import {Base,pcopy,True,MetaStep,MetaMacro,Invoking,$isFunction,$isPromise,$classOf,$use,Protocol,StrictProtocol,$isNothing,Undefined,Abstract,Metadata} from 'miruken-core';
+import {$define,$handle,CallbackHandler,$composer} from 'miruken-callback';
 
 /**
  * Captures structured validation errors.
@@ -243,8 +131,10 @@ export const ValidationResult = Base.extend({
     }
 });
 
+const IGNORE = ['valid', 'errors', 'addKey', 'addError', 'reset'];
+
 function _isReservedKey(key) {
-    return key in ValidationResult.prototype;
+    return IGNORE.indexOf(key) >= 0;
 }
 
 /**
@@ -377,3 +267,337 @@ export const $validateThat = MetaMacro.extend({
      */
     isActive: True
 });
+
+/**
+ * Protocol for validating objects.
+ * @class Validating
+ * @extends miruken.Protocol
+ */        
+export const Validating = Protocol.extend({
+    /**
+     * Validates the object in the scope.
+     * @method validate 
+     * @param   {Object} object     -  object to validate
+     * @param   {Object} scope      -  scope of validation
+     * @param   {Object} [results]  -  validation results
+     * @returns {miruken.validate.ValidationResult}  validation results.
+     */
+    validate(object, scope, results) {},
+    /**
+     * Validates the object asynchronously in the scope.
+     * @method validateAsync
+     * @param   {Object} object     - object to validate
+     * @param   {Object} scope      - scope of validation
+     * @param   {Object} [results]  - validation results
+     * @returns {Promise} promise of validation results.
+     * @async
+     */
+    validateAsync(object, scope, results) {}
+});
+
+/**
+ * Protocol for validating objects strictly.
+ * @class Validator
+ * @extends miruken.StrictProtocol
+ * @uses miruken.validate.Validating
+ */        
+export const Validator = StrictProtocol.extend(Validating);
+
+/**
+ * CallbackHandler for performing validation.
+ * <p>
+ * Once an object is validated, it will receive a **$validation** property containing the validation results.
+ * </p>
+ * @class ValidationCallbackHandler
+ * @extends miruken.callback.CallbackHandler
+ * @uses miruken.validate.Validator
+ * @uses miruken.validate.Validating
+ */        
+export const ValidationCallbackHandler = CallbackHandler.extend(Validator, {
+    validate(object, scope, results) {
+        if ($isNothing(object)) {
+            throw new TypeError("Missing object to validate.");
+        }
+        const validation = new Validation(object, false, scope, results);
+        $composer.handle(validation, true);
+        results = validation.results;
+        _bindValidationResults(object, results);
+        _validateThat(validation, null, $composer);
+        return results;
+    },
+    validateAsync(object, scope, results) {
+        if ($isNothing(object)) {
+            throw new TypeError("Missing object to validate.");
+        }            
+        const validation = new Validation(object, true, scope, results),
+              composer   = $composer;
+        return composer.deferAll(validation).then(() => {
+            results = validation.results;
+            _bindValidationResults(object, results);
+            const asyncResults = [];
+            _validateThat(validation, asyncResults, composer);
+            return asyncResults.length > 0
+                 ? Promise.all(asyncResults).then(() => results)
+                 : results;
+        });
+    }
+});
+
+function _validateThat(validation, asyncResults, composer) {
+    const object = validation.object;
+    for (let key in object) {
+        if (key.lastIndexOf('validateThat', 0) == 0) {
+            const validator   = object[key],
+                  returnValue = validator.call(object, validation, composer);
+            if (asyncResults && $isPromise(returnValue)) {
+                asyncResults.push(returnValue);
+            }
+        }
+    }
+}
+
+function _bindValidationResults(object, results) {
+    Object.defineProperty(object, '$validation', {
+        enumerable:   false,
+        configurable: true,
+        writable:     false,
+        value:        results
+    });
+}
+
+CallbackHandler.implement({
+    $valid(target, scope) {
+        return this.aspect((_, composer) =>
+            Validator(composer).validate(target, scope).valid);
+    },
+    $validAsync(target, scope) {
+        return this.aspect((_, composer) =>
+             Validator(composer).validateAsync(target, scope)
+                 .then(results => results.valid));
+    }
+});
+
+import validatejs from 'validate.js';
+
+validatejs.Promise = Promise;
+
+/**
+ * Shortcut to indicate required property.
+ * @property {Object} $required
+ * @readOnly
+ * @for miruken.validate.$ 
+ */
+export const $required = Object.freeze({ presence: true });
+
+/**
+ * Shortcut to indicate nested validation.
+ * @property {Object} $nested
+ * @readOnly
+ * @for miruken.validate.$ 
+ */
+export const $nested = Object.freeze({ nested: true });
+
+validatejs.validators.nested = Undefined;
+
+/**
+ * Metamacro to register custom validators with [validate.js](http://validatejs.org).
+ * <pre>
+ *    const CustomValidators = Base.extend($registerValidators, {
+ *        uniqueUserName: [Database, function (db, userName) {
+ *            if (db.hasUserName(userName)) {
+ *               return "UserName " + userName + " is already taken";
+ *            }
+ *        }]
+ *    })
+ * </pre>
+ * would register a uniqueUserName validator with a Database dependency.
+ * @class $registerValidators
+ * @extends miruken.MetaMacro
+ */    
+export const $registerValidators = MetaMacro.extend({
+    execute(step, metadata, target, definition) {
+        if (step === MetaStep.Subclass || step === MetaStep.Implement) {
+            for (let name in definition) {
+                let validator = definition[name];
+                if (Array.isArray(validator)) {
+                    const dependencies = validator.slice(0);
+                    validator = dependencies.pop();
+                    if (!$isFunction(validator)) {
+                        continue;
+                    }
+                    if (dependencies.length > 0) {
+                        const fn = validator;
+                        validator = function (...args) {
+                            if (!$composer) {
+                                throw new Error(`Unable to invoke validator '${nm}'.`);
+                            }
+                            const d = dependencies.concat(args.map($use));
+                            return Invoking($composer).invoke(fn, d);
+                        };
+                    }
+                }
+                if ($isFunction(validator)) {
+                    validatejs.validators[name] = validator;
+                }
+            }
+        }
+    },
+    /**
+     * Determines if the macro should be inherited
+     * @method shouldInherit
+     * @returns {boolean} true
+     */        
+    shouldInherit: True,
+    /**
+     * Determines if the macro should be applied on extension.
+     * @method isActive
+     * @returns {boolean} true
+     */        
+    isActive: True
+});
+
+/**
+ * Base class to define custom validators using
+ * {{#crossLink "miruken.validate.$registerValidators"}}{{/crossLink}}.
+ * <pre>
+ *    const CustomValidators = ValidationRegistry.extend({
+ *        creditCardNumber: function (cardNumber, options, key, attributes) {
+ *           // do the check...
+ *        }
+ *    })
+ * </pre>
+ * would register a creditCardNumber validator function.
+ * @class ValidationRegistry
+ * @constructor
+ * @extends Abstract
+ */        
+export const ValidationRegistry = Abstract.extend($registerValidators);
+
+const DETAILED    = { format: "detailed", cleanAttributes: false },
+      VALIDATABLE = { validate: undefined };
+
+/**
+ * CallbackHandler for performing validation using [validate.js](http://validatejs.org)
+ * <p>
+ * Classes participate in validation by declaring **validate** constraints on properties.
+ * </p>
+ * <pre>
+ * const Address = Base.extend({
+ *     $properties: {
+ *         line:    { <b>validate</b>: { presence: true } },
+ *         city:    { <b>validate</b>: { presence: true } },
+ *         state:   { 
+ *             <b>validate</b>: {
+ *                 presence: true,
+ *                 length: { is: 2 }
+ *             }
+ *         },
+ *         zipcode: { 
+ *             <b>validate</b>: {
+ *                 presence: true,
+ *                 length: { is: 5 }
+ *         }
+ *     }
+ * })
+ * </pre>
+ * @class ValidateJsCallbackHandler
+ * @extends miruken.callback.CallbackHandler
+ */            
+export const ValidateJsCallbackHandler = CallbackHandler.extend({
+    $validate: [
+        null,  function (validation, composer) {
+            const target      = validation.object,
+                  nested      = {},
+                  constraints = _buildConstraints(target, nested);
+            if (constraints) {
+                const scope     = validation.scope,
+                      results   = validation.results,
+                      validator = Validator(composer); 
+                if (validation.isAsync) {
+                    return validatejs.async(target, constraints, DETAILED)
+                        .then(valid => _validateNestedAsync(validator, scope, results, nested))
+                    	.catch(errors => {
+                            if (errors instanceof Error) {
+                                return Promise.reject(errors);
+                            }
+                            return _validateNestedAsync(validator, scope, results, nested).then(function () {
+                                _mapResults(results, errors);
+                            });
+                        });
+                } else {
+                    const errors = validatejs(target, constraints, DETAILED);
+                    for (let key in nested) {
+                        const child = nested[key];
+                        if (Array.isArray(child)) {
+                            for (let i = 0; i < child.length; ++i) {
+                                validator.validate(child[i], scope, results.addKey(key + '.' + i));
+                            }
+                        } else {
+                            validator.validate(child, scope, results.addKey(key));
+                        }
+                    }
+                    _mapResults(results, errors);
+                }
+            }
+        }]
+});
+
+function _validateNestedAsync(validator, scope, results, nested) {
+    const pending = [];
+    for (let key in nested) {
+        const child = nested[key];
+        if (Array.isArray(child)) {
+            for (let i = 0; i < child.length; ++i) {
+                let childResults = results.addKey(key + '.' + i);
+                childResults = validator.validateAsync(child[i], scope, childResults);
+                pending.push(childResults);
+            }
+        } else {
+            let childResults = results.addKey(key);
+            childResults = validator.validateAsync(child, scope, childResults);
+            pending.push(childResults);
+        }
+    }
+    return Promise.all(pending);
+}
+
+function _mapResults(results, errors) {
+    if (errors) {
+        errors.forEach(error => {
+            results.addKey(error.attribute).addError(error.validator, {
+                message: error.error,
+                value:   error.value 
+            });
+        });
+    }
+}
+
+function _buildConstraints(target, nested) {
+    const meta        = target[Metadata],
+          descriptors = meta && meta.getDescriptor(VALIDATABLE);
+    let  constraints;
+    if (descriptors) {
+        for (let key in descriptors) {
+            const descriptor = descriptors[key],
+                  validate   = descriptor.validate;
+            (constraints || (constraints = {}))[key] = validate;
+            for (let name in validate) {
+                if (name === 'nested') {
+                    const child = target[key];
+                    if (child) {
+                        nested[key] = child;
+                    }
+                } else if (!(name in validatejs.validators)) {
+                    validatejs.validators[name] = function (...args) {
+                        const validator = $composer && $composer.resolve(name);
+                        if (!validator) {
+                            throw new Error(`Unable to resolve validator '${name}'.`);
+                        }
+                        return validator.validate(...args);
+                    };
+                }
+            }
+        }
+        return constraints;
+    }
+}

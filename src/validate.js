@@ -75,7 +75,7 @@ export const ValidationCallbackHandler = CallbackHandler.extend(Validator, {
         return composer.deferAll(validation).then(() => {
             results = validation.results;
             _bindValidationResults(object, results);
-            var asyncResults = [];
+            const asyncResults = [];
             _validateThat(validation, asyncResults, composer);
             return asyncResults.length > 0
                  ? Promise.all(asyncResults).then(() => results)
@@ -108,14 +108,12 @@ function _bindValidationResults(object, results) {
 
 CallbackHandler.implement({
     $valid(target, scope) {
-        return this.aspect((_, composer) => {
-            return Validator(composer).validate(target, scope).valid;
-        });
+        return this.aspect((_, composer) =>
+            Validator(composer).validate(target, scope).valid);
     },
     $validAsync(target, scope) {
-        return this.aspect( (_, composer) => {
-            return Validator(composer).validateAsync(target, scope)
-                .then(results => results.valid);
-        });
+        return this.aspect((_, composer) =>
+             Validator(composer).validateAsync(target, scope)
+                 .then(results => results.valid));
     }
 });

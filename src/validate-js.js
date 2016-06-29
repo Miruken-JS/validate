@@ -149,7 +149,7 @@ export const ValidateJsCallbackHandler = CallbackHandler.extend({
                             if (errors instanceof Error) {
                                 return Promise.reject(errors);
                             }
-                            return _validateNestedAsync(validator, scope, results, nested).then(function () {
+                            return _validateNestedAsync(validator, scope, results, nested).then(() => {
                                 _mapResults(results, errors);
                             });
                         });

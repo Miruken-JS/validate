@@ -221,6 +221,8 @@ $handle(CallbackHandler, Validation, function (validation, composer) {
  * @extends miruken.MetaMacro
  */    
 export const $validateThat = MetaMacro.extend({
+    get active() { return true; },
+    get inherit() { return true; },    
     execute: function _(step, metadata, target, definition) {
         const validateThat = this.extractProperty('$validateThat', target, definition);
         if (!validateThat) {
@@ -253,19 +255,7 @@ export const $validateThat = MetaMacro.extend({
                 metadata.type.implement(validators);
             }
         }
-    },
-    /**
-     * Determines if the macro should be inherited
-     * @method shouldInherit
-     * @returns {boolean} true
-     */         
-    shouldInherit: True,
-    /**
-     * Determines if the macro should be applied on extension.
-     * @method isActive
-     * @returns {boolean} true
-     */
-    isActive: True
+    }
 });
 
 /**
@@ -415,6 +405,8 @@ validatejs.validators.nested = Undefined;
  * @extends miruken.MetaMacro
  */    
 export const $registerValidators = MetaMacro.extend({
+    get active() { return true; },
+    get inherit() { return true; },        
     execute(step, metadata, target, definition) {
         if (step === MetaStep.Subclass || step === MetaStep.Implement) {
             for (let name in definition) {
@@ -441,19 +433,7 @@ export const $registerValidators = MetaMacro.extend({
                 }
             }
         }
-    },
-    /**
-     * Determines if the macro should be inherited
-     * @method shouldInherit
-     * @returns {boolean} true
-     */        
-    shouldInherit: True,
-    /**
-     * Determines if the macro should be applied on extension.
-     * @method isActive
-     * @returns {boolean} true
-     */        
-    isActive: True
+    }
 });
 
 /**
@@ -520,7 +500,7 @@ export const ValidateJsCallbackHandler = CallbackHandler.extend({
                             if (errors instanceof Error) {
                                 return Promise.reject(errors);
                             }
-                            return _validateNestedAsync(validator, scope, results, nested).then(function () {
+                            return _validateNestedAsync(validator, scope, results, nested).then(() => {
                                 _mapResults(results, errors);
                             });
                         });

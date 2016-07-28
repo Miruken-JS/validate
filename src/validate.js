@@ -62,8 +62,8 @@ export const ValidationCallbackHandler = CallbackHandler.extend(Validator, {
         const validation = new Validation(object, false, scope, results);
         $composer.handle(validation, true);
         results = validation.results;
-        _bindValidationResults(object, results);
-        _validateThat(validation, null, $composer);
+        bindValidationResults(object, results);
+        validateThat(validation, null, $composer);
         return results;
     },
     validateAsync(object, scope, results) {
@@ -74,9 +74,9 @@ export const ValidationCallbackHandler = CallbackHandler.extend(Validator, {
               composer   = $composer;
         return composer.deferAll(validation).then(() => {
             results = validation.results;
-            _bindValidationResults(object, results);
+            bindValidationResults(object, results);
             const asyncResults = [];
-            _validateThat(validation, asyncResults, composer);
+            validateThat(validation, asyncResults, composer);
             return asyncResults.length > 0
                  ? Promise.all(asyncResults).then(() => results)
                  : results;
@@ -84,7 +84,7 @@ export const ValidationCallbackHandler = CallbackHandler.extend(Validator, {
     }
 });
 
-function _validateThat(validation, asyncResults, composer) {
+function validateThat(validation, asyncResults, composer) {
     const object = validation.object;
     for (let key in object) {
         if (key.lastIndexOf('validateThat', 0) == 0) {
@@ -97,7 +97,7 @@ function _validateThat(validation, asyncResults, composer) {
     }
 }
 
-function _bindValidationResults(object, results) {
+function bindValidationResults(object, results) {
     Object.defineProperty(object, '$validation', {
         enumerable:   false,
         configurable: true,

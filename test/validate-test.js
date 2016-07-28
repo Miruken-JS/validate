@@ -18,9 +18,7 @@ import {
     True, Base, Invoking, Modifier
 } from 'miruken-core';
 
-import chai from 'chai';
-
-const expect = chai.expect;
+import { expect } from 'chai';
 
 const HttpClient = Base.extend({
 });

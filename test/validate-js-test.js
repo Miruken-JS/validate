@@ -13,9 +13,7 @@ import {
 
 import validatejs from 'validate.js';
 
-import chai from 'chai';
-
-const expect = chai.expect;
+import { expect } from 'chai';
 
 const Address = Base.extend({
     $properties: {

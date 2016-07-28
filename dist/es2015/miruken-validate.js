@@ -165,6 +165,12 @@ var Validation = exports.Validation = _mirukenCore.Base.extend({
 });
 
 var $validateThat = exports.$validateThat = _mirukenCore.MetaMacro.extend({
+    get active() {
+        return true;
+    },
+    get inherit() {
+        return true;
+    },
     execute: function _(step, metadata, target, definition) {
         var validateThat = this.extractProperty('$validateThat', target, definition);
         if (!validateThat) {
@@ -203,11 +209,7 @@ var $validateThat = exports.$validateThat = _mirukenCore.MetaMacro.extend({
                 metadata.type.implement(validators);
             }
         }
-    },
-
-    shouldInherit: _mirukenCore.True,
-
-    isActive: _mirukenCore.True
+    }
 });
 
 var Validating = exports.Validating = _mirukenCore.Protocol.extend({
@@ -293,6 +295,12 @@ var $nested = exports.$nested = Object.freeze({ nested: true });
 _validate2.default.validators.nested = _mirukenCore.Undefined;
 
 var $registerValidators = exports.$registerValidators = _mirukenCore.MetaMacro.extend({
+    get active() {
+        return true;
+    },
+    get inherit() {
+        return true;
+    },
     execute: function execute(step, metadata, target, definition) {
         if (step === _mirukenCore.MetaStep.Subclass || step === _mirukenCore.MetaStep.Implement) {
             for (var _name3 in definition) {
@@ -330,11 +338,7 @@ var $registerValidators = exports.$registerValidators = _mirukenCore.MetaMacro.e
                 }
             }
         }
-    },
-
-    shouldInherit: _mirukenCore.True,
-
-    isActive: _mirukenCore.True
+    }
 });
 
 var ValidationRegistry = exports.ValidationRegistry = _mirukenCore.Abstract.extend($registerValidators);

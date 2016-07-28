@@ -168,6 +168,12 @@ define(['exports', 'miruken-core', 'miruken-callback', 'validate.js'], function 
     });
 
     var $validateThat = exports.$validateThat = _mirukenCore.MetaMacro.extend({
+        get active() {
+            return true;
+        },
+        get inherit() {
+            return true;
+        },
         execute: function _(step, metadata, target, definition) {
             var validateThat = this.extractProperty('$validateThat', target, definition);
             if (!validateThat) {
@@ -206,11 +212,7 @@ define(['exports', 'miruken-core', 'miruken-callback', 'validate.js'], function 
                     metadata.type.implement(validators);
                 }
             }
-        },
-
-        shouldInherit: _mirukenCore.True,
-
-        isActive: _mirukenCore.True
+        }
     });
 
     var Validating = exports.Validating = _mirukenCore.Protocol.extend({
@@ -296,6 +298,12 @@ define(['exports', 'miruken-core', 'miruken-callback', 'validate.js'], function 
     _validate2.default.validators.nested = _mirukenCore.Undefined;
 
     var $registerValidators = exports.$registerValidators = _mirukenCore.MetaMacro.extend({
+        get active() {
+            return true;
+        },
+        get inherit() {
+            return true;
+        },
         execute: function execute(step, metadata, target, definition) {
             if (step === _mirukenCore.MetaStep.Subclass || step === _mirukenCore.MetaStep.Implement) {
                 for (var _name3 in definition) {
@@ -333,11 +341,7 @@ define(['exports', 'miruken-core', 'miruken-callback', 'validate.js'], function 
                     }
                 }
             }
-        },
-
-        shouldInherit: _mirukenCore.True,
-
-        isActive: _mirukenCore.True
+        }
     });
 
     var ValidationRegistry = exports.ValidationRegistry = _mirukenCore.Abstract.extend($registerValidators);

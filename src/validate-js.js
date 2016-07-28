@@ -44,6 +44,8 @@ validatejs.validators.nested = Undefined;
  * @extends miruken.MetaMacro
  */    
 export const $registerValidators = MetaMacro.extend({
+    get active() { return true; },
+    get inherit() { return true; },        
     execute(step, metadata, target, definition) {
         if (step === MetaStep.Subclass || step === MetaStep.Implement) {
             for (let name in definition) {
@@ -70,19 +72,7 @@ export const $registerValidators = MetaMacro.extend({
                 }
             }
         }
-    },
-    /**
-     * Determines if the macro should be inherited
-     * @method shouldInherit
-     * @returns {boolean} true
-     */        
-    shouldInherit: True,
-    /**
-     * Determines if the macro should be applied on extension.
-     * @method isActive
-     * @returns {boolean} true
-     */        
-    isActive: True
+    }
 });
 
 /**
@@ -90,7 +80,7 @@ export const $registerValidators = MetaMacro.extend({
  * {{#crossLink "miruken.validate.$registerValidators"}}{{/crossLink}}.
  * <pre>
  *    const CustomValidators = ValidationRegistry.extend({
- *        creditCardNumber: function (cardNumber, options, key, attributes) {
+ *        creditCardNumber(cardNumber, options, key, attributes) {
  *           // do the check...
  *        }
  *    })
@@ -137,20 +127,20 @@ export const ValidateJsCallbackHandler = CallbackHandler.extend({
         null,  function (validation, composer) {
             const target      = validation.object,
                   nested      = {},
-                  constraints = _buildConstraints(target, nested);
+                  constraints = buildConstraints(target, nested);
             if (constraints) {
                 const scope     = validation.scope,
                       results   = validation.results,
                       validator = Validator(composer); 
                 if (validation.isAsync) {
                     return validatejs.async(target, constraints, DETAILED)
-                        .then(valid => _validateNestedAsync(validator, scope, results, nested))
+                        .then(valid => validateNestedAsync(validator, scope, results, nested))
                     	.catch(errors => {
                             if (errors instanceof Error) {
                                 return Promise.reject(errors);
                             }
-                            return _validateNestedAsync(validator, scope, results, nested).then(() => {
-                                _mapResults(results, errors);
+                            return validateNestedAsync(validator, scope, results, nested).then(() => {
+                                mapResults(results, errors);
                             });
                         });
                 } else {
@@ -165,13 +155,13 @@ export const ValidateJsCallbackHandler = CallbackHandler.extend({
                             validator.validate(child, scope, results.addKey(key));
                         }
                     }
-                    _mapResults(results, errors);
+                    mapResults(results, errors);
                 }
             }
         }]
 });
 
-function _validateNestedAsync(validator, scope, results, nested) {
+function validateNestedAsync(validator, scope, results, nested) {
     const pending = [];
     for (let key in nested) {
         const child = nested[key];
@@ -190,7 +180,7 @@ function _validateNestedAsync(validator, scope, results, nested) {
     return Promise.all(pending);
 }
 
-function _mapResults(results, errors) {
+function mapResults(results, errors) {
     if (errors) {
         errors.forEach(error => {
             results.addKey(error.attribute).addError(error.validator, {
@@ -201,7 +191,7 @@ function _mapResults(results, errors) {
     }
 }
 
-function _buildConstraints(target, nested) {
+function buildConstraints(target, nested) {
     const meta        = target[Metadata],
           descriptors = meta && meta.getDescriptor(VALIDATABLE);
     let  constraints;

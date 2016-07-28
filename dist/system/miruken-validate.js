@@ -278,6 +278,12 @@ System.register(['miruken-core', 'miruken-callback', 'validate.js'], function (_
             });
 
             _export('$validateThat', $validateThat = MetaMacro.extend({
+                get active() {
+                    return true;
+                },
+                get inherit() {
+                    return true;
+                },
                 execute: function _(step, metadata, target, definition) {
                     var validateThat = this.extractProperty('$validateThat', target, definition);
                     if (!validateThat) {
@@ -316,11 +322,7 @@ System.register(['miruken-core', 'miruken-callback', 'validate.js'], function (_
                             metadata.type.implement(validators);
                         }
                     }
-                },
-
-                shouldInherit: True,
-
-                isActive: True
+                }
             }));
 
             _export('$validateThat', $validateThat);
@@ -396,6 +398,12 @@ System.register(['miruken-core', 'miruken-callback', 'validate.js'], function (_
             validatejs.validators.nested = Undefined;
 
             _export('$registerValidators', $registerValidators = MetaMacro.extend({
+                get active() {
+                    return true;
+                },
+                get inherit() {
+                    return true;
+                },
                 execute: function execute(step, metadata, target, definition) {
                     if (step === MetaStep.Subclass || step === MetaStep.Implement) {
                         for (var _name3 in definition) {
@@ -433,11 +441,7 @@ System.register(['miruken-core', 'miruken-callback', 'validate.js'], function (_
                             }
                         }
                     }
-                },
-
-                shouldInherit: True,
-
-                isActive: True
+                }
             }));
 
             _export('$registerValidators', $registerValidators);

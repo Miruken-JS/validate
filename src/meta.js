@@ -93,7 +93,9 @@ $handle(CallbackHandler, Validation, function (validation, composer) {
  * @extends miruken.MetaMacro
  */    
 export const $validateThat = MetaMacro.extend({
-    execute: function _(step, metadata, target, definition) {
+    get active() { return true; },
+    get inherit() { return true; },    
+    execute(step, metadata, target, definition) {
         const validateThat = this.extractProperty('$validateThat', target, definition);
         if (!validateThat) {
             return;
@@ -125,17 +127,5 @@ export const $validateThat = MetaMacro.extend({
                 metadata.type.implement(validators);
             }
         }
-    },
-    /**
-     * Determines if the macro should be inherited
-     * @method shouldInherit
-     * @returns {boolean} true
-     */         
-    shouldInherit: True,
-    /**
-     * Determines if the macro should be applied on extension.
-     * @method isActive
-     * @returns {boolean} true
-     */
-    isActive: True
+    }
 });

@@ -78,7 +78,7 @@ export const ValidationResult = Base.extend({
              * Gets or adds validation results for the key.
              * @method addKey
              * @param  {string} key  -  property name
-             * @results {miruken.validate.ValidationResult} named validation results.
+             * @results {ValidationResult} named validation results.
              */                
             addKey(key) {
                 return this[key] || (this[key] = new ValidationResult);
@@ -108,7 +108,7 @@ export const ValidationResult = Base.extend({
             /**
              * Clears all validation results.
              * @method reset
-             * @returns {miruken.validate.ValidationResult} receiving results
+             * @returns {ValidationResult} receiving results
              * @chainable
              */
             reset() { 

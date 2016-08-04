@@ -1,20 +1,19 @@
 import {
     True, Undefined, Abstract,
-    Metadata, MetaStep, MetaMacro,
-    Invoking, $isFunction, $use
+    MetaStep, MetaMacro, Invoking,
+    $meta, $isFunction, $use
 } from 'miruken-core';
 
 import { CallbackHandler, $composer } from 'miruken-callback';
 import { Validator } from './validate';
-import validatejs from 'validate.js';
 
+import validatejs from 'validate.js';
 validatejs.Promise = Promise;
 
 /**
  * Shortcut to indicate required property.
  * @property {Object} $required
  * @readOnly
- * @for miruken.validate.$ 
  */
 export const $required = Object.freeze({ presence: true });
 
@@ -22,7 +21,7 @@ export const $required = Object.freeze({ presence: true });
  * Shortcut to indicate nested validation.
  * @property {Object} $nested
  * @readOnly
- * @for miruken.validate.$ 
+ * @for validate.$ 
  */
 export const $nested = Object.freeze({ nested: true });
 
@@ -41,7 +40,7 @@ validatejs.validators.nested = Undefined;
  * </pre>
  * would register a uniqueUserName validator with a Database dependency.
  * @class $registerValidators
- * @extends miruken.MetaMacro
+ * @extends MetaMacro
  */    
 export const $registerValidators = MetaMacro.extend({
     get active() { return true; },
@@ -77,7 +76,7 @@ export const $registerValidators = MetaMacro.extend({
 
 /**
  * Base class to define custom validators using
- * {{#crossLink "miruken.validate.$registerValidators"}}{{/crossLink}}.
+ * {{#crossLink "validate.$registerValidators"}}{{/crossLink}}.
  * <pre>
  *    const CustomValidators = ValidationRegistry.extend({
  *        creditCardNumber(cardNumber, options, key, attributes) {
@@ -120,7 +119,7 @@ const DETAILED    = { format: "detailed", cleanAttributes: false },
  * })
  * </pre>
  * @class ValidateJsCallbackHandler
- * @extends miruken.callback.CallbackHandler
+ * @extends CallbackHandler
  */            
 export const ValidateJsCallbackHandler = CallbackHandler.extend({
     $validate: [
@@ -139,9 +138,8 @@ export const ValidateJsCallbackHandler = CallbackHandler.extend({
                             if (errors instanceof Error) {
                                 return Promise.reject(errors);
                             }
-                            return validateNestedAsync(validator, scope, results, nested).then(() => {
-                                mapResults(results, errors);
-                            });
+                            return validateNestedAsync(validator, scope, results, nested)
+                                .then(() => mapResults(results, errors));
                         });
                 } else {
                     const errors = validatejs(target, constraints, DETAILED);
@@ -182,18 +180,18 @@ function validateNestedAsync(validator, scope, results, nested) {
 
 function mapResults(results, errors) {
     if (errors) {
-        errors.forEach(error => {
-            results.addKey(error.attribute).addError(error.validator, {
+        errors.forEach(error => results.addKey(error.attribute)
+            .addError(error.validator, {
                 message: error.error,
                 value:   error.value 
-            });
-        });
+            })
+        );
     }
 }
 
 function buildConstraints(target, nested) {
-    const meta        = target[Metadata],
-          descriptors = meta && meta.getDescriptor(VALIDATABLE);
+    const meta        = $meta(target),
+          descriptors = meta && meta.getMetadata(VALIDATABLE);
     let  constraints;
     if (descriptors) {
         for (let key in descriptors) {

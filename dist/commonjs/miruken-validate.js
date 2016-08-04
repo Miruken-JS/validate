@@ -7,13 +7,15 @@ exports.ValidateJsCallbackHandler = exports.ValidationRegistry = exports.$regist
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
+exports.validate = validate;
+
 var _mirukenCore = require('miruken-core');
 
 var _mirukenCallback = require('miruken-callback');
 
-var _validate = require('validate.js');
+var _validate2 = require('validate.js');
 
-var _validate2 = _interopRequireDefault(_validate);
+var _validate3 = _interopRequireDefault(_validate2);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -171,7 +173,7 @@ var $validateThat = exports.$validateThat = _mirukenCore.MetaMacro.extend({
     get inherit() {
         return true;
     },
-    execute: function _(step, metadata, target, definition) {
+    execute: function execute(step, metadata, target, definition) {
         var validateThat = this.extractProperty('$validateThat', target, definition);
         if (!validateThat) {
             return;
@@ -212,6 +214,14 @@ var $validateThat = exports.$validateThat = _mirukenCore.MetaMacro.extend({
     }
 });
 
+function validate() {
+    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+        args[_key] = arguments[_key];
+    }
+
+    return (0, _mirukenCore.decorate)((0, _mirukenCallback.addDefinition)($validate), args);
+}
+
 var Validating = exports.Validating = _mirukenCore.Protocol.extend({
     validate: function validate(object, scope, results) {},
     validateAsync: function validateAsync(object, scope, results) {}
@@ -227,8 +237,8 @@ var ValidationCallbackHandler = exports.ValidationCallbackHandler = _mirukenCall
         var validation = new Validation(object, false, scope, results);
         _mirukenCallback.$composer.handle(validation, true);
         results = validation.results;
-        _bindValidationResults(object, results);
-        _validateThat(validation, null, _mirukenCallback.$composer);
+        bindValidationResults(object, results);
+        validateThat(validation, null, _mirukenCallback.$composer);
         return results;
     },
     validateAsync: function validateAsync(object, scope, results) {
@@ -239,9 +249,9 @@ var ValidationCallbackHandler = exports.ValidationCallbackHandler = _mirukenCall
             composer = _mirukenCallback.$composer;
         return composer.deferAll(validation).then(function () {
             results = validation.results;
-            _bindValidationResults(object, results);
+            bindValidationResults(object, results);
             var asyncResults = [];
-            _validateThat(validation, asyncResults, composer);
+            validateThat(validation, asyncResults, composer);
             return asyncResults.length > 0 ? Promise.all(asyncResults).then(function () {
                 return results;
             }) : results;
@@ -249,7 +259,7 @@ var ValidationCallbackHandler = exports.ValidationCallbackHandler = _mirukenCall
     }
 });
 
-function _validateThat(validation, asyncResults, composer) {
+function validateThat(validation, asyncResults, composer) {
     var object = validation.object;
     for (var key in object) {
         if (key.lastIndexOf('validateThat', 0) == 0) {
@@ -262,7 +272,7 @@ function _validateThat(validation, asyncResults, composer) {
     }
 }
 
-function _bindValidationResults(object, results) {
+function bindValidationResults(object, results) {
     Object.defineProperty(object, '$validation', {
         enumerable: false,
         configurable: true,
@@ -286,13 +296,13 @@ _mirukenCallback.CallbackHandler.implement({
     }
 });
 
-_validate2.default.Promise = Promise;
+_validate3.default.Promise = Promise;
 
 var $required = exports.$required = Object.freeze({ presence: true });
 
 var $nested = exports.$nested = Object.freeze({ nested: true });
 
-_validate2.default.validators.nested = _mirukenCore.Undefined;
+_validate3.default.validators.nested = _mirukenCore.Undefined;
 
 var $registerValidators = exports.$registerValidators = _mirukenCore.MetaMacro.extend({
     get active() {
@@ -320,8 +330,8 @@ var $registerValidators = exports.$registerValidators = _mirukenCore.MetaMacro.e
                                         throw new Error('Unable to invoke validator \'' + nm + '\'.');
                                     }
 
-                                    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-                                        args[_key] = arguments[_key];
+                                    for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+                                        args[_key2] = arguments[_key2];
                                     }
 
                                     var d = dependencies.concat(args.map(_mirukenCore.$use));
@@ -334,7 +344,7 @@ var $registerValidators = exports.$registerValidators = _mirukenCore.MetaMacro.e
                     if (_ret3 === 'continue') continue;
                 }
                 if ((0, _mirukenCore.$isFunction)(validator)) {
-                    _validate2.default.validators[_name3] = validator;
+                    _validate3.default.validators[_name3] = validator;
                 }
             }
         }
@@ -350,7 +360,7 @@ var ValidateJsCallbackHandler = exports.ValidateJsCallbackHandler = _mirukenCall
     $validate: [null, function (validation, composer) {
         var target = validation.object,
             nested = {},
-            constraints = _buildConstraints(target, nested);
+            constraints = buildConstraints(target, nested);
         if (constraints) {
             var _ret5 = function () {
                 var scope = validation.scope,
@@ -358,19 +368,19 @@ var ValidateJsCallbackHandler = exports.ValidateJsCallbackHandler = _mirukenCall
                     validator = Validator(composer);
                 if (validation.isAsync) {
                     return {
-                        v: _validate2.default.async(target, constraints, DETAILED).then(function (valid) {
-                            return _validateNestedAsync(validator, scope, results, nested);
+                        v: _validate3.default.async(target, constraints, DETAILED).then(function (valid) {
+                            return validateNestedAsync(validator, scope, results, nested);
                         }).catch(function (errors) {
                             if (errors instanceof Error) {
                                 return Promise.reject(errors);
                             }
-                            return _validateNestedAsync(validator, scope, results, nested).then(function () {
-                                _mapResults(results, errors);
+                            return validateNestedAsync(validator, scope, results, nested).then(function () {
+                                return mapResults(results, errors);
                             });
                         })
                     };
                 } else {
-                    var errors = (0, _validate2.default)(target, constraints, DETAILED);
+                    var errors = (0, _validate3.default)(target, constraints, DETAILED);
                     for (var key in nested) {
                         var child = nested[key];
                         if (Array.isArray(child)) {
@@ -381,7 +391,7 @@ var ValidateJsCallbackHandler = exports.ValidateJsCallbackHandler = _mirukenCall
                             validator.validate(child, scope, results.addKey(key));
                         }
                     }
-                    _mapResults(results, errors);
+                    mapResults(results, errors);
                 }
             }();
 
@@ -390,7 +400,7 @@ var ValidateJsCallbackHandler = exports.ValidateJsCallbackHandler = _mirukenCall
     }]
 });
 
-function _validateNestedAsync(validator, scope, results, nested) {
+function validateNestedAsync(validator, scope, results, nested) {
     var pending = [];
     for (var key in nested) {
         var child = nested[key];
@@ -409,10 +419,10 @@ function _validateNestedAsync(validator, scope, results, nested) {
     return Promise.all(pending);
 }
 
-function _mapResults(results, errors) {
+function mapResults(results, errors) {
     if (errors) {
         errors.forEach(function (error) {
-            results.addKey(error.attribute).addError(error.validator, {
+            return results.addKey(error.attribute).addError(error.validator, {
                 message: error.error,
                 value: error.value
             });
@@ -420,15 +430,15 @@ function _mapResults(results, errors) {
     }
 }
 
-function _buildConstraints(target, nested) {
-    var meta = target[_mirukenCore.Metadata],
-        descriptors = meta && meta.getDescriptor(VALIDATABLE);
+function buildConstraints(target, nested) {
+    var meta = (0, _mirukenCore.$meta)(target),
+        descriptors = meta && meta.getMetadata(VALIDATABLE);
     var constraints = void 0;
     if (descriptors) {
         for (var key in descriptors) {
             var descriptor = descriptors[key],
-                validate = descriptor.validate;
-            (constraints || (constraints = {}))[key] = validate;
+                _validate = descriptor.validate;
+            (constraints || (constraints = {}))[key] = _validate;
 
             var _loop = function _loop(_name4) {
                 if (_name4 === 'nested') {
@@ -436,8 +446,8 @@ function _buildConstraints(target, nested) {
                     if (child) {
                         nested[key] = child;
                     }
-                } else if (!(_name4 in _validate2.default.validators)) {
-                    _validate2.default.validators[_name4] = function () {
+                } else if (!(_name4 in _validate3.default.validators)) {
+                    _validate3.default.validators[_name4] = function () {
                         var validator = _mirukenCallback.$composer && _mirukenCallback.$composer.resolve(_name4);
                         if (!validator) {
                             throw new Error('Unable to resolve validator \'' + _name4 + '\'.');
@@ -447,7 +457,7 @@ function _buildConstraints(target, nested) {
                 }
             };
 
-            for (var _name4 in validate) {
+            for (var _name4 in _validate) {
                 _loop(_name4);
             }
         }

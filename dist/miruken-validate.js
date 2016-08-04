@@ -1,5 +1,5 @@
-import {Base,pcopy,True,MetaStep,MetaMacro,Invoking,$isFunction,$isPromise,$classOf,$use,Protocol,StrictProtocol,$isNothing,Undefined,Abstract,Metadata} from 'miruken-core';
-import {$define,$handle,CallbackHandler,$composer} from 'miruken-callback';
+import {Base,pcopy,True,MetaStep,MetaMacro,Invoking,$isFunction,$isPromise,$classOf,$use,decorate,Protocol,StrictProtocol,$isNothing,Undefined,Abstract,$meta} from 'miruken-core';
+import {$define,$handle,CallbackHandler,addDefinition,$composer} from 'miruken-callback';
 
 /**
  * Captures structured validation errors.
@@ -79,7 +79,7 @@ export const ValidationResult = Base.extend({
              * Gets or adds validation results for the key.
              * @method addKey
              * @param  {string} key  -  property name
-             * @results {miruken.validate.ValidationResult} named validation results.
+             * @results {ValidationResult} named validation results.
              */                
             addKey(key) {
                 return this[key] || (this[key] = new ValidationResult);
@@ -109,7 +109,7 @@ export const ValidationResult = Base.extend({
             /**
              * Clears all validation results.
              * @method reset
-             * @returns {miruken.validate.ValidationResult} receiving results
+             * @returns {ValidationResult} receiving results
              * @chainable
              */
             reset() { 
@@ -140,7 +140,6 @@ function _isReservedKey(key) {
 /**
  * Validation definition group.
  * @property {Function} $validate
- * @for miruken.validate.$
  */
 export const $validate = $define('$validate');
 
@@ -151,7 +150,7 @@ export const $validate = $define('$validate');
  * @param   {Object}    object  -  object to validate
  * @param   {boolean}   async   -  true if validate asynchronously
  * @param   {Any}       scope   -  scope of validation
- * @param   {miruken.validate.ValidationResult} results  -  results to validate to
+ * @param   {ValidationResult} results  -  results to validate to
  * @extends Base
  */
 export const Validation = Base.extend({
@@ -180,13 +179,13 @@ export const Validation = Base.extend({
             get scope() { return scope; },
             /**
              * Gets the validation results.
-             * @property {miruken.validate.ValidationResult} results
+             * @property {ValidationResult} results
              * @readOnly
              */                                                                
             get results() { return results; },
             /**
              * Gets the async validation results.
-             * @property {miruken.validate.ValidationResult} results
+             * @property {ValidationResult} results
              * @readOnly
              */                                                                                
             get asyncResults() { return _asyncResults; },
@@ -218,12 +217,12 @@ $handle(CallbackHandler, Validation, function (validation, composer) {
 /**
  * Metamacro for class-based validation.
  * @class $validateThat
- * @extends miruken.MetaMacro
+ * @extends MetaMacro
  */    
 export const $validateThat = MetaMacro.extend({
     get active() { return true; },
     get inherit() { return true; },    
-    execute: function _(step, metadata, target, definition) {
+    execute(step, metadata, target, definition) {
         const validateThat = this.extractProperty('$validateThat', target, definition);
         if (!validateThat) {
             return;
@@ -258,10 +257,14 @@ export const $validateThat = MetaMacro.extend({
     }
 });
 
+export function validate(...args) {
+    return decorate(addDefinition($validate), args);
+}
+
 /**
  * Protocol for validating objects.
  * @class Validating
- * @extends miruken.Protocol
+ * @extends Protocol
  */        
 export const Validating = Protocol.extend({
     /**
@@ -270,7 +273,7 @@ export const Validating = Protocol.extend({
      * @param   {Object} object     -  object to validate
      * @param   {Object} scope      -  scope of validation
      * @param   {Object} [results]  -  validation results
-     * @returns {miruken.validate.ValidationResult}  validation results.
+     * @returns {ValidationResult}  validation results.
      */
     validate(object, scope, results) {},
     /**
@@ -288,8 +291,8 @@ export const Validating = Protocol.extend({
 /**
  * Protocol for validating objects strictly.
  * @class Validator
- * @extends miruken.StrictProtocol
- * @uses miruken.validate.Validating
+ * @extends StrictProtocol
+ * @uses Validating
  */        
 export const Validator = StrictProtocol.extend(Validating);
 
@@ -299,9 +302,9 @@ export const Validator = StrictProtocol.extend(Validating);
  * Once an object is validated, it will receive a **$validation** property containing the validation results.
  * </p>
  * @class ValidationCallbackHandler
- * @extends miruken.callback.CallbackHandler
- * @uses miruken.validate.Validator
- * @uses miruken.validate.Validating
+ * @extends CallbackHandler
+ * @uses Validator
+ * @uses Validating
  */        
 export const ValidationCallbackHandler = CallbackHandler.extend(Validator, {
     validate(object, scope, results) {
@@ -311,8 +314,8 @@ export const ValidationCallbackHandler = CallbackHandler.extend(Validator, {
         const validation = new Validation(object, false, scope, results);
         $composer.handle(validation, true);
         results = validation.results;
-        _bindValidationResults(object, results);
-        _validateThat(validation, null, $composer);
+        bindValidationResults(object, results);
+        validateThat(validation, null, $composer);
         return results;
     },
     validateAsync(object, scope, results) {
@@ -323,9 +326,9 @@ export const ValidationCallbackHandler = CallbackHandler.extend(Validator, {
               composer   = $composer;
         return composer.deferAll(validation).then(() => {
             results = validation.results;
-            _bindValidationResults(object, results);
+            bindValidationResults(object, results);
             const asyncResults = [];
-            _validateThat(validation, asyncResults, composer);
+            validateThat(validation, asyncResults, composer);
             return asyncResults.length > 0
                  ? Promise.all(asyncResults).then(() => results)
                  : results;
@@ -333,7 +336,7 @@ export const ValidationCallbackHandler = CallbackHandler.extend(Validator, {
     }
 });
 
-function _validateThat(validation, asyncResults, composer) {
+function validateThat(validation, asyncResults, composer) {
     const object = validation.object;
     for (let key in object) {
         if (key.lastIndexOf('validateThat', 0) == 0) {
@@ -346,7 +349,7 @@ function _validateThat(validation, asyncResults, composer) {
     }
 }
 
-function _bindValidationResults(object, results) {
+function bindValidationResults(object, results) {
     Object.defineProperty(object, '$validation', {
         enumerable:   false,
         configurable: true,
@@ -368,14 +371,12 @@ CallbackHandler.implement({
 });
 
 import validatejs from 'validate.js';
-
 validatejs.Promise = Promise;
 
 /**
  * Shortcut to indicate required property.
  * @property {Object} $required
  * @readOnly
- * @for miruken.validate.$ 
  */
 export const $required = Object.freeze({ presence: true });
 
@@ -383,7 +384,7 @@ export const $required = Object.freeze({ presence: true });
  * Shortcut to indicate nested validation.
  * @property {Object} $nested
  * @readOnly
- * @for miruken.validate.$ 
+ * @for validate.$ 
  */
 export const $nested = Object.freeze({ nested: true });
 
@@ -402,7 +403,7 @@ validatejs.validators.nested = Undefined;
  * </pre>
  * would register a uniqueUserName validator with a Database dependency.
  * @class $registerValidators
- * @extends miruken.MetaMacro
+ * @extends MetaMacro
  */    
 export const $registerValidators = MetaMacro.extend({
     get active() { return true; },
@@ -438,10 +439,10 @@ export const $registerValidators = MetaMacro.extend({
 
 /**
  * Base class to define custom validators using
- * {{#crossLink "miruken.validate.$registerValidators"}}{{/crossLink}}.
+ * {{#crossLink "validate.$registerValidators"}}{{/crossLink}}.
  * <pre>
  *    const CustomValidators = ValidationRegistry.extend({
- *        creditCardNumber: function (cardNumber, options, key, attributes) {
+ *        creditCardNumber(cardNumber, options, key, attributes) {
  *           // do the check...
  *        }
  *    })
@@ -481,28 +482,27 @@ const DETAILED    = { format: "detailed", cleanAttributes: false },
  * })
  * </pre>
  * @class ValidateJsCallbackHandler
- * @extends miruken.callback.CallbackHandler
+ * @extends CallbackHandler
  */            
 export const ValidateJsCallbackHandler = CallbackHandler.extend({
     $validate: [
         null,  function (validation, composer) {
             const target      = validation.object,
                   nested      = {},
-                  constraints = _buildConstraints(target, nested);
+                  constraints = buildConstraints(target, nested);
             if (constraints) {
                 const scope     = validation.scope,
                       results   = validation.results,
                       validator = Validator(composer); 
                 if (validation.isAsync) {
                     return validatejs.async(target, constraints, DETAILED)
-                        .then(valid => _validateNestedAsync(validator, scope, results, nested))
+                        .then(valid => validateNestedAsync(validator, scope, results, nested))
                     	.catch(errors => {
                             if (errors instanceof Error) {
                                 return Promise.reject(errors);
                             }
-                            return _validateNestedAsync(validator, scope, results, nested).then(() => {
-                                _mapResults(results, errors);
-                            });
+                            return validateNestedAsync(validator, scope, results, nested)
+                                .then(() => mapResults(results, errors));
                         });
                 } else {
                     const errors = validatejs(target, constraints, DETAILED);
@@ -516,13 +516,13 @@ export const ValidateJsCallbackHandler = CallbackHandler.extend({
                             validator.validate(child, scope, results.addKey(key));
                         }
                     }
-                    _mapResults(results, errors);
+                    mapResults(results, errors);
                 }
             }
         }]
 });
 
-function _validateNestedAsync(validator, scope, results, nested) {
+function validateNestedAsync(validator, scope, results, nested) {
     const pending = [];
     for (let key in nested) {
         const child = nested[key];
@@ -541,20 +541,20 @@ function _validateNestedAsync(validator, scope, results, nested) {
     return Promise.all(pending);
 }
 
-function _mapResults(results, errors) {
+function mapResults(results, errors) {
     if (errors) {
-        errors.forEach(error => {
-            results.addKey(error.attribute).addError(error.validator, {
+        errors.forEach(error => results.addKey(error.attribute)
+            .addError(error.validator, {
                 message: error.error,
                 value:   error.value 
-            });
-        });
+            })
+        );
     }
 }
 
-function _buildConstraints(target, nested) {
-    const meta        = target[Metadata],
-          descriptors = meta && meta.getDescriptor(VALIDATABLE);
+function buildConstraints(target, nested) {
+    const meta        = $meta(target),
+          descriptors = meta && meta.getMetadata(VALIDATABLE);
     let  constraints;
     if (descriptors) {
         for (let key in descriptors) {

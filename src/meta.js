@@ -12,7 +12,6 @@ import {
 /**
  * Validation definition group.
  * @property {Function} $validate
- * @for miruken.validate.$
  */
 export const $validate = $define('$validate');
 
@@ -23,7 +22,7 @@ export const $validate = $define('$validate');
  * @param   {Object}    object  -  object to validate
  * @param   {boolean}   async   -  true if validate asynchronously
  * @param   {Any}       scope   -  scope of validation
- * @param   {miruken.validate.ValidationResult} results  -  results to validate to
+ * @param   {ValidationResult} results  -  results to validate to
  * @extends Base
  */
 export const Validation = Base.extend({
@@ -52,13 +51,13 @@ export const Validation = Base.extend({
             get scope() { return scope; },
             /**
              * Gets the validation results.
-             * @property {miruken.validate.ValidationResult} results
+             * @property {ValidationResult} results
              * @readOnly
              */                                                                
             get results() { return results; },
             /**
              * Gets the async validation results.
-             * @property {miruken.validate.ValidationResult} results
+             * @property {ValidationResult} results
              * @readOnly
              */                                                                                
             get asyncResults() { return _asyncResults; },
@@ -90,7 +89,7 @@ $handle(CallbackHandler, Validation, function (validation, composer) {
 /**
  * Metamacro for class-based validation.
  * @class $validateThat
- * @extends miruken.MetaMacro
+ * @extends MetaMacro
  */    
 export const $validateThat = MetaMacro.extend({
     get active() { return true; },

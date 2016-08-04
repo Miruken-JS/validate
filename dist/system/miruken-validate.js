@@ -3,13 +3,13 @@
 System.register(['miruken-core', 'miruken-callback', 'validate.js'], function (_export, _context) {
     "use strict";
 
-    var Base, pcopy, True, MetaStep, MetaMacro, Invoking, $isFunction, $isPromise, $classOf, $use, Protocol, StrictProtocol, $isNothing, Undefined, Abstract, Metadata, $define, $handle, CallbackHandler, $composer, validatejs, _typeof, ValidationResult, IGNORE, $validate, Validation, $validateThat, Validating, Validator, ValidationCallbackHandler, $required, $nested, $registerValidators, ValidationRegistry, DETAILED, VALIDATABLE, ValidateJsCallbackHandler;
+    var Base, pcopy, True, MetaStep, MetaMacro, Invoking, $isFunction, $isPromise, $classOf, $use, decorate, Protocol, StrictProtocol, $isNothing, Undefined, Abstract, $meta, $define, $handle, CallbackHandler, addDefinition, $composer, validatejs, _typeof, ValidationResult, IGNORE, $validate, Validation, $validateThat, Validating, Validator, ValidationCallbackHandler, $required, $nested, $registerValidators, ValidationRegistry, DETAILED, VALIDATABLE, ValidateJsCallbackHandler;
 
     function _isReservedKey(key) {
         return IGNORE.indexOf(key) >= 0;
     }
 
-    function _validateThat(validation, asyncResults, composer) {
+    function validateThat(validation, asyncResults, composer) {
         var object = validation.object;
         for (var key in object) {
             if (key.lastIndexOf('validateThat', 0) == 0) {
@@ -22,7 +22,7 @@ System.register(['miruken-core', 'miruken-callback', 'validate.js'], function (_
         }
     }
 
-    function _bindValidationResults(object, results) {
+    function bindValidationResults(object, results) {
         Object.defineProperty(object, '$validation', {
             enumerable: false,
             configurable: true,
@@ -31,7 +31,7 @@ System.register(['miruken-core', 'miruken-callback', 'validate.js'], function (_
         });
     }
 
-    function _validateNestedAsync(validator, scope, results, nested) {
+    function validateNestedAsync(validator, scope, results, nested) {
         var pending = [];
         for (var key in nested) {
             var child = nested[key];
@@ -50,10 +50,10 @@ System.register(['miruken-core', 'miruken-callback', 'validate.js'], function (_
         return Promise.all(pending);
     }
 
-    function _mapResults(results, errors) {
+    function mapResults(results, errors) {
         if (errors) {
             errors.forEach(function (error) {
-                results.addKey(error.attribute).addError(error.validator, {
+                return results.addKey(error.attribute).addError(error.validator, {
                     message: error.error,
                     value: error.value
                 });
@@ -61,15 +61,15 @@ System.register(['miruken-core', 'miruken-callback', 'validate.js'], function (_
         }
     }
 
-    function _buildConstraints(target, nested) {
-        var meta = target[Metadata],
-            descriptors = meta && meta.getDescriptor(VALIDATABLE);
+    function buildConstraints(target, nested) {
+        var meta = $meta(target),
+            descriptors = meta && meta.getMetadata(VALIDATABLE);
         var constraints = void 0;
         if (descriptors) {
             for (var key in descriptors) {
                 var descriptor = descriptors[key],
-                    validate = descriptor.validate;
-                (constraints || (constraints = {}))[key] = validate;
+                    _validate = descriptor.validate;
+                (constraints || (constraints = {}))[key] = _validate;
 
                 var _loop = function _loop(_name4) {
                     if (_name4 === 'nested') {
@@ -88,7 +88,7 @@ System.register(['miruken-core', 'miruken-callback', 'validate.js'], function (_
                     }
                 };
 
-                for (var _name4 in validate) {
+                for (var _name4 in _validate) {
                     _loop(_name4);
                 }
             }
@@ -107,16 +107,18 @@ System.register(['miruken-core', 'miruken-callback', 'validate.js'], function (_
             $isPromise = _mirukenCore.$isPromise;
             $classOf = _mirukenCore.$classOf;
             $use = _mirukenCore.$use;
+            decorate = _mirukenCore.decorate;
             Protocol = _mirukenCore.Protocol;
             StrictProtocol = _mirukenCore.StrictProtocol;
             $isNothing = _mirukenCore.$isNothing;
             Undefined = _mirukenCore.Undefined;
             Abstract = _mirukenCore.Abstract;
-            Metadata = _mirukenCore.Metadata;
+            $meta = _mirukenCore.$meta;
         }, function (_mirukenCallback) {
             $define = _mirukenCallback.$define;
             $handle = _mirukenCallback.$handle;
             CallbackHandler = _mirukenCallback.CallbackHandler;
+            addDefinition = _mirukenCallback.addDefinition;
             $composer = _mirukenCallback.$composer;
         }, function (_validateJs) {
             validatejs = _validateJs.default;
@@ -284,7 +286,7 @@ System.register(['miruken-core', 'miruken-callback', 'validate.js'], function (_
                 get inherit() {
                     return true;
                 },
-                execute: function _(step, metadata, target, definition) {
+                execute: function execute(step, metadata, target, definition) {
                     var validateThat = this.extractProperty('$validateThat', target, definition);
                     if (!validateThat) {
                         return;
@@ -327,6 +329,16 @@ System.register(['miruken-core', 'miruken-callback', 'validate.js'], function (_
 
             _export('$validateThat', $validateThat);
 
+            function validate() {
+                for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+                    args[_key] = arguments[_key];
+                }
+
+                return decorate(addDefinition($validate), args);
+            }
+
+            _export('validate', validate);
+
             _export('Validating', Validating = Protocol.extend({
                 validate: function validate(object, scope, results) {},
                 validateAsync: function validateAsync(object, scope, results) {}
@@ -346,8 +358,8 @@ System.register(['miruken-core', 'miruken-callback', 'validate.js'], function (_
                     var validation = new Validation(object, false, scope, results);
                     $composer.handle(validation, true);
                     results = validation.results;
-                    _bindValidationResults(object, results);
-                    _validateThat(validation, null, $composer);
+                    bindValidationResults(object, results);
+                    validateThat(validation, null, $composer);
                     return results;
                 },
                 validateAsync: function validateAsync(object, scope, results) {
@@ -358,9 +370,9 @@ System.register(['miruken-core', 'miruken-callback', 'validate.js'], function (_
                         composer = $composer;
                     return composer.deferAll(validation).then(function () {
                         results = validation.results;
-                        _bindValidationResults(object, results);
+                        bindValidationResults(object, results);
                         var asyncResults = [];
-                        _validateThat(validation, asyncResults, composer);
+                        validateThat(validation, asyncResults, composer);
                         return asyncResults.length > 0 ? Promise.all(asyncResults).then(function () {
                             return results;
                         }) : results;
@@ -423,8 +435,8 @@ System.register(['miruken-core', 'miruken-callback', 'validate.js'], function (_
                                                     throw new Error('Unable to invoke validator \'' + nm + '\'.');
                                                 }
 
-                                                for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-                                                    args[_key] = arguments[_key];
+                                                for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+                                                    args[_key2] = arguments[_key2];
                                                 }
 
                                                 var d = dependencies.concat(args.map($use));
@@ -457,7 +469,7 @@ System.register(['miruken-core', 'miruken-callback', 'validate.js'], function (_
                 $validate: [null, function (validation, composer) {
                     var target = validation.object,
                         nested = {},
-                        constraints = _buildConstraints(target, nested);
+                        constraints = buildConstraints(target, nested);
                     if (constraints) {
                         var _ret5 = function () {
                             var scope = validation.scope,
@@ -466,13 +478,13 @@ System.register(['miruken-core', 'miruken-callback', 'validate.js'], function (_
                             if (validation.isAsync) {
                                 return {
                                     v: validatejs.async(target, constraints, DETAILED).then(function (valid) {
-                                        return _validateNestedAsync(validator, scope, results, nested);
+                                        return validateNestedAsync(validator, scope, results, nested);
                                     }).catch(function (errors) {
                                         if (errors instanceof Error) {
                                             return Promise.reject(errors);
                                         }
-                                        return _validateNestedAsync(validator, scope, results, nested).then(function () {
-                                            _mapResults(results, errors);
+                                        return validateNestedAsync(validator, scope, results, nested).then(function () {
+                                            return mapResults(results, errors);
                                         });
                                     })
                                 };
@@ -488,7 +500,7 @@ System.register(['miruken-core', 'miruken-callback', 'validate.js'], function (_
                                         validator.validate(child, scope, results.addKey(key));
                                     }
                                 }
-                                _mapResults(results, errors);
+                                mapResults(results, errors);
                             }
                         }();
 

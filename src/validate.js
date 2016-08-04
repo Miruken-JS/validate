@@ -12,7 +12,7 @@ import { Validation } from './meta';
 /**
  * Protocol for validating objects.
  * @class Validating
- * @extends miruken.Protocol
+ * @extends Protocol
  */        
 export const Validating = Protocol.extend({
     /**
@@ -21,7 +21,7 @@ export const Validating = Protocol.extend({
      * @param   {Object} object     -  object to validate
      * @param   {Object} scope      -  scope of validation
      * @param   {Object} [results]  -  validation results
-     * @returns {miruken.validate.ValidationResult}  validation results.
+     * @returns {ValidationResult}  validation results.
      */
     validate(object, scope, results) {},
     /**
@@ -39,8 +39,8 @@ export const Validating = Protocol.extend({
 /**
  * Protocol for validating objects strictly.
  * @class Validator
- * @extends miruken.StrictProtocol
- * @uses miruken.validate.Validating
+ * @extends StrictProtocol
+ * @uses Validating
  */        
 export const Validator = StrictProtocol.extend(Validating);
 
@@ -50,9 +50,9 @@ export const Validator = StrictProtocol.extend(Validating);
  * Once an object is validated, it will receive a **$validation** property containing the validation results.
  * </p>
  * @class ValidationCallbackHandler
- * @extends miruken.callback.CallbackHandler
- * @uses miruken.validate.Validator
- * @uses miruken.validate.Validating
+ * @extends CallbackHandler
+ * @uses Validator
+ * @uses Validating
  */        
 export const ValidationCallbackHandler = CallbackHandler.extend(Validator, {
     validate(object, scope, results) {

@@ -1,8 +1,6 @@
 import validatejs from 'validate.js';
-import {Invoking,inject,metadata,$meta,$isFunction,$use,Base,pcopy,$isPromise,$classOf,decorate,Protocol,StrictProtocol,$isNothing,Undefined,Modifier} from 'miruken-core';
-import {$define,$handle,CallbackHandler,$composer,addDefinition,provide} from 'miruken-callback';
-import {Context} from 'miruken-context';
-import {expect} from 'chai';
+import {Invoking,inject,metadata,$meta,$isFunction,$use,Base,pcopy,$isPromise,$classOf,decorate,Protocol,StrictProtocol,$isNothing,Undefined} from 'miruken-core';
+import {$define,$handle,CallbackHandler,$composer,addDefinition} from 'miruken-callback';
 
 const validateThatKey      = Symbol(),
       validateThatCriteria = { [validateThatKey]: true };
@@ -17,7 +15,7 @@ export function validateThat(target, key, descriptor) {
     if (!$isFunction(fn)) return;
     const meta = $meta(target);
     if (meta) {
-        meta.addMetadata(key,  validateThatCriteria);
+        meta.defineMetadata(key,  validateThatCriteria);
         inject.get(target, key, dependencies => {
             if (dependencies.length > 0) {
                 descriptor.value = function (validation, composer) {
@@ -180,11 +178,11 @@ const constraintKey = Symbol(),
 export function constraint(constraints) {
     return function (target, key, descriptor) {
         if (key === 'constructor') return;
-        const { get, value } = descriptor;
-        if (!get && !value) return;
+        const { get, value, initializer } = descriptor;
+        if (!get && !value && !initializer) return;
         const meta = $meta(target);
         if (meta) {
-            meta.addMetadata(key, { [criteria]: constraints });
+            meta.defineMetadata(key, { [constraintKey]: constraints });
         }
     };
 }
@@ -196,12 +194,12 @@ constraint.required = function (target, key, descriptor)
     return constraint({presence: true})(target, key, descriptor);
 }
 
-constraint.nested = function (target, key, descriptor)
+export function applyConstraints (target, key, descriptor)
 {
     return constraint({nested: true})(target, key, descriptor);
 }
 
-export { constraint as is, constraint as has };
+export { constraint as default, constraint as is, constraint as has };
 
 /**
  * Validation definition group.
@@ -305,7 +303,7 @@ export function customValidator(...args) {
     }
 }
 
-function _customValidator() {
+function _customValidator(args) {
     return args.length === 1
          ? _customValidatorClass(...args)
          : _customValidatorMethod(...args);
@@ -337,30 +335,28 @@ function _customValidatorMethod(target, key, descriptor) {
         }
     });
     constraint[key] = function (...options) {
-        return decorate(_constraint, options);
+        return decorate((t, k, d) => {
+            return constraint({[key]: options})(t, k, d);
+        }, options);
     };
     validatejs.validators[key] = descriptor.value;    
 }
 
-function _constraint(target, key, descriptor, options) {
-    return constraint({[key]: options})(target, key, descriptor);    
-}
-
 export default customValidator;
 
-constraint.length = function (len)
+constraint.exactLength = function (len)
 {
-    return contraint({length: {is: len}});
+    return constraint({length: {is: len}});
 }
 
 constraint.minimumLength = function (len)
 {
-    return contraint({length: {minimum: len}});
+    return constraint({length: {minimum: len}});
 }
 
 constraint.maximumLength = function (len)
 {
-    return contraint({length: {maximum: len}});
+    return constraint({length: {maximum: len}});
 }
 
 constraint.number = function(target, key, descriptor)
@@ -380,32 +376,32 @@ constraint.onlyInteger = function (target, key, descriptor)
 
 constraint.equalTo = function (val)
 {
-    return contraints({numericality: {equalTo: val}});
+    return constraint({numericality: {equalTo: val}});
 }
 
 constraint.greaterThan = function (val)
 {
-    return contraints({numericality: {greaterThan: val}});
+    return constraint({numericality: {greaterThan: val}});
 }
 
 constraint.greaterThanOrEqualTo = function (val)
 {
-    return contraints({numericality: {greaterThanOrEqualTo: val}});
+    return constraint({numericality: {greaterThanOrEqualTo: val}});
 }
 
 constraint.lessThan = function (val)
 {
-    return contraints({numericality: {lessThan: val}});
+    return constraint({numericality: {lessThan: val}});
 }
 
 constraint.lessThanOrEqualTo = function (val)
 {
-    return contraints({numericality: {lessThanOrEqualTo: val}});
+    return constraint({numericality: {lessThanOrEqualTo: val}});
 }
 
 constraint.divisibleBy = function (val)
 {
-    return contraints({numericality: {divisibleBy: val}});
+    return constraint({numericality: {divisibleBy: val}});
 }
 
 constraint.odd = function (target, key, descriptor)
@@ -421,6 +417,11 @@ constraint.even = function (target, key, descriptor)
 
 
 
+
+constraint.required = function (target, key, descriptor)
+{
+    return constraint({presence: true})(target, key, descriptor);
+}
 
 /**
  * Marks method as providing validation capabilities.
@@ -639,9 +640,9 @@ function mapResults(results, errors) {
 
 function buildConstraints(target, nested) {
     let constraints; 
-    constraints.get(object, (criteria, key) => {
+    constraint.get(target, (criteria, key) => {
         (constraints || (constraints = {}))[key] = criteria;
-        for (let name in validate) {
+        for (let name in criteria) {
             if (name === 'nested') {
                 const child = target[key];
                 if (child) {
@@ -663,343 +664,3 @@ function buildConstraints(target, nested) {
     });
     return constraints;
 }
-
-import '../src/length';
-import '../src/number';
-    
-const Address = Base.extend({
-    @is.required
-    line: '',
-    @is.required    
-    city: '',
-    @is.required
-    @has.lengh(2)
-    state: '',
-    @is.required
-    @has.lengh(5)    
-    zipcode: '' 
-});
-
-const LineItem = Base.extend({
-    @is.required
-    @is.length(5)
-    plu: '',
-    @is.onlyInteger
-    @is.greaterThan(0)
-    quantity: 0
-});
-
-const Order = Base.extend({
-    @is.required
-    @constraint.nested
-    address: '',
-    @is.required
-    @constraint.nested    
-    lineItems: [], 
-});
-
-const User = Base.extend({
-    @has.uniqueUserName
-    userName: undefined,
-    orders: [],
-    constructor(userName) {
-        this.userName = userName;
-    }
-});      
-
-const Database = Base.extend({
-    constructor(userNames) {
-        this.extend({
-            hasUserName(userName) {
-                return userNames.indexOf(userName) >= 0;
-            }
-        });
-    }
-});
-
-const CustomValidators = Base.extend(customValidator, {
-    mustBeUpperCase() {},
-    @inject(Database)
-    uniqueUserName(db, userName) {
-        if (db.hasUserName(userName)) {
-            return `UserName ${userName} is already taken`;
-        }
-    }]
-});
-
-describe("customValidator", () => {
-    it("should register validators", () => {
-        expect(validatejs.validators).to.have.property('mustBeUpperCase');
-    });
-
-    it("should register validators on demand", () => {
-        CustomValidators.implement({
-            uniqueLastName() {}
-        });
-        expect(validatejs.validators).to.have.property('uniqueLastName');
-    });
-
-    it("should register validators with dependencies", () => {
-        expect(validatejs.validators).to.have.property('uniqueUserName');
-    });
-});
-
-describe("ValidateJsCallbackHandler", () => {
-    let context;
-    beforeEach(() => {
-        context = new Context();
-        context.addHandlers(new ValidationCallbackHandler, new ValidateJsCallbackHandler);
-    });
-
-    describe("#validate", () => {
-        it("should validate simple objects", () => {
-            const address = new Address,
-                  results = Validator(context).validate(address);
-            expect(results.line.errors.presence).to.eql([{
-                message: "Line can't be blank",
-                value:   undefined
-            }]);
-            expect(results.city.errors.presence).to.eql([{
-                message: "City can't be blank",
-                value:   undefined
-            }]);
-            expect(results.state.errors.presence).to.eql([{
-                message: "State can't be blank",
-                value:   undefined
-            }]);
-            expect(results.zipcode.errors.presence).to.eql([{
-                message: "Zipcode can't be blank",
-                value:   undefined
-            }]);
-        });
-
-        it("should validate complex objects", () => {
-            const order = new Order();
-            order.address   = new Address({
-                line:    "100 Tulip Ln",
-                city:    "Wantaugh",
-                state:   "NY",
-                zipcode: "11580"
-            });
-            order.lineItems = [new LineItem({plu: '12345', quantity: 2})];
-            const results = Validator(context).validate(order);
-            expect(results.valid).to.be.true;
-        });
-
-        it("should invalidate complex objects", () => {
-            const order = new Order();
-            order.address   = new Address;
-            order.lineItems = [new LineItem];
-            const results = Validator(context).validate(order);
-            expect(results.address.line.errors.presence).to.eql([{
-                message: "Line can't be blank",
-                value:   undefined
-            }]);
-            expect(results.address.city.errors.presence).to.eql([{
-                message: "City can't be blank",
-                value:   undefined
-            }]);
-            expect(results.address.state.errors.presence).to.eql([{
-                message: "State can't be blank",
-                value:   undefined
-            }]);
-            expect(results.address.zipcode.errors.presence).to.eql([{
-                message: "Zipcode can't be blank",
-                value:   undefined
-            }]);
-            expect(results["lineItems.0"].plu.errors.presence).to.eql([{
-                message: "Plu can't be blank",
-                value:   undefined
-            }]);
-            expect(results["lineItems.0"].quantity.errors.numericality).to.eql([{
-                message: "Quantity must be greater than 0",
-                value:   0
-            }]);
-            expect(results.errors.presence).to.deep.include.members([{
-                key:     "address.line",
-                message: "Line can't be blank",
-                value:   undefined
-            }, {
-                key:     "address.city",
-                message: "City can't be blank",
-                value:   undefined
-            }, {
-                key:     "address.state",
-                message: "State can't be blank",
-                value:   undefined
-            }, {
-                key:     "address.zipcode",
-                message: "Zipcode can't be blank",
-                value:   undefined
-            }, {
-                key:     "lineItems.0.plu",
-                message: "Plu can't be blank",
-                value:   undefined
-            }
-            ]);
-            expect(results.errors.numericality).to.deep.include.members([{
-                key:     "lineItems.0.quantity",
-                message: "Quantity must be greater than 0",
-                value:   0
-            }
-            ]);
-        });
-
-        it("should pass exceptions through", () => {
-            const ThrowValidators = Base.extend(customValidator, {
-                  throws() {
-                      throw new Error("Oh No!");
-                  }}),
-                  ThrowOnValidation = Base.extend({
-                      @constraint.throws
-                      bad: undefined
-                  });                
-            expect(() => {
-                Validator(context).validate(new ThrowOnValidation);
-            }).to.throw(Error, "Oh No!");
-        });
-
-        it("should validate with dependencies", () => {
-            const user     = new User('neo'),
-                  database = new Database(['hellboy', 'razor']);
-            context.addHandlers(new (CallbackHandler.extend(Invoking, {
-                invoke(fn, dependencies) {
-                    expect(dependencies[0]).to.equal(Database);
-                    dependencies[0] = database;
-                    for (let i = 1; i < dependencies.length; ++i) {
-                        dependencies[i] = Modifier.unwrap(dependencies[i]);
-                    }
-                    return fn.apply(null, dependencies);
-                }
-            })));
-            let results = Validator(context).validate(user);
-            expect(results.valid).to.be.true;
-            user.userName = 'razor';
-            results = Validator(context).validate(user);
-            expect(results.valid).to.be.false;
-        });
-
-        it.only("should dynamically find validators", () => {
-            const MissingValidator = Base.extend({
-                @is.uniqueCode
-                code: undefined
-              });
-            context.addHandlers((new CallbackHandler).extend({
-                @provide("uniqueCode")
-                uniqueCode() { return this; },
-                validate(value, options, key, attributes) {}
-            }));
-            expect(Validator(context).validate(new MissingValidator).valid).to.be.true;
-        });
-
-        it("should fail if missing validator", () => {
-            const MissingValidator = Base.extend({
-                @is.uniqueCode
-                code: undefined
-              });
-            expect(() => {
-                Validator(context).validate(new MissingValidator);
-            }).to.throw(Error, "Unable to resolve validator 'uniqueCode'.");
-        });    
-    });
-
-    describe("#validateAsync", () => {
-        it("should validate simple objects", () => {
-            const address = new Address();
-            Validator(context).validateAsync(address).then(results => {
-                expect(results.line.errors.presence).to.eql([{
-                    message: "Line can't be blank",
-                    value:   undefined
-                }]);
-                expect(results.city.errors.presence).to.eql([{
-                    message: "City can't be blank",
-                    value:   undefined
-                }]);
-                expect(results.state.errors.presence).to.eql([{
-                    message: "State can't be blank",
-                    value:   undefined
-                }]);
-                expect(results.zipcode.errors.presence).to.eql([{
-                    message: "Zipcode can't be blank",
-                    value:   undefined
-                }]);
-            });
-        });
-
-        it("should invalidate complex objects", done => {
-            const order = new Order();
-            order.address   = new Address;
-            order.lineItems = [new LineItem];
-            Validator(context).validateAsync(order).then(results => {
-                expect(results.address.line.errors.presence).to.eql([{
-                    message: "Line can't be blank",
-                    value:   undefined
-                }]);
-                expect(results.address.city.errors.presence).to.eql([{
-                    message: "City can't be blank",
-                    value:   undefined
-                }]);
-                expect(results.address.state.errors.presence).to.eql([{
-                    message: "State can't be blank",
-                    value:   undefined
-                }]);
-                expect(results.address.zipcode.errors.presence).to.eql([{
-                    message: "Zipcode can't be blank",
-                    value:   undefined
-                }]);
-                expect(results["lineItems.0"].plu.errors.presence).to.eql([{
-                    message: "Plu can't be blank",
-                    value:   undefined
-                }]);
-                expect(results["lineItems.0"].quantity.errors.numericality).to.eql([{
-                    message: "Quantity must be greater than 0",
-                    value:   0
-                }]);
-                expect(results.errors.presence).to.deep.include.members([{
-                    key:     "address.line",
-                    message: "Line can't be blank",
-                    value:   undefined
-                }, {
-                    key:     "address.city",
-                    message: "City can't be blank",
-                    value:   undefined
-                }, {
-                    key:     "address.state",
-                    message: "State can't be blank",
-                    value:   undefined
-                }, {
-                    key:     "address.zipcode",
-                    message: "Zipcode can't be blank",
-                    value:   undefined
-                }, {
-                    key:     "lineItems.0.plu",
-                    message: "Plu can't be blank",
-                    value:   undefined
-                }
-                ]);
-                expect(results.errors.numericality).to.deep.include.members([{
-                    key:     "lineItems.0.quantity",
-                    message: "Quantity must be greater than 0",
-                    value:   0
-                }
-                ]);
-                done();
-            });
-        });
-        
-        it("should pass exceptions through", done => {
-            const ThrowValidators = Base.extend(customValidator, {
-                  throwsAsync() {
-                      return Promise.reject(new Error("Oh No!"));
-                  }}),
-                  ThrowOnValidation = Base.extend({
-                      @constraint.throwsAsync
-                      bad: undefined
-                  });
-            Validator(context).validateAsync(new ThrowOnValidation).catch(error => {
-                expect(error.message).to.equal("Oh No!");
-                done();
-            });
-        });
-    });
-});

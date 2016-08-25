@@ -16,7 +16,7 @@ export function validateThat(target, key, descriptor) {
     if (!$isFunction(fn)) return;
     const meta = $meta(target);
     if (meta) {
-        meta.addMetadata(key,  validateThatCriteria);
+        meta.defineMetadata(key,  validateThatCriteria);
         inject.get(target, key, dependencies => {
             if (dependencies.length > 0) {
                 descriptor.value = function (validation, composer) {

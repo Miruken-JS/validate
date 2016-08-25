@@ -14,7 +14,7 @@ export function constraint(constraints) {
         if (!get && !value && !initializer) return;
         const meta = $meta(target);
         if (meta) {
-            meta.addMetadata(key, { [constraintKey]: constraints });
+            meta.defineMetadata(key, { [constraintKey]: constraints });
         }
     };
 }

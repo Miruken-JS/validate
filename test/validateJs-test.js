@@ -1,91 +1,17 @@
-import { Base, Invoking, Modifier } from 'miruken-core';
-import { CallbackHandler } from 'miruken-callback';
+import { Base, Invoking, Modifier, inject } from 'miruken-core';
+import { CallbackHandler, provide } from 'miruken-callback';
 import { Context } from 'miruken-context';
-
-import {
-    Validator, ValidationCallbackHandler
-} from '../src/validate';
-
-import {
-    ValidationRegistry, ValidateJsCallbackHandler,
-    $required
-} from '../src/validate-js'; 
-
+import { Validator, ValidationCallbackHandler } from '../src/validator';
+import { ValidateJsCallbackHandler } from '../src/validatorJs';
+import { customValidator } from '../src/customValidator';
+import { constraint, is, has, applyConstraints } from '../src/constraint';
+import '../src/required';
+import '../src/length';
+import '../src/number';
+    
 import validatejs from 'validate.js';
 
 import { expect } from 'chai';
-
-const Address = Base.extend({
-    $properties: {
-        line:    { validate: $required },
-        city:    { validate: $required },
-        state:   { 
-            validate: {
-                presence: true,
-                length: { is: 2 }
-            }
-        },
-        zipcode: { 
-            validate: {
-                presence: true,
-                length: { is: 5 }
-            }
-        }
-    }
-});
-
-const LineItem = Base.extend({
-    $properties: {
-        plu: { 
-            validate: {
-                presence: true,
-                length: { is: 5 }
-            }
-        },
-        quantity: {
-            value: 0,
-            validate: {
-                numericality: {
-                    onlyInteger: true,
-                    greaterThan: 0
-                }
-            }
-        }
-    }
-});
-
-const Order = Base.extend({
-    $properties: {
-        address: {
-            map: Address,  
-            validate: {
-                presence: true,
-                nested: true
-            }
-        },
-        lineItems: { 
-            map: LineItem, 
-            validate: {
-                presence: true,
-                nested: true
-            }
-        }
-    }
-});
-
-const User = Base.extend({
-    $properties: {
-        userName: {
-            validate: {
-                uniqueUserName: true
-            }
-        },
-        orders: { map: Order }
-    },
-    constructor(userName) {
-        this.userName = userName;
-    }
-});      
 
 const Database = Base.extend({
     constructor(userNames) {
@@ -97,28 +23,64 @@ const Database = Base.extend({
     }
 });
 
-const CustomValidators = ValidationRegistry.extend({
-    mustBeUpperCase: () => {},
-    uniqueUserName:  [Database, function (db, userName) {
+const CustomValidators = Base.extend(customValidator, {
+    mustBeUpperCase() {},
+    @inject(Database)
+    uniqueUserName(db, userName) {
         if (db.hasUserName(userName)) {
             return `UserName ${userName} is already taken`;
         }
-    }]
+    }
 });
 
-describe("ValidatorRegistry", () => {
-    it("should not create instance", () => {
-        expect(() => {
-            new CustomValidators();
-        }).to.throw(TypeError, "Abstract class cannot be instantiated.");
-    });
+const Address = Base.extend({
+    @is.required
+    line: '',
+    @is.required    
+    city: '',
+    @is.required
+    @has.exactLength(2)
+    state: '',
+    @is.required
+    @has.exactLength(5)    
+    zipcode: '' 
+});
 
+const LineItem = Base.extend({
+    @is.required
+    @has.exactLength(5)
+    plu: '',
+    @is.onlyInteger
+    @is.greaterThan(0)
+    quantity: 0
+});
+
+const Order = Base.extend({
+    @is.required
+    @applyConstraints
+    address: '',
+    @is.required
+    @applyConstraints    
+    lineItems: [], 
+});
+
+const User = Base.extend({
+    @has.uniqueUserName
+    userName: '',
+    orders: [],
+    constructor(userName) {
+        this.userName = userName;
+    }
+});      
+
+describe("customValidator", () => {
     it("should register validators", () => {
         expect(validatejs.validators).to.have.property('mustBeUpperCase');
     });
 
     it("should register validators on demand", () => {
         CustomValidators.implement({
+            @customValidator
             uniqueLastName() {}
         });
         expect(validatejs.validators).to.have.property('uniqueLastName');
@@ -138,29 +100,29 @@ describe("ValidateJsCallbackHandler", () => {
 
     describe("#validate", () => {
         it("should validate simple objects", () => {
-            const address = new Address,
+            const address = new Address(),
                   results = Validator(context).validate(address);
             expect(results.line.errors.presence).to.eql([{
                 message: "Line can't be blank",
-                value:   undefined
+                value:   ''
             }]);
             expect(results.city.errors.presence).to.eql([{
                 message: "City can't be blank",
-                value:   undefined
+                value:   ''
             }]);
             expect(results.state.errors.presence).to.eql([{
                 message: "State can't be blank",
-                value:   undefined
+                value:   ''
             }]);
             expect(results.zipcode.errors.presence).to.eql([{
                 message: "Zipcode can't be blank",
-                value:   undefined
+                value:   ''
             }]);
         });
 
         it("should validate complex objects", () => {
-            const order = new Order();
-            order.address   = new Address({
+            const order   = new Order();
+            order.address = new Address({
                 line:    "100 Tulip Ln",
                 city:    "Wantaugh",
                 state:   "NY",
@@ -172,29 +134,29 @@ describe("ValidateJsCallbackHandler", () => {
         });
 
         it("should invalidate complex objects", () => {
-            const order = new Order();
+            const order     = new Order();
             order.address   = new Address;
             order.lineItems = [new LineItem];
             const results = Validator(context).validate(order);
             expect(results.address.line.errors.presence).to.eql([{
                 message: "Line can't be blank",
-                value:   undefined
+                value:   ''
             }]);
             expect(results.address.city.errors.presence).to.eql([{
                 message: "City can't be blank",
-                value:   undefined
+                value:   ''
             }]);
             expect(results.address.state.errors.presence).to.eql([{
                 message: "State can't be blank",
-                value:   undefined
+                value:   ''
             }]);
             expect(results.address.zipcode.errors.presence).to.eql([{
                 message: "Zipcode can't be blank",
-                value:   undefined
+                value:   ''
             }]);
             expect(results["lineItems.0"].plu.errors.presence).to.eql([{
                 message: "Plu can't be blank",
-                value:   undefined
+                value:   ''
             }]);
             expect(results["lineItems.0"].quantity.errors.numericality).to.eql([{
                 message: "Quantity must be greater than 0",
@@ -203,23 +165,23 @@ describe("ValidateJsCallbackHandler", () => {
             expect(results.errors.presence).to.deep.include.members([{
                 key:     "address.line",
                 message: "Line can't be blank",
-                value:   undefined
+                value:   ''
             }, {
                 key:     "address.city",
                 message: "City can't be blank",
-                value:   undefined
+                value:   ''
             }, {
                 key:     "address.state",
                 message: "State can't be blank",
-                value:   undefined
+                value:   ''
             }, {
                 key:     "address.zipcode",
                 message: "Zipcode can't be blank",
-                value:   undefined
+                value:   ''
             }, {
                 key:     "lineItems.0.plu",
                 message: "Plu can't be blank",
-                value:   undefined
+                value:   ''
             }
             ]);
             expect(results.errors.numericality).to.deep.include.members([{
@@ -231,14 +193,13 @@ describe("ValidateJsCallbackHandler", () => {
         });
 
         it("should pass exceptions through", () => {
-            const ThrowValidators = ValidationRegistry.extend({
+            const ThrowValidators = Base.extend(customValidator, {
                   throws() {
                       throw new Error("Oh No!");
                   }}),
                   ThrowOnValidation = Base.extend({
-                      $properties: {
-                          bad:  { validate: { throws: true } }
-                      }
+                      @constraint.throws
+                      bad: undefined
                   });                
             expect(() => {
                 Validator(context).validate(new ThrowOnValidation);
@@ -267,14 +228,12 @@ describe("ValidateJsCallbackHandler", () => {
 
         it("should dynamically find validators", () => {
             const MissingValidator = Base.extend({
-                  $properties: {
-                      code:  { validate: { uniqueCode: true } }
-                  }
+                @constraint({uniqueCode: true})
+                code: undefined
               });
             context.addHandlers((new CallbackHandler).extend({
-                $provide:[
-                    "uniqueCode", function () { return this; }
-                ],
+                @provide("uniqueCode")
+                uniqueCode() { return this; },
                 validate(value, options, key, attributes) {}
             }));
             expect(Validator(context).validate(new MissingValidator).valid).to.be.true;
@@ -282,9 +241,8 @@ describe("ValidateJsCallbackHandler", () => {
 
         it("should fail if missing validator", () => {
             const MissingValidator = Base.extend({
-                  $properties: {
-                      code:  { validate: { uniqueCode: true } }
-                  }
+                @constraint({uniqueCode: true})
+                code: undefined
               });
             expect(() => {
                 Validator(context).validate(new MissingValidator);
@@ -298,19 +256,19 @@ describe("ValidateJsCallbackHandler", () => {
             Validator(context).validateAsync(address).then(results => {
                 expect(results.line.errors.presence).to.eql([{
                     message: "Line can't be blank",
-                    value:   undefined
+                    value:   ''
                 }]);
                 expect(results.city.errors.presence).to.eql([{
                     message: "City can't be blank",
-                    value:   undefined
+                    value:   ''
                 }]);
                 expect(results.state.errors.presence).to.eql([{
                     message: "State can't be blank",
-                    value:   undefined
+                    value:   ''
                 }]);
                 expect(results.zipcode.errors.presence).to.eql([{
                     message: "Zipcode can't be blank",
-                    value:   undefined
+                    value:   ''
                 }]);
             });
         });
@@ -322,23 +280,23 @@ describe("ValidateJsCallbackHandler", () => {
             Validator(context).validateAsync(order).then(results => {
                 expect(results.address.line.errors.presence).to.eql([{
                     message: "Line can't be blank",
-                    value:   undefined
+                    value:   ''
                 }]);
                 expect(results.address.city.errors.presence).to.eql([{
                     message: "City can't be blank",
-                    value:   undefined
+                    value:   ''
                 }]);
                 expect(results.address.state.errors.presence).to.eql([{
                     message: "State can't be blank",
-                    value:   undefined
+                    value:   ''
                 }]);
                 expect(results.address.zipcode.errors.presence).to.eql([{
                     message: "Zipcode can't be blank",
-                    value:   undefined
+                    value:   ''
                 }]);
                 expect(results["lineItems.0"].plu.errors.presence).to.eql([{
                     message: "Plu can't be blank",
-                    value:   undefined
+                    value:   ''
                 }]);
                 expect(results["lineItems.0"].quantity.errors.numericality).to.eql([{
                     message: "Quantity must be greater than 0",
@@ -347,23 +305,23 @@ describe("ValidateJsCallbackHandler", () => {
                 expect(results.errors.presence).to.deep.include.members([{
                     key:     "address.line",
                     message: "Line can't be blank",
-                    value:   undefined
+                    value:   ''
                 }, {
                     key:     "address.city",
                     message: "City can't be blank",
-                    value:   undefined
+                    value:   ''
                 }, {
                     key:     "address.state",
                     message: "State can't be blank",
-                    value:   undefined
+                    value:   ''
                 }, {
                     key:     "address.zipcode",
                     message: "Zipcode can't be blank",
-                    value:   undefined
+                    value:   ''
                 }, {
                     key:     "lineItems.0.plu",
                     message: "Plu can't be blank",
-                    value:   undefined
+                    value:   ''
                 }
                 ]);
                 expect(results.errors.numericality).to.deep.include.members([{
@@ -377,14 +335,13 @@ describe("ValidateJsCallbackHandler", () => {
         });
         
         it("should pass exceptions through", done => {
-            const ThrowValidators = ValidationRegistry.extend({
+            const ThrowValidators = Base.extend(customValidator, {
                   throwsAsync() {
                       return Promise.reject(new Error("Oh No!"));
                   }}),
                   ThrowOnValidation = Base.extend({
-                      $properties: {
-                          bad:  { validate: { throwsAsync: true } }
-                      }
+                      @constraint.throwsAsync
+                      bad: undefined
                   });
             Validator(context).validateAsync(new ThrowOnValidation).catch(error => {
                 expect(error.message).to.equal("Oh No!");

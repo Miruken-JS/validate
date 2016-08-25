@@ -44,7 +44,7 @@ export const ValidationResult = Base.extend({
                 if (_errors) {
                     _summary = {};
                     for (let name in _errors) {
-                        _summary[name] = _errors[name].slice(0);
+                        _summary[name] = _errors[name].slice();
                     }
                 }
                 const ownKeys = Object.getOwnPropertyNames(this);

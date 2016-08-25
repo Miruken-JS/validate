@@ -1,18 +1,15 @@
-import {
-    Validation, $validate, $validateThat
-} from '../src/meta';
-
+import { validate } from '../src/validate';
+import { Validation, $validate } from '../src/validation';
+import { validateThat } from '../src/validateThat';
 import { ValidationResult } from '../src/result';
 
 import {
     Validator, ValidationCallbackHandler
-} from '../src/validate';
+} from '../src/validator';
 
 import { Context } from 'miruken-context';
-
-import {
-    CallbackHandler, $callbacks
-} from 'miruken-callback';
+import { CallbackHandler } from 'miruken-callback';
+import { inject } from 'miruken-core';
 
 import {
     True, Base, Invoking, Modifier
@@ -31,75 +28,72 @@ const Player = Base.extend({
     }
 });
 
-const Coach = Base.extend($validateThat, {
-    $properties: {
-        firstName: '',
-        lastName:  '',
-        license:   ''
-    },
-    $validateThat: {
-        coachPassedBackgroundCheck: [HttpClient, (http, validation) => {
-            return Promise.delay(10).then(() => {
-                if (validation.object.lastName === 'Smith') {
-                    validation.results.addError('coachPassedBackgroundCheck', { 
-                        message: 'Coach failed background check'
-                    });
-                }
-            });
-        }]
+const Coach = Base.extend({
+    firstName: '',
+    lastName:  '',
+    license:   '',
+
+    @validateThat
+    @inject(HttpClient)
+    coachPassedBackgroundCheck(http, validation) {
+        return Promise.delay(10).then(() => {
+            if (validation.object.lastName === 'Smith') {
+                validation.results.addError('coachPassedBackgroundCheck', { 
+                    message: 'Coach failed background check'
+                });
+            }
+        });
     }
 });
 
-const Team = Base.extend(
-    $callbacks, $validateThat, {
-        $properties: {
-            name:     '',
-            division: '',
-            players:  []
-        },
-        $validateThat: {
-            teamHasDivision: function (validation) {
-                if (this.name === 'Liverpool' && this.division !== 'U8') {
-                    validation.results.addKey('division')
-                        .addError('teamHasDivision', { 
-                            message: this.name + ' does not have division ' + this.division
-                        });
-                }
-            }
-        },
-        $validate:[
-            Player, function (validation, composer) {
-                const player = validation.object;
-                if (!player.firstName || player.firstName.length == 0) {
-                    validation.results.addKey('firstName')
-                        .addError('required', { message: 'First name required' });
-                }
-                if (!player.lastName  || player.lastName.length == 0) {
-                    validation.results.addKey('lastName')
-                        .addError('required', { message: 'Last name required' });
-                }
-                if ((player.dob instanceof Date) === false) {
-                    validation.results.addKey('dob')
-                        .addError('required', { message: 'DOB required' });
-                }
-            },
-            Coach, function (validation, composer) {
-                const coach = validation.object;
-                if (!coach.firstName || coach.firstName.length == 0) {
-                    validation.results.addKey('firstName')
-                        .addError('required', { message: 'First name required' });
-                }
-                if (!coach.lastName  || coach.lastName.length == 0) {
-                    validation.results.addKey('lastName')
-                        .addError('required', { message: 'Last name required' });
-                }
-                if (["D", "E", "F"].indexOf(coach.license) < 0) {
-                    validation.results.addKey('license')
-                        .addError('license', { message: 'License must be D, E or F' });
-                }
-                return Promise.delay(50).then(True);
-            }]
-    });
+const Team = Base.extend({
+    name:     '',
+    division: '',
+    players:  [],
+
+    @validateThat
+    teamHasDivision(validation) {
+        if (this.name === 'Liverpool' && this.division !== 'U8') {
+            validation.results.addKey('division')
+                .addError('teamHasDivision', { 
+                    message: this.name + ' does not have division ' + this.division
+                });
+        }
+    },
+    @validate(Player)
+    validatePlayer(validation, composer) {
+        const player = validation.object;
+        if (!player.firstName || player.firstName.length == 0) {
+            validation.results.addKey('firstName')
+                .addError('required', { message: 'First name required' });
+        }
+        if (!player.lastName  || player.lastName.length == 0) {
+            validation.results.addKey('lastName')
+                .addError('required', { message: 'Last name required' });
+        }
+        if ((player.dob instanceof Date) === false) {
+            validation.results.addKey('dob')
+                .addError('required', { message: 'DOB required' });
+        }
+    },
+    @validate(Coach)
+    validateCoach(validation, composer) {
+        const coach = validation.object;
+        if (!coach.firstName || coach.firstName.length == 0) {
+            validation.results.addKey('firstName')
+                .addError('required', { message: 'First name required' });
+        }
+        if (!coach.lastName  || coach.lastName.length == 0) {
+            validation.results.addKey('lastName')
+                .addError('required', { message: 'Last name required' });
+        }
+        if (["D", "E", "F"].indexOf(coach.license) < 0) {
+            validation.results.addKey('license')
+                .addError('license', { message: 'License must be D, E or F' });
+        }
+        return Promise.delay(50).then(True);
+    }
+});
 
 describe("Validation", () => {
     describe("#object", () => {
@@ -365,30 +359,19 @@ describe("ValidationCallbackHandler", () => {
     });
 });
 
-describe("$validateThat", () => {
-    it("should create validatorThat methods", () => {
-        const team       = new Team({name: "Liverpool", division: "U9"}),
-              validation = new Validation(team);
-        team.validateThatTeamHasDivision(validation);
-        expect(validation.results.valid).to.be.false;
-        expect(validation.results.division.errors.teamHasDivision).to.eql([{
-            message: "Liverpool does not have division U9"
-        }]);
-    });
-
+describe("validateThat", () => {
     it("should extend validatorThat methods on instances", () => {
         const team   = new Team({name: "Liverpool", division: "U9"}),
               league = new Context()
               .addHandlers(team, new ValidationCallbackHandler());
         team.extend({
-            $validateThat: {
-                teamHasAtLeastSevenPlayerWhenU9: function (validation) {
-                    if (this.division === "U9" && this.players.length < 7) {
-                        validation.results.addKey('players')
-                            .addError('teamHasAtLeastSevenPlayerWhenU9', { 
-                                message: this.name + ' must have at lease 7 players for division ' + this.division
-                            });
-                    }
+            @validateThat
+            teamHasAtLeastSevenPlayerWhenU9(validation) {
+                if (this.division === "U9" && this.players.length < 7) {
+                    validation.results.addKey('players')
+                        .addError('teamHasAtLeastSevenPlayerWhenU9', { 
+                            message: this.name + ' must have at lease 7 players for division ' + this.division
+                        });
                 }
             }
         });

@@ -18,15 +18,15 @@ const detailed    = { format: "detailed", cleanAttributes: false },
  * </p>
  * <pre>
  * const Address = Base.extend({
- *         @requried
- *         line:    undefined,
- *         @required
- *         city:    undefined,
- *         @length.is(2)
- *         @required
- *         state:   undefined
- *         @length.is(5)
- *         @required
+ *         @is.requried
+ *         line:    '',
+ *         @is.required
+ *         city:    '',
+ *         @has.exactLength(2)
+ *         @is.required
+ *         state:   ''
+ *         @has.exactLength(5)
+ *         @is.required
  *         zipcode:
  *     }
  * })

@@ -1,16 +1,9 @@
 import constraint from './constraint';
 
-constraint.exactLength = function (len)
-{
-    return constraint({length: {is: len}});
-}
+export const length = {
+    is(len)      { return constraint({length: {is: len}}) },
+    atLeast(len) { return constraint({length: {minimum: len}}) },
+    atMost(len)  { return constraint({length: {maximum: len}}) } 
+};
 
-constraint.minimumLength = function (len)
-{
-    return constraint({length: {minimum: len}});
-}
-
-constraint.maximumLength = function (len)
-{
-    return constraint({length: {maximum: len}});
-}
+export default length;

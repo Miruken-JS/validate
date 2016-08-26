@@ -21,14 +21,6 @@ export function constraint(constraints) {
 
 constraint.get = metadata.get.bind(undefined, constraintKey, criteria);
 
-constraint.required = function (target, key, descriptor)
-{
-    return constraint({presence: true})(target, key, descriptor);
-}
+export const applyConstraints = constraint({nested: true});
 
-export function applyConstraints (target, key, descriptor)
-{
-    return constraint({nested: true})(target, key, descriptor);
-}
-
-export { constraint as default, constraint as is, constraint as has };
+export default constraint;

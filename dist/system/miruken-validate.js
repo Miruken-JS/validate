@@ -3,7 +3,7 @@
 System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_export, _context) {
     "use strict";
 
-    var validatejs, Invoking, inject, metadata, $meta, $isFunction, $use, Base, pcopy, $isPromise, $classOf, decorate, Protocol, StrictProtocol, $isNothing, Undefined, $define, $handle, CallbackHandler, $composer, addDefinition, _typeof, _desc, _value, _obj, validateThatKey, validateThatCriteria, ValidationResult, IGNORE, constraintKey, criteria, $validate, Validation, Validating, Validator, ValidationCallbackHandler, detailed, validatable, ValidateJsCallbackHandler;
+    var validatejs, Invoking, inject, metadata, $meta, $isFunction, $use, Base, pcopy, $isPromise, $classOf, decorate, Protocol, StrictProtocol, $isNothing, Undefined, $define, $handle, CallbackHandler, $composer, addDefinition, _typeof, _desc, _value, _obj, validateThatKey, validateThatCriteria, ValidationResult, IGNORE, constraintKey, criteria, applyConstraints, $validate, Validation, counter, validators, email, length, number, required, url, Validating, Validator, ValidationCallbackHandler, detailed, validatable, ValidateJsCallbackHandler;
 
     function _applyDecoratedDescriptor(target, property, decorators, descriptor, context) {
         var desc = {};
@@ -34,18 +34,6 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
         return desc;
     }
 
-    function _toConsumableArray(arr) {
-        if (Array.isArray(arr)) {
-            for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) {
-                arr2[i] = arr[i];
-            }
-
-            return arr2;
-        } else {
-            return Array.from(arr);
-        }
-    }
-
     function _defineProperty(obj, key, value) {
         if (key in obj) {
             Object.defineProperty(obj, key, {
@@ -65,33 +53,19 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
         return IGNORE.indexOf(key) >= 0;
     }
 
-    function _customValidator(args) {
-        return args.length === 1 ? _customValidatorClass.apply(undefined, _toConsumableArray(args)) : _customValidatorMethod.apply(undefined, _toConsumableArray(args));
-    }
-
-    function _customValidatorClass(target) {
-        if ($isFunction(target)) {
-            target = target.prototype;
-        }
-        Reflect.ownKeys(target).forEach(function (key) {
-            var descriptor = Object.getOwnPropertyDescriptor(target, key);
-            _customValidatorMethod(target, key, descriptor);
-        });
-    }
-
-    function _customValidatorMethod(target, key, descriptor) {
-        if (key === 'constructor') return;
+    function _customValidatorMethod(target, prototype, key, descriptor) {
+        if (!descriptor.enumerable || key === 'constructor') return;
         var fn = descriptor.value;
         if (!$isFunction(fn)) return;
-        inject.get(target, key, function (dependencies) {
+        inject.get(prototype, key, function (dependencies) {
             if (dependencies.length > 0) {
                 descriptor.value = function () {
                     if (!$composer) {
                         throw new Error('Unable to invoke validator \'' + key + '\'.');
                     }
 
-                    for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-                        args[_key2] = arguments[_key2];
+                    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+                        args[_key] = arguments[_key];
                     }
 
                     var deps = dependencies.concat(args.map($use));
@@ -99,16 +73,20 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
                 };
             }
         });
-        constraint[key] = function () {
-            for (var _len3 = arguments.length, options = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-                options[_key3] = arguments[_key3];
+        target[key] = function () {
+            for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+                args[_key2] = arguments[_key2];
             }
 
-            return decorate(function (t, k, d) {
+            return decorate(function (t, k, d, options) {
                 return constraint(_defineProperty({}, key, options))(t, k, d);
-            }, options);
+            }, args);
         };
-        validatejs.validators[key] = descriptor.value;
+
+        if (validators.hasOwnProperty(key)) {
+            key = key + '-' + counter++;
+        }
+        validators[key] = descriptor.value;
     }
 
     function _validateThat(validation, asyncResults, composer) {
@@ -227,7 +205,7 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
             validateThatKey = Symbol();
             validateThatCriteria = _defineProperty({}, validateThatKey, true);
             function validateThat(target, key, descriptor) {
-                if (key === 'constructor') return;
+                if (!key || key === 'constructor') return;
                 var fn = descriptor.value;
                 if (!$isFunction(fn)) return;
                 var meta = $meta(target);
@@ -368,21 +346,11 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
 
             constraint.get = metadata.get.bind(undefined, constraintKey, criteria);
 
-            constraint.required = function (target, key, descriptor) {
-                return constraint({ presence: true })(target, key, descriptor);
-            };
-
-            function applyConstraints(target, key, descriptor) {
-                return constraint({ nested: true })(target, key, descriptor);
-            }
+            _export('applyConstraints', applyConstraints = constraint({ nested: true }));
 
             _export('applyConstraints', applyConstraints);
 
             _export('default', constraint);
-
-            _export('is', constraint);
-
-            _export('has', constraint);
 
             _export('$validate', $validate = $define('$validate'));
 
@@ -436,86 +404,126 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
                 }
             });
 
-            function customValidator() {
-                for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-                    args[_key] = arguments[_key];
+            counter = 0;
+            validators = validatejs.validators;
+            function customValidator(target) {
+                if (arguments.length > 1) {
+                    throw new SyntaxError("customValidator can only be applied to a class");
                 }
 
-                if (args.length === 0) {
-                    return function () {
-                        return _customValidator(arguments);
-                    };
-                } else {
-                    return _customValidator(args);
-                }
+                var prototype = target.prototype;
+
+                Reflect.ownKeys(prototype).forEach(function (key) {
+                    var descriptor = Object.getOwnPropertyDescriptor(prototype, key);
+                    _customValidatorMethod(target, prototype, key, descriptor);
+                });
             }
             _export('customValidator', customValidator);
 
             _export('default', customValidator);
 
-            constraint.exactLength = function (len) {
-                return constraint({ length: { is: len } });
-            };
+            _export('email', email = constraint({ email: true }));
 
-            constraint.minimumLength = function (len) {
-                return constraint({ length: { minimum: len } });
-            };
+            _export('email', email);
 
-            constraint.maximumLength = function (len) {
-                return constraint({ length: { maximum: len } });
-            };
+            _export('default', email);
 
-            constraint.number = function (target, key, descriptor) {
-                return constraint({ numericality: { noStrings: true } })(target, key, descriptor);
-            };
+            _export('length', length = {
+                is: function is(len) {
+                    return constraint({ length: { is: len } });
+                },
+                atLeast: function atLeast(len) {
+                    return constraint({ length: { minimum: len } });
+                },
+                atMost: function atMost(len) {
+                    return constraint({ length: { maximum: len } });
+                }
+            });
 
-            constraint.strictNumber = function (target, key, descriptor) {
-                return constraint({ numericality: { strict: true } })(target, key, descriptor);
-            };
+            _export('length', length);
 
-            constraint.onlyInteger = function (target, key, descriptor) {
-                return constraint({ numericality: { onlyInteger: true } })(target, key, descriptor);
-            };
+            _export('default', length);
 
-            constraint.equalTo = function (val) {
-                return constraint({ numericality: { equalTo: val } });
-            };
+            function matches(pattern, flags) {
+                var criteria = { format: pattern };
+                if (flags) {
+                    criteria.flags = flags;
+                }
+                return constraint(criteria);
+            }
 
-            constraint.greaterThan = function (val) {
-                return constraint({ numericality: { greaterThan: val } });
-            };
+            _export('matches', matches);
 
-            constraint.greaterThanOrEqualTo = function (val) {
-                return constraint({ numericality: { greaterThanOrEqualTo: val } });
-            };
+            _export('default', matches);
 
-            constraint.lessThan = function (val) {
-                return constraint({ numericality: { lessThan: val } });
-            };
+            function includes(members) {
+                return constraint({ inclusion: members });
+            }
 
-            constraint.lessThanOrEqualTo = function (val) {
-                return constraint({ numericality: { lessThanOrEqualTo: val } });
-            };
+            _export('includes', includes);
 
-            constraint.divisibleBy = function (val) {
-                return constraint({ numericality: { divisibleBy: val } });
-            };
+            function excludes(members) {
+                return constraint({ exclusion: members });
+            }
 
-            constraint.odd = function (target, key, descriptor) {
-                return constraint({ numericality: { odd: true } })(target, key, descriptor);
-            };
+            _export('excludes', excludes);
 
-            constraint.even = function (target, key, descriptor) {
-                return constraint({ numericality: { even: true } })(target, key, descriptor);
-            };
+            _export('number', number = constraint({ numericality: { noStrings: true } }));
 
-            constraint.required = function (target, key, descriptor) {
-                return constraint({ presence: true })(target, key, descriptor);
-            };
+            _export('number', number);
+
+            Object.assign(number, {
+                strict: constraint({ numericality: { strict: true } }),
+                onlyInteger: constraint({ numericality: { onlyInteger: true } }),
+                equalTo: function equalTo(val) {
+                    return constraint({ numericality: { equalTo: val } });
+                },
+                greaterThan: function greaterThan(val) {
+                    return constraint({ numericality: { greaterThan: val } });
+                },
+                greaterThanOrEqualTo: function greaterThanOrEqualTo(val) {
+                    return constraint({ numericality: { greaterThanOrEqualTo: val } });
+                },
+                lessThan: function lessThan(val) {
+                    return constraint({ numericality: { lessThan: val } });
+                },
+                lessThanOrEqualTo: function lessThanOrEqualTo(val) {
+                    return constraint({ numericality: { lessThanOrEqualTo: val } });
+                },
+                divisibleBy: function divisibleBy(val) {
+                    return constraint({ numericality: { divisibleBy: val } });
+                },
+
+                odd: constraint({ numericality: { odd: true } }),
+                even: constraint({ numericality: { even: true } })
+            });
+
+            _export('default', number);
+
+            _export('required', required = constraint({ presence: true }));
+
+            _export('required', required);
+
+            _export('default', required);
+
+            _export('url', url = constraint({ url: true }));
+
+            _export('url', url);
+
+            Object.assign(url, {
+                schemes: function schemes(_schemes) {
+                    return constraint({ url: { schemes: _schemes } });
+                },
+                allowLocal: function allowLocal(_allowLocal) {
+                    return constraint({ url: { allowLocal: _allowLocal } });
+                }
+            });
+
+            _export('default', url);
 
             function validate() {
-                for (var _len4 = arguments.length, types = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-                    types[_key4] = arguments[_key4];
+                for (var _len3 = arguments.length, types = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+                    types[_key3] = arguments[_key3];
                 }
 
                 return decorate(addDefinition($validate), types);

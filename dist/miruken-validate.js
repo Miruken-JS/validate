@@ -10,7 +10,7 @@ const validateThatKey      = Symbol(),
  * @method validateThat
  */
 export function validateThat(target, key, descriptor) {
-    if (key === 'constructor') return;
+    if (!key || key === 'constructor') return;
     const fn = descriptor.value;
     if (!$isFunction(fn)) return;
     const meta = $meta(target);
@@ -189,17 +189,9 @@ export function constraint(constraints) {
 
 constraint.get = metadata.get.bind(undefined, constraintKey, criteria);
 
-constraint.required = function (target, key, descriptor)
-{
-    return constraint({presence: true})(target, key, descriptor);
-}
+export const applyConstraints = constraint({nested: true});
 
-export function applyConstraints (target, key, descriptor)
-{
-    return constraint({nested: true})(target, key, descriptor);
-}
-
-export { constraint as default, constraint as is, constraint as has };
+export default constraint;
 
 /**
  * Validation definition group.
@@ -278,6 +270,9 @@ $handle(CallbackHandler, Validation, function (validation, composer) {
     }
 });
 
+let counter = 0;
+const validators = validatejs.validators;
+
 /**
  * Register custom validator with [validate.js](http://validatejs.org).
  * <pre>
@@ -293,37 +288,24 @@ $handle(CallbackHandler, Validation, function (validation, composer) {
  * would register a uniqueUserName validator with a Database dependency.
  * @function customValidator
  */
-export function customValidator(...args) {
-    if (args.length === 0) {
-        return function () {
-            return _customValidator(arguments);
-        };
-    } else {
-        return _customValidator(args);
+export function customValidator(target) {
+    if (arguments.length > 1) {
+        throw new SyntaxError("customValidator can only be applied to a class");
     }
-}
 
-function _customValidator(args) {
-    return args.length === 1
-         ? _customValidatorClass(...args)
-         : _customValidatorMethod(...args);
-}
-
-function _customValidatorClass(target) {
-    if ($isFunction(target)) {
-        target = target.prototype;
-    }
-    Reflect.ownKeys(target).forEach(key => {
-        const descriptor = Object.getOwnPropertyDescriptor(target, key);
-        _customValidatorMethod(target, key, descriptor);
+    const prototype = target.prototype;
+    
+    Reflect.ownKeys(prototype).forEach(key => {
+        const descriptor = Object.getOwnPropertyDescriptor(prototype, key);
+        _customValidatorMethod(target, prototype, key, descriptor);
     });
 }
 
-function _customValidatorMethod(target, key, descriptor) {
-    if (key === 'constructor') return;    
+function _customValidatorMethod(target, prototype, key, descriptor) {
+    if (!descriptor.enumerable || key === 'constructor') return;    
     const fn = descriptor.value;
     if (!$isFunction(fn)) return;
-    inject.get(target, key, dependencies => {
+    inject.get(prototype, key, dependencies => {
         if (dependencies.length > 0) {
             descriptor.value = function (...args) {
                 if (!$composer) {
@@ -334,94 +316,83 @@ function _customValidatorMethod(target, key, descriptor) {
             }
         }
     });
-    constraint[key] = function (...options) {
-        return decorate((t, k, d) => {
+    target[key] = function (...args) {
+        return decorate((t, k, d, options) => {
             return constraint({[key]: options})(t, k, d);
-        }, options);
+        }, args);
     };
-    validatejs.validators[key] = descriptor.value;    
+
+    if (validators.hasOwnProperty(key)) {
+        key = `${key}-${counter++}`;
+    }
+    validators[key] = descriptor.value;    
 }
 
 export default customValidator;
 
-constraint.exactLength = function (len)
-{
-    return constraint({length: {is: len}});
+export const email = constraint({email: true});
+
+export default email;
+
+export const length = {
+    is(len)      { return constraint({length: {is: len}}) },
+    atLeast(len) { return constraint({length: {minimum: len}}) },
+    atMost(len)  { return constraint({length: {maximum: len}}) } 
+};
+
+export default length;
+
+export function matches(pattern, flags) {
+    const criteria = { format: pattern };
+    if (flags) {
+        criteria.flags = flags;
+    }
+    return constraint(criteria);
 }
 
-constraint.minimumLength = function (len)
-{
-    return constraint({length: {minimum: len}});
+export default matches;
+
+export function includes(members) {
+    return constraint({inclusion: members});
 }
 
-constraint.maximumLength = function (len)
-{
-    return constraint({length: {maximum: len}});
+export function excludes(members) {
+    return constraint({exclusion: members});
 }
 
-constraint.number = function(target, key, descriptor)
-{
-    return constraint({numericality: {noStrings: true}})(target, key, descriptor);
-}
+export const number = constraint({numericality: {noStrings: true}});
 
-constraint.strictNumber = function(target, key, descriptor)
-{
-    return constraint({numericality: {strict: true}})(target, key, descriptor);
-}
+Object.assign(number, {
+    strict:                   constraint({numericality: {strict: true}}),
+    onlyInteger:              constraint({numericality: {onlyInteger: true}}),
+    equalTo(val)              { return constraint({numericality: {equalTo: val}}); },
+    greaterThan(val)          { return constraint({numericality: {greaterThan: val}}); },
+    greaterThanOrEqualTo(val) { return constraint({numericality: {greaterThanOrEqualTo: val}}); },
+    lessThan(val)             { return constraint({numericality: {lessThan: val}}) },
+    lessThanOrEqualTo(val)    { return constraint({numericality: {lessThanOrEqualTo: val}}); },
+    divisibleBy(val)          { return constraint({numericality: {divisibleBy: val}}); },
+    odd:                      constraint({numericality: {odd: true}}),
+    even:                     constraint({numericality: {even: true}})
+});
 
-constraint.onlyInteger = function (target, key, descriptor)
-{
-    return constraint({numericality: {onlyInteger: true}})(target, key, descriptor);
-}
-
-constraint.equalTo = function (val)
-{
-    return constraint({numericality: {equalTo: val}});
-}
-
-constraint.greaterThan = function (val)
-{
-    return constraint({numericality: {greaterThan: val}});
-}
-
-constraint.greaterThanOrEqualTo = function (val)
-{
-    return constraint({numericality: {greaterThanOrEqualTo: val}});
-}
-
-constraint.lessThan = function (val)
-{
-    return constraint({numericality: {lessThan: val}});
-}
-
-constraint.lessThanOrEqualTo = function (val)
-{
-    return constraint({numericality: {lessThanOrEqualTo: val}});
-}
-
-constraint.divisibleBy = function (val)
-{
-    return constraint({numericality: {divisibleBy: val}});
-}
-
-constraint.odd = function (target, key, descriptor)
-{
-    return constraint({numericality: {odd: true}})(target, key, descriptor);
-}
-
-constraint.even = function (target, key, descriptor)
-{
-    return constraint({numericality: {even: true}})(target, key, descriptor);
-}
+export default number;
 
 
 
 
 
-constraint.required = function (target, key, descriptor)
-{
-    return constraint({presence: true})(target, key, descriptor);
-}
+export const required = constraint({presence: true});
+
+export default required;
+
+export const url = constraint({url: true});
+
+Object.assign(url, {
+    schemes(schemes) { return constraint({url: {schemes}}); },
+    allowLocal(allowLocal) { return constraint({url: {allowLocal}}); }    
+});
+
+export default url;
 
 /**
  * Marks method as providing validation capabilities.
@@ -554,15 +525,15 @@ const detailed    = { format: "detailed", cleanAttributes: false },
  * </p>
  * <pre>
  * const Address = Base.extend({
- *         @requried
- *         line:    undefined,
- *         @required
- *         city:    undefined,
- *         @length.is(2)
- *         @required
- *         state:   undefined
- *         @length.is(5)
- *         @required
+ *         @is.requried
+ *         line:    '',
+ *         @is.required
+ *         city:    '',
+ *         @has.exactLength(2)
+ *         @is.required
+ *         state:   ''
+ *         @has.exactLength(5)
+ *         @is.required
  *         zipcode:
  *     }
  * })

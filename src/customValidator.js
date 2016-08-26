@@ -6,6 +6,9 @@ import { $composer } from 'miruken-callback';
 import { constraint } from './constraint';
 import validatejs from 'validate.js';
 
+let counter = 0;
+const validators = validatejs.validators;
+
 /**
  * Register custom validator with [validate.js](http://validatejs.org).
  * <pre>
@@ -21,37 +24,24 @@ import validatejs from 'validate.js';
  * would register a uniqueUserName validator with a Database dependency.
  * @function customValidator
  */
-export function customValidator(...args) {
-    if (args.length === 0) {
-        return function () {
-            return _customValidator(arguments);
-        };
-    } else {
-        return _customValidator(args);
+export function customValidator(target) {
+    if (arguments.length > 1) {
+        throw new SyntaxError("customValidator can only be applied to a class");
     }
-}
 
-function _customValidator(args) {
-    return args.length === 1
-         ? _customValidatorClass(...args)
-         : _customValidatorMethod(...args);
-}
-
-function _customValidatorClass(target) {
-    if ($isFunction(target)) {
-        target = target.prototype;
-    }
-    Reflect.ownKeys(target).forEach(key => {
-        const descriptor = Object.getOwnPropertyDescriptor(target, key);
-        _customValidatorMethod(target, key, descriptor);
+    const prototype = target.prototype;
+    
+    Reflect.ownKeys(prototype).forEach(key => {
+        const descriptor = Object.getOwnPropertyDescriptor(prototype, key);
+        _customValidatorMethod(target, prototype, key, descriptor);
     });
 }
 
-function _customValidatorMethod(target, key, descriptor) {
-    if (key === 'constructor') return;    
+function _customValidatorMethod(target, prototype, key, descriptor) {
+    if (!descriptor.enumerable || key === 'constructor') return;    
     const fn = descriptor.value;
     if (!$isFunction(fn)) return;
-    inject.get(target, key, dependencies => {
+    inject.get(prototype, key, dependencies => {
         if (dependencies.length > 0) {
             descriptor.value = function (...args) {
                 if (!$composer) {
@@ -62,12 +52,16 @@ function _customValidatorMethod(target, key, descriptor) {
             }
         }
     });
-    constraint[key] = function (...options) {
-        return decorate((t, k, d) => {
+    target[key] = function (...args) {
+        return decorate((t, k, d, options) => {
             return constraint({[key]: options})(t, k, d);
-        }, options);
+        }, args);
     };
-    validatejs.validators[key] = descriptor.value;    
+
+    if (validators.hasOwnProperty(key)) {
+        key = `${key}-${counter++}`;
+    }
+    validators[key] = descriptor.value;    
 }
 
 export default customValidator;

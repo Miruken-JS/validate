@@ -4,11 +4,15 @@ import { Context } from 'miruken-context';
 import { Validator, ValidationCallbackHandler } from '../src/validator';
 import { ValidateJsCallbackHandler } from '../src/validatorJs';
 import { customValidator } from '../src/customValidator';
-import { constraint, is, has, applyConstraints } from '../src/constraint';
-import '../src/required';
-import '../src/length';
-import '../src/number';
-    
+import { constraint, applyConstraints } from '../src/constraint';
+import { includes, excludes } from '../src/member';
+import required from '../src/required';
+import length from '../src/length';
+import number from '../src/number';
+import matches from '../src/matches';
+import email from '../src/email';
+import url from '../src/url';
+
 import validatejs from 'validate.js';
 
 import { expect } from 'chai';
@@ -23,64 +27,255 @@ const Database = Base.extend({
     }
 });
 
-const CustomValidators = Base.extend(customValidator, {
+const custom = Base.extend(customValidator, {
     mustBeUpperCase() {},
     @inject(Database)
     uniqueUserName(db, userName) {
-        if (db.hasUserName(userName)) {
+        if (userName != null && db.hasUserName(userName)) {
             return `UserName ${userName} is already taken`;
         }
     }
 });
 
 const Address = Base.extend({
-    @is.required
+    @required
     line: '',
-    @is.required    
+    @required    
     city: '',
-    @is.required
-    @has.exactLength(2)
+    @required
+    @length.is(2)
     state: '',
-    @is.required
-    @has.exactLength(5)    
+    @required
+    @length.is(5)    
     zipcode: '' 
 });
 
 const LineItem = Base.extend({
-    @is.required
-    @has.exactLength(5)
+    @required
+    @length.is(5)
     plu: '',
-    @is.onlyInteger
-    @is.greaterThan(0)
+    @number.onlyInteger
+    @number.greaterThan(0)
     quantity: 0
 });
 
 const Order = Base.extend({
-    @is.required
+    @required
     @applyConstraints
     address: '',
-    @is.required
+    @required
     @applyConstraints    
-    lineItems: [], 
+    lineItems: [],
+    @email
+    email: undefined
 });
 
 const User = Base.extend({
-    @has.uniqueUserName
-    userName: '',
+    @custom.uniqueUserName
+    userName: undefined,
     orders: [],
     constructor(userName) {
         this.userName = userName;
     }
-});      
+});
 
+describe("built-ins", () => {
+    let context;
+    beforeEach(() => {
+        context = new Context();
+        context.addHandlers(new ValidationCallbackHandler(),
+                            new ValidateJsCallbackHandler());
+    });
+
+    describe("required", () => {
+        it("should require value", () => {
+            const address = new Address({
+                      line: 'abc', city: 'Rockwall',
+                      state: 'TX', zipcode: '75032'
+                  }),
+                  results = Validator(context).validate(address);
+            expect(results.valid).to.be.true;
+        });    
+        
+        it("should fail if not provided", () => {
+            const address = new Address(),
+                  results = Validator(context).validate(address);
+            expect(results["city"].errors.presence).to.eql([{
+                message: "City can't be blank", 
+                value:   ''
+            }]);
+        });    
+    });
+
+    describe("length", () => {
+        it("should satisfy length", () => {
+            const address = new Address({
+                      line: 'abc', city: 'Rockwall',
+                      state: 'TX', zipcode: '75032'
+                  }),
+                  results = Validator(context).validate(address);
+            expect(results.valid).to.be.true;
+        });    
+        
+        it("should fail if length unsatisfied", () => {
+            const address = new Address({
+                      line: 'abc', city: 'Rockwall',
+                      state: 'T', zipcode: '7503'
+                  }),
+                  results = Validator(context).validate(address);
+            expect(results["state"].errors.length).to.eql([{
+                message: "State is the wrong length (should be 2 characters)", 
+                value:   'T'
+            }]);
+            expect(results["zipcode"].errors.length).to.eql([{
+                message: "Zipcode is the wrong length (should be 5 characters)", 
+                value:   '7503'
+            }]);            
+        });    
+    });
+    
+    describe("number", () => {
+        const Person = Base.extend({
+            @number
+            age: undefined
+        });
+        
+        it("should require typeof number", () => {
+            const person = new Person({age: 7}),
+                  results = Validator(context).validate(person);
+            expect(results.valid).to.be.true;
+        });    
+        
+        it("should fail if not typeof number", () => {
+            const person = new Person({age: "7"}),
+                  results = Validator(context).validate(person);
+            expect(results["age"].errors.numericality).to.eql([{
+                message: "Age is not a number", 
+                value:   "7"
+            }]);
+        });    
+    });
+    
+    describe("email", () => {
+        const Contact = Base.extend({
+            @email
+            email: undefined
+        });
+        
+        it("should require valid email", () => {
+            const contact = new Contact({email: "ric@miruken.com"}),
+                  results = Validator(context).validate(contact);
+            expect(results.valid).to.be.true;            
+        });
+        
+        it("should fail if not a valid email", () => {
+            const contact = new Contact({email: "hello"}),
+                  results = Validator(context).validate(contact);
+            expect(results["email"].errors.email).to.eql([{
+                message: "Email is not a valid email", 
+                value:   "hello"
+            }]);
+        });    
+    });
+
+    describe("url", () => {
+        const Site = Base.extend({
+            @url
+            url: undefined
+        });
+        
+        it("should require valid url", () => {
+            const site = new Site({url: "http://www.google.com"}),
+                  results = Validator(context).validate(site);
+            expect(results.valid).to.be.true;            
+        });
+        
+        it("should fail if not a valid url", () => {
+            const site = new Site({url: "www.google.com"}),
+                  results = Validator(context).validate(site);
+            expect(results["url"].errors.url).to.eql([{
+                message: "Url is not a valid url", 
+                value:   "www.google.com"
+            }]);
+        });    
+    });
+
+    describe("matches", () => {
+        const Login = Base.extend({
+            @matches(/^[a-z0-9_-]{3,16}$/)
+            userName: undefined,
+            @matches(/^[a-z0-9_-]{6,18}$/)
+            password: undefined            
+        });
+        
+        it("should require valid match", () => {
+            const login = new Login({userName: "my-us3r_n4m3", password: "myp4ssw0rd"}),
+                  results = Validator(context).validate(login);
+            expect(results.valid).to.be.true;            
+        });
+        
+        it("should fail if not a valid match", () => {
+            const login = new Login({
+                userName: "th1s1s-wayt00_l0ngt0beausername", password: "mypa$$w0rd"}),
+                  results = Validator(context).validate(login);
+            expect(results["userName"].errors.format).to.eql([{
+                message: "User name is invalid", 
+                value:   "th1s1s-wayt00_l0ngt0beausername"
+            }]);                
+            expect(results["password"].errors.format).to.eql([{
+                message: "Password is invalid", 
+                value:   "mypa$$w0rd"
+            }]);
+        });    
+    });
+
+    describe("member", () => {
+        const ShoppingCart = Base.extend({
+            @includes("ball", "barbie", "lego")
+            purchase: undefined,
+            @excludes(11580, 75032)
+            delivery: undefined          
+        });
+        
+        it("should require inclusion", () => {
+            const cart = new ShoppingCart({purchase: "barbie"}),
+                  results = Validator(context).validate(cart);
+            expect(results.valid).to.be.true;
+        });    
+        
+        it("should fail if not included", () => {
+            const cart = new ShoppingCart({purchase: "gun"}),
+                  results = Validator(context).validate(cart);
+            expect(results["purchase"].errors.inclusion).to.eql([{
+                message: "gun is not included in the list", 
+                value:   "gun"
+            }]);
+        });
+
+        it("should require exclusion", () => {
+            const cart = new ShoppingCart({delivery: 75087}),
+                  results = Validator(context).validate(cart);
+            expect(results.valid).to.be.true;
+        });    
+        
+        it("should fail if not excluded", () => {
+            const cart = new ShoppingCart({delivery: 75032}),
+                  results = Validator(context).validate(cart);
+            expect(results["delivery"].errors.exclusion).to.eql([{
+                message: "75032 is restricted", 
+                value:   75032
+            }]);
+        });            
+    });
+});
+    
 describe("customValidator", () => {
     it("should register validators", () => {
         expect(validatejs.validators).to.have.property('mustBeUpperCase');
     });
 
     it("should register validators on demand", () => {
-        CustomValidators.implement({
-            @customValidator
+        Base.extend(customValidator, {
             uniqueLastName() {}
         });
         expect(validatejs.validators).to.have.property('uniqueLastName');
@@ -89,13 +284,23 @@ describe("customValidator", () => {
     it("should register validators with dependencies", () => {
         expect(validatejs.validators).to.have.property('uniqueUserName');
     });
+
+    it("should handle naming conflicts", () => {
+        Base.extend(customValidator, {
+            mustBeUpperCase() {},
+        });
+        expect(validatejs.validators).to.have.property('mustBeUpperCase');
+        expect(validatejs.validators).to.have.property('mustBeUpperCase-0');        
+    });
+
 });
 
 describe("ValidateJsCallbackHandler", () => {
     let context;
     beforeEach(() => {
         context = new Context();
-        context.addHandlers(new ValidationCallbackHandler, new ValidateJsCallbackHandler);
+        context.addHandlers(new ValidationCallbackHandler(),
+                            new ValidateJsCallbackHandler());
     });
 
     describe("#validate", () => {
@@ -193,12 +398,12 @@ describe("ValidateJsCallbackHandler", () => {
         });
 
         it("should pass exceptions through", () => {
-            const ThrowValidators = Base.extend(customValidator, {
+            const ex = Base.extend(customValidator, {
                   throws() {
                       throw new Error("Oh No!");
                   }}),
                   ThrowOnValidation = Base.extend({
-                      @constraint.throws
+                      @ex.throws
                       bad: undefined
                   });                
             expect(() => {
@@ -335,12 +540,12 @@ describe("ValidateJsCallbackHandler", () => {
         });
         
         it("should pass exceptions through", done => {
-            const ThrowValidators = Base.extend(customValidator, {
+            const ex = Base.extend(customValidator, {
                   throwsAsync() {
                       return Promise.reject(new Error("Oh No!"));
                   }}),
                   ThrowOnValidation = Base.extend({
-                      @constraint.throwsAsync
+                      @ex.throwsAsync
                       bad: undefined
                   });
             Validator(context).validateAsync(new ThrowOnValidation).catch(error => {

@@ -11,7 +11,7 @@ const validateThatKey      = Symbol(),
  * @method validateThat
  */
 export function validateThat(target, key, descriptor) {
-    if (key === 'constructor') return;
+    if (!key || key === 'constructor') return;
     const fn = descriptor.value;
     if (!$isFunction(fn)) return;
     const meta = $meta(target);

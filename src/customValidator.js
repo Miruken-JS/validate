@@ -52,16 +52,18 @@ function _customValidatorMethod(target, prototype, key, descriptor) {
             }
         }
     });
-    target[key] = function (...args) {
-        return decorate((t, k, d, options) => {
-            return constraint({[key]: options})(t, k, d);
-        }, args);
+
+    let tag = key;
+    if (validators.hasOwnProperty(tag)) {
+        tag = `${tag}-${counter++}`;
+    }
+    
+    target[tag] = function (...args) {
+        return decorate((t, k, d, options) =>
+            constraint({[tag]: options})(t, k, d), args);
     };
 
-    if (validators.hasOwnProperty(key)) {
-        key = `${key}-${counter++}`;
-    }
-    validators[key] = descriptor.value;    
+    validators[tag] = descriptor.value;    
 }
 
 export default customValidator;

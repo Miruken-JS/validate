@@ -29,6 +29,7 @@ export function validateThat(target, key, descriptor) {
     }
 }
 
-validateThat.get = metadata.get.bind(undefined, validateThatKey, validateThatCriteria);
+validateThat.getOwn = metadata.getOwn.bind(metadata, validateThatKey, validateThatCriteria);
+validateThat.get    = metadata.get.bind(metadata, validateThatKey, validateThatCriteria);
 
 export default validateThat;

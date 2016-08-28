@@ -80,7 +80,8 @@ function validateThat(target, key, descriptor) {
     }
 }
 
-validateThat.get = _mirukenCore.metadata.get.bind(undefined, validateThatKey, validateThatCriteria);
+validateThat.getOwn = _mirukenCore.metadata.getOwn.bind(_mirukenCore.metadata, validateThatKey, validateThatCriteria);
+validateThat.get = _mirukenCore.metadata.get.bind(_mirukenCore.metadata, validateThatKey, validateThatCriteria);
 
 exports.default = validateThat;
 var ValidationResult = exports.ValidationResult = _mirukenCore.Base.extend({
@@ -200,7 +201,8 @@ function constraint(constraints) {
     };
 }
 
-constraint.get = _mirukenCore.metadata.get.bind(undefined, constraintKey, criteria);
+constraint.getOwn = _mirukenCore.metadata.getOwn.bind(_mirukenCore.metadata, constraintKey, criteria);
+constraint.get = _mirukenCore.metadata.get.bind(_mirukenCore.metadata, constraintKey, criteria);
 
 var applyConstraints = exports.applyConstraints = constraint({ nested: true });
 
@@ -289,20 +291,22 @@ function _customValidatorMethod(target, prototype, key, descriptor) {
             };
         }
     });
+
+    var tag = key;
+    if (validators.hasOwnProperty(tag)) {
+        tag = tag + '-' + counter++;
+    }
+    validators[tag] = descriptor.value;
+
     target[key] = function () {
         for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
             args[_key2] = arguments[_key2];
         }
 
         return (0, _mirukenCore.decorate)(function (t, k, d, options) {
-            return constraint(_defineProperty({}, key, options))(t, k, d);
+            return constraint(_defineProperty({}, tag, options))(t, k, d);
         }, args);
     };
-
-    if (validators.hasOwnProperty(key)) {
-        key = key + '-' + counter++;
-    }
-    validators[key] = descriptor.value;
 }
 
 exports.default = customValidator;
@@ -331,11 +335,21 @@ function matches(pattern, flags) {
 }
 
 exports.default = matches;
-function includes(members) {
+function includes() {
+    for (var _len3 = arguments.length, members = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+        members[_key3] = arguments[_key3];
+    }
+
+    members = (0, _mirukenCore.$flatten)(members, true);
     return constraint({ inclusion: members });
 }
 
-function excludes(members) {
+function excludes() {
+    for (var _len4 = arguments.length, members = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+        members[_key4] = arguments[_key4];
+    }
+
+    members = (0, _mirukenCore.$flatten)(members, true);
     return constraint({ exclusion: members });
 }
 
@@ -384,8 +398,8 @@ Object.assign(url, {
 
 exports.default = url;
 function validate() {
-    for (var _len3 = arguments.length, types = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-        types[_key3] = arguments[_key3];
+    for (var _len5 = arguments.length, types = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+        types[_key5] = arguments[_key5];
     }
 
     return (0, _mirukenCore.decorate)((0, _mirukenCallback.addDefinition)($validate), types);

@@ -1,5 +1,5 @@
 import validatejs from 'validate.js';
-import {Invoking,inject,metadata,$meta,$isFunction,$use,Base,pcopy,$isPromise,$classOf,decorate,Protocol,StrictProtocol,$isNothing,Undefined} from 'miruken-core';
+import {Invoking,inject,metadata,$meta,$isFunction,$use,Base,pcopy,$isPromise,$classOf,decorate,$flatten,Protocol,StrictProtocol,$isNothing,Undefined} from 'miruken-core';
 import {$define,$handle,CallbackHandler,$composer,addDefinition} from 'miruken-callback';
 
 const validateThatKey      = Symbol(),
@@ -28,7 +28,8 @@ export function validateThat(target, key, descriptor) {
     }
 }
 
-validateThat.get = metadata.get.bind(undefined, validateThatKey, validateThatCriteria);
+validateThat.getOwn = metadata.getOwn.bind(metadata, validateThatKey, validateThatCriteria);
+validateThat.get    = metadata.get.bind(metadata, validateThatKey, validateThatCriteria);
 
 export default validateThat;
 
@@ -187,7 +188,8 @@ export function constraint(constraints) {
     };
 }
 
-constraint.get = metadata.get.bind(undefined, constraintKey, criteria);
+constraint.getOwn = metadata.getOwn.bind(metadata, constraintKey, criteria);
+constraint.get    = metadata.get.bind(metadata, constraintKey, criteria);
 
 export const applyConstraints = constraint({nested: true});
 
@@ -316,16 +318,17 @@ function _customValidatorMethod(target, prototype, key, descriptor) {
             }
         }
     });
-    target[key] = function (...args) {
-        return decorate((t, k, d, options) => {
-            return constraint({[key]: options})(t, k, d);
-        }, args);
-    };
 
-    if (validators.hasOwnProperty(key)) {
-        key = `${key}-${counter++}`;
+    let tag = key;
+    if (validators.hasOwnProperty(tag)) {
+        tag = `${tag}-${counter++}`;
     }
-    validators[key] = descriptor.value;    
+    validators[tag] = descriptor.value;
+    
+    target[key] = function (...args) {
+        return decorate((t, k, d, options) =>
+            constraint({[tag]: options})(t, k, d), args);
+    };
 }
 
 export default customValidator;
@@ -352,11 +355,13 @@ export function matches(pattern, flags) {
 
 export default matches;
 
-export function includes(members) {
+export function includes(...members) {
+    members = $flatten(members, true);
     return constraint({inclusion: members});
 }
 
-export function excludes(members) {
+export function excludes(...members) {
+    members = $flatten(members, true);    
     return constraint({exclusion: members});
 }
 

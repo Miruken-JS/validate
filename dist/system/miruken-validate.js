@@ -3,7 +3,7 @@
 System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_export, _context) {
     "use strict";
 
-    var validatejs, Invoking, inject, metadata, $meta, $isFunction, $use, Base, pcopy, $isPromise, $classOf, decorate, Protocol, StrictProtocol, $isNothing, Undefined, $define, $handle, CallbackHandler, $composer, addDefinition, _typeof, _desc, _value, _obj, validateThatKey, validateThatCriteria, ValidationResult, IGNORE, constraintKey, criteria, applyConstraints, $validate, Validation, counter, validators, email, length, number, required, url, Validating, Validator, ValidationCallbackHandler, detailed, validatable, ValidateJsCallbackHandler;
+    var validatejs, Invoking, inject, metadata, $meta, $isFunction, $use, Base, pcopy, $isPromise, $classOf, decorate, $flatten, Protocol, StrictProtocol, $isNothing, Undefined, $define, $handle, CallbackHandler, $composer, addDefinition, _typeof, _desc, _value, _obj, validateThatKey, validateThatCriteria, ValidationResult, IGNORE, constraintKey, criteria, applyConstraints, $validate, Validation, counter, validators, email, length, number, required, url, Validating, Validator, ValidationCallbackHandler, detailed, validatable, ValidateJsCallbackHandler;
 
     function _applyDecoratedDescriptor(target, property, decorators, descriptor, context) {
         var desc = {};
@@ -73,20 +73,22 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
                 };
             }
         });
+
+        var tag = key;
+        if (validators.hasOwnProperty(tag)) {
+            tag = tag + '-' + counter++;
+        }
+        validators[tag] = descriptor.value;
+
         target[key] = function () {
             for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
                 args[_key2] = arguments[_key2];
             }
 
             return decorate(function (t, k, d, options) {
-                return constraint(_defineProperty({}, key, options))(t, k, d);
+                return constraint(_defineProperty({}, tag, options))(t, k, d);
             }, args);
         };
-
-        if (validators.hasOwnProperty(key)) {
-            key = key + '-' + counter++;
-        }
-        validators[key] = descriptor.value;
     }
 
     function _validateThat(validation, asyncResults, composer) {
@@ -185,6 +187,7 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
             $isPromise = _mirukenCore.$isPromise;
             $classOf = _mirukenCore.$classOf;
             decorate = _mirukenCore.decorate;
+            $flatten = _mirukenCore.$flatten;
             Protocol = _mirukenCore.Protocol;
             StrictProtocol = _mirukenCore.StrictProtocol;
             $isNothing = _mirukenCore.$isNothing;
@@ -225,7 +228,8 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
 
             _export('validateThat', validateThat);
 
-            validateThat.get = metadata.get.bind(undefined, validateThatKey, validateThatCriteria);
+            validateThat.getOwn = metadata.getOwn.bind(metadata, validateThatKey, validateThatCriteria);
+            validateThat.get = metadata.get.bind(metadata, validateThatKey, validateThatCriteria);
 
             _export('default', validateThat);
 
@@ -344,7 +348,8 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
 
             _export('constraint', constraint);
 
-            constraint.get = metadata.get.bind(undefined, constraintKey, criteria);
+            constraint.getOwn = metadata.getOwn.bind(metadata, constraintKey, criteria);
+            constraint.get = metadata.get.bind(metadata, constraintKey, criteria);
 
             _export('applyConstraints', applyConstraints = constraint({ nested: true }));
 
@@ -456,13 +461,23 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
 
             _export('default', matches);
 
-            function includes(members) {
+            function includes() {
+                for (var _len3 = arguments.length, members = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+                    members[_key3] = arguments[_key3];
+                }
+
+                members = $flatten(members, true);
                 return constraint({ inclusion: members });
             }
 
             _export('includes', includes);
 
-            function excludes(members) {
+            function excludes() {
+                for (var _len4 = arguments.length, members = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+                    members[_key4] = arguments[_key4];
+                }
+
+                members = $flatten(members, true);
                 return constraint({ exclusion: members });
             }
 
@@ -522,8 +537,8 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
             _export('default', url);
 
             function validate() {
-                for (var _len3 = arguments.length, types = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-                    types[_key3] = arguments[_key3];
+                for (var _len5 = arguments.length, types = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+                    types[_key5] = arguments[_key5];
                 }
 
                 return decorate(addDefinition($validate), types);

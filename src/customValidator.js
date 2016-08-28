@@ -57,13 +57,12 @@ function _customValidatorMethod(target, prototype, key, descriptor) {
     if (validators.hasOwnProperty(tag)) {
         tag = `${tag}-${counter++}`;
     }
+    validators[tag] = descriptor.value;
     
-    target[tag] = function (...args) {
+    target[key] = function (...args) {
         return decorate((t, k, d, options) =>
             constraint({[tag]: options})(t, k, d), args);
     };
-
-    validators[tag] = descriptor.value;    
 }
 
 export default customValidator;

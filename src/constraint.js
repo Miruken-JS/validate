@@ -19,7 +19,8 @@ export function constraint(constraints) {
     };
 }
 
-constraint.get = metadata.get.bind(undefined, constraintKey, criteria);
+constraint.getOwn = metadata.getOwn.bind(metadata, constraintKey, criteria);
+constraint.get    = metadata.get.bind(metadata, constraintKey, criteria);
 
 export const applyConstraints = constraint({nested: true});
 

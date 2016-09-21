@@ -1,10 +1,10 @@
 import {
     Invoking, inject, decorate, $isFunction, $use
-} from 'miruken-core';
+} from "miruken-core";
 
-import { $composer } from 'miruken-callback';
-import { constraint } from './constraint';
-import validatejs from 'validate.js';
+import { $composer } from "miruken-callback";
+import constraint from "./constraint";
+import validatejs from "validate.js";
 
 let counter = 0;
 const validators = validatejs.validators;
@@ -38,7 +38,7 @@ export function customValidator(target) {
 }
 
 function _customValidatorMethod(target, prototype, key, descriptor) {
-    if (!descriptor.enumerable || key === 'constructor') return;    
+    if (!descriptor.enumerable || key === "constructor") return;    
     const fn = descriptor.value;
     if (!$isFunction(fn)) return;
     inject.get(prototype, key, dependencies => {

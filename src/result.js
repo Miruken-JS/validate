@@ -1,4 +1,4 @@
-import { Base, pcopy } from 'miruken-core';
+import { Base, pcopy } from "miruken-core";
 
 /**
  * Captures structured validation errors.
@@ -130,8 +130,10 @@ export const ValidationResult = Base.extend({
     }
 });
 
-const IGNORE = ['valid', 'errors', 'addKey', 'addError', 'reset'];
+const IGNORE = ["valid", "errors", "addKey", "addError", "reset"];
 
 function _isReservedKey(key) {
     return IGNORE.indexOf(key) >= 0;
 }
+
+export default ValidationResult;

@@ -1,4 +1,4 @@
-import constraint from './constraint';
+import constraint from "./constraint";
 
 export const url = constraint({url: true});
 

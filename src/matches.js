@@ -1,4 +1,4 @@
-import constraint from './constraint';
+import constraint from "./constraint";
 
 export function matches(pattern, flags) {
     const criteria = { format: pattern };

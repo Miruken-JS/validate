@@ -1,4 +1,4 @@
-import constraint from './constraint';
+import constraint from "./constraint";
 
 export const email = constraint({email: true});
 

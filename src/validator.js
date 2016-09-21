@@ -1,10 +1,10 @@
 import {
     Protocol, StrictProtocol, $isNothing, $isPromise
-} from 'miruken-core';
+} from "miruken-core";
 
-import { CallbackHandler, $composer } from 'miruken-callback';
-import { validateThat } from './validateThat';
-import { Validation } from './validation';
+import { CallbackHandler, $composer } from "miruken-callback";
+import validateThat from "./validateThat";
+import Validation from "./validation";
 
 /**
  * Protocol for validating objects.
@@ -93,7 +93,7 @@ function _validateThat(validation, asyncResults, composer) {
 }
 
 function _bindValidationResults(object, results) {
-    Object.defineProperty(object, '$validation', {
+    Object.defineProperty(object, "$validation", {
         enumerable:   false,
         configurable: true,
         writable:     false,

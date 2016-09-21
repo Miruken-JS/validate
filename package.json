@@ -22,6 +22,7 @@
       "dist": "dist/amd"
     },
     "dependencies": {
+      "reflect-metadata": "^0.1.8",
       "validate.js": "^0.10.0"
     },
     "devDependencies": {
@@ -35,6 +36,7 @@
   },
   "dependencies": {
     "chai": "^1.10.0",
+    "reflect-metadata": "^0.1.8",
     "validate.js": "^0.10.0"
   },
   "devDependencies": {

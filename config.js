@@ -21,6 +21,7 @@ System.config({
     "miruken-callback": "npm:miruken-callback@0.0.1",
     "miruken-context": "npm:miruken-context@0.0.1",
     "miruken-core": "npm:miruken-core@0.0.1",
+    "reflect-metadata": "npm:reflect-metadata@0.1.8",
     "validate.js": "npm:validate.js@0.10.0",
     "–latest": "npm:babel-core@5.8.38",
     "–latest-runtime": "npm:babel-runtime@5.8.38",

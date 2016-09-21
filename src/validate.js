@@ -1,6 +1,6 @@
-import { $validate } from './validation';
-import { addDefinition } from 'miruken-callback';
-import { decorate } from 'miruken-core';
+import { $validate } from "./validation";
+import { addDefinition } from "miruken-callback";
+import { decorate } from "miruken-core";
 
 /**
  * Marks method as providing validation capabilities.

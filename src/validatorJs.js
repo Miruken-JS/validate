@@ -1,9 +1,9 @@
-import { Undefined, $isFunction} from 'miruken-core';
-import { CallbackHandler, $composer } from 'miruken-callback';
-import { Validator } from './validator';
-import { validate } from './validate';
-import { constraint } from './constraint';
-import validatejs from 'validate.js';
+import { Undefined, $isFunction} from "miruken-core";
+import { CallbackHandler, $composer } from "miruken-callback";
+import { Validator } from "./validator";
+import validate from "./validate";
+import constraint from "./constraint";
+import validatejs from "validate.js";
 
 validatejs.Promise = Promise;
 validatejs.validators.nested = Undefined;
@@ -19,12 +19,12 @@ const detailed    = { format: "detailed", cleanAttributes: false },
  * <pre>
  * const Address = Base.extend({
  *         @is.requried
- *         line:    '',
+ *         line:    "",
  *         @is.required
- *         city:    '',
+ *         city:    "",
  *         @has.exactLength(2)
  *         @is.required
- *         state:   ''
+ *         state:   ""
  *         @has.exactLength(5)
  *         @is.required
  *         zipcode:
@@ -60,7 +60,7 @@ export const ValidateJsCallbackHandler = CallbackHandler.extend({
                     const child = nested[key];
                     if (Array.isArray(child)) {
                         for (let i = 0; i < child.length; ++i) {
-                            validator.validate(child[i], scope, results.addKey(key + '.' + i));
+                            validator.validate(child[i], scope, results.addKey(key + "." + i));
                         }
                     } else {
                         validator.validate(child, scope, results.addKey(key));
@@ -78,7 +78,7 @@ function validateNestedAsync(validator, scope, results, nested) {
         const child = nested[key];
         if (Array.isArray(child)) {
             for (let i = 0; i < child.length; ++i) {
-                let childResults = results.addKey(key + '.' + i);
+                let childResults = results.addKey(key + "." + i);
                 childResults = validator.validateAsync(child[i], scope, childResults);
                 pending.push(childResults);
             }
@@ -107,7 +107,7 @@ function buildConstraints(target, nested) {
     constraint.get(target, (criteria, key) => {
         (constraints || (constraints = {}))[key] = criteria;
         for (let name in criteria) {
-            if (name === 'nested') {
+            if (name === "nested") {
                 const child = target[key];
                 if (child) {
                     nested[key] = child;

@@ -364,8 +364,8 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
 
             _export('applyConstraints', applyConstraints);
 
-            constraint.getOwn = Metadata.getter(constraintsMetadataKey, true);
             constraint.get = Metadata.getter(constraintsMetadataKey);
+            constraint.getOwn = Metadata.getter(constraintsMetadataKey, true);
             _export('default', constraint);
 
             _export('$validate', $validate = $define(Variance.Contravariant));

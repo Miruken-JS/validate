@@ -216,8 +216,8 @@ define(['exports', 'validate.js', 'miruken-core', 'miruken-callback'], function 
 
     var applyConstraints = exports.applyConstraints = constraint({ nested: true });
 
-    constraint.getOwn = _mirukenCore.Metadata.getter(constraintsMetadataKey, true);
     constraint.get = _mirukenCore.Metadata.getter(constraintsMetadataKey);
+    constraint.getOwn = _mirukenCore.Metadata.getter(constraintsMetadataKey, true);
 
     function _mergeConstraints(target, source) {
         Reflect.ownKeys(source).forEach(function (key) {

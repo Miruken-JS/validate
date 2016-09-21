@@ -186,8 +186,8 @@ export function constraint(constraints) {
 
 export const applyConstraints = constraint({nested: true});
 
-constraint.getOwn = Metadata.getter(constraintsMetadataKey, true);
 constraint.get    = Metadata.getter(constraintsMetadataKey); 
+constraint.getOwn = Metadata.getter(constraintsMetadataKey, true);
 
 function _mergeConstraints(target, source) {
     Reflect.ownKeys(source).forEach(key => {

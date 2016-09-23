@@ -200,7 +200,7 @@ describe("ValidationCallbackHandler", () => {
                   league = new Context()
                   .addHandlers(team, new ValidationCallbackHandler()),
                   player = new Player({firstName: "Diego", lastName: "Morales", dob: new Date(2006, 7, 19)});
-            $validate(league, Player, function (validation, composer) {
+            $validate(league, Player, validation => {
                 const player = validation.object,
                       start  = new Date(2006, 8, 1),
                       end    = new Date(2007, 7, 31);
@@ -259,7 +259,7 @@ describe("ValidationCallbackHandler", () => {
         it("should validate unknown sources", () => {
             const league = new Context()
                   .addHandlers(new ValidationCallbackHandler());
-            $validate(league, null, function (validation, composer) {
+            $validate(league, null, validation => {
                 const source = validation.object;
                 if ((source instanceof Team) &&
                     (!source.name || source.name.length == 0)) {
@@ -302,7 +302,7 @@ describe("ValidationCallbackHandler", () => {
             league = new Context()
                 .addHandlers(new ValidationCallbackHandler(),
                              new (CallbackHandler.extend(Invoking, {
-                                 invoke: function (fn, dependencies, ctx) {
+                                 invoke(fn, dependencies, ctx) {
                                      expect(dependencies[0]).to.equal(HttpClient);
                                      dependencies[0] = httpClient;
                                      for (let i = 1; i < dependencies.length; ++i) {
@@ -313,29 +313,29 @@ describe("ValidationCallbackHandler", () => {
                              })));
         });
 
-        it("should invalidate object", function (done) {
+        it("should invalidate object", done => {
             const team  = new Team({name: "Liverpool", division: "U8"}),
                   coach = new Coach;
             league.addHandlers(team);
-            Validator(league).validateAsync(coach).then(function (results) {
+            Validator(league).validateAsync(coach).then(results => {
                 expect(results.valid).to.be.false;
                 done();
             });
         });
 
-        it("should be valid if no validators", function (done) {
+        it("should be valid if no validators", done => {
             const coach = new Coach;
-            Validator(league).validateAsync(coach).then(function (results) {
+            Validator(league).validateAsync(coach).then(results => {
                 expect(results.valid).to.be.true;
                 done();
             });
         });
 
-        it("should provide key errors", function (done) {
+        it("should provide key errors", done => {
             const team  = new Team({name: "Liverpool", division: "U8"}),
                   coach = new Coach({firstName: "Jonathan"});
             league.addHandlers(team);
-            Validator(league).validateAsync(coach).then(function (results) {
+            Validator(league).validateAsync(coach).then(results => {
                 expect(results.valid).to.be.false;
                 expect(results.license.errors.license).to.eql([{
                     message: "License must be D, E or F"
@@ -344,11 +344,11 @@ describe("ValidationCallbackHandler", () => {
             });
         });
 
-        it("should validateThat instance", function (done) {
+        it("should validateThat instance", done => {
             const team   = new Team({name: "Liverpool", division: "U8"}),
                   coach  = new Coach({firstName: "John", lastName: "Smith"});
             league.addHandlers(team);
-            Validator(league).validateAsync(coach).then(function (results) {
+            Validator(league).validateAsync(coach).then(results => {
                 expect(results.valid).to.be.false;
                 expect(results.errors.coachPassedBackgroundCheck).to.eql([{
                     message: "Coach failed background check"

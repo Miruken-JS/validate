@@ -82,14 +82,14 @@ export const ValidationCallbackHandler = CallbackHandler.extend(Validator, {
 });
 
 function _validateThat(validation, asyncResults, composer) {
-    const object  = validation.object,
-          matches = validateThat.get(object, (_, key) => {
-              const validator   = object[key],
-                    returnValue = validator.call(object, validation, composer);
-              if (asyncResults && $isPromise(returnValue)) {
-                  asyncResults.push(returnValue);
-              }
-          });
+    const object  = validation.object;
+    validateThat.getKeys(object, (_, key) => {
+        const validator   = object[key],
+              returnValue = validator.call(object, validation, composer);
+        if (asyncResults && $isPromise(returnValue)) {
+            asyncResults.push(returnValue);
+        }
+    });
 }
 
 function _bindValidationResults(object, results) {

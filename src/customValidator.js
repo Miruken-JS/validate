@@ -26,7 +26,7 @@ const validators = validatejs.validators;
  */
 export function customValidator(target) {
     if (arguments.length > 1) {
-        throw new SyntaxError("customValidator can only be applied to a class");
+        throw new SyntaxError("@customValidator can only be applied to a class");
     }
 
     const prototype = target.prototype;
@@ -41,17 +41,16 @@ function _customValidatorMethod(target, prototype, key, descriptor) {
     if (!descriptor.enumerable || key === "constructor") return;    
     const fn = descriptor.value;
     if (!$isFunction(fn)) return;
-    inject.get(prototype, key, dependencies => {
-        if (dependencies.length > 0) {
-            descriptor.value = function (...args) {
-                if (!$composer) {
-                    throw new Error(`Unable to invoke validator '${key}'.`);
-                }
-                const deps = dependencies.concat(args.map($use));
-                return Invoking($composer).invoke(fn, deps);
+    const dependencies = inject.get(prototype, key);
+    if (dependencies && dependencies.length > 0) {
+        descriptor.value = function (...args) {
+            if (!$composer) {
+                throw new Error(`Unable to invoke validator '${key}'.`);
             }
+            const deps = dependencies.concat(args.map($use));
+            return Invoking($composer).invoke(fn, deps);
         }
-    });
+    };
 
     let tag = key;
     if (validators.hasOwnProperty(tag)) {

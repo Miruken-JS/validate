@@ -1,5 +1,5 @@
 import validatejs from "validate.js";
-import {True,Invoking,Metadata,inject,$isFunction,$use,Base,pcopy,$isObject,Variance,$isPromise,$classOf,decorate,$flatten,Protocol,StrictProtocol,$isNothing,Undefined} from 'miruken-core';
+import {True,Invoking,Metadata,inject,$isFunction,$use,Base,pcopy,$isPlainObject,Variance,$isPromise,$classOf,decorate,$flatten,Protocol,StrictProtocol,$isNothing,Undefined} from 'miruken-core';
 import {CallbackHandler,$define,$handle,$composer,addDefinition} from 'miruken-callback';
 
 const validateThatMetadataKey = Symbol();
@@ -8,24 +8,22 @@ const validateThatMetadataKey = Symbol();
  * Marks method as providing contextual validation.
  * @method validateThat
  */
-export function validateThat(target, key, descriptor) {
-    if (!key || key === "constructor") return;
-    const fn = descriptor.value;
-    if (!$isFunction(fn)) return;
-    Metadata.getOrCreateOwn(validateThatMetadataKey, target, key, True);
-    inject.get(target, key, dependencies => {
-        if (dependencies.length > 0) {
-            descriptor.value = function (validation, composer) {
-                const args = Array.prototype.slice.call(arguments),
-                      deps = dependencies.concat(args.map($use));
-                return Invoking(composer).invoke(fn, deps, this);
+export const validateThat = Metadata.decorator(validateThatMetadataKey,
+    (target, key, descriptor) => {
+        if (!key || key === "constructor") return;
+        const fn = descriptor.value;
+        if (!$isFunction(fn)) return;
+        Metadata.getOrCreateOwn(validateThatMetadataKey, target, key, True);
+        inject.get(target, key, dependencies => {
+            if (dependencies.length > 0) {
+                descriptor.value = function (validation, composer) {
+                    const args = Array.prototype.slice.call(arguments),
+                          deps = dependencies.concat(args.map($use));
+                    return Invoking(composer).invoke(fn, deps, this);
+                }
             }
-        }
+        });
     });
-}
-
-validateThat.getOwn = Metadata.getter(validateThatMetadataKey, true);
-validateThat.get    = Metadata.getter(validateThatMetadataKey); 
 
 export default validateThat;
 
@@ -167,33 +165,29 @@ function _isReservedKey(key) {
 
 export default ValidationResult;
 
-const constraintsMetadataKey = Symbol();
+const constraintMetadataKey = Symbol();
 
 /**
  * Specifies validation constraints on properties and methods.
  * @method constraints
  */
-export function constraint(constraints) {
-    return function (target, key, descriptor) {
-        if (!constraints || key === "constructor") return;
+export const constraint = Metadata.decorator(constraintMetadataKey,
+    (target, key, descriptor, constraints) => {
+        if (constraints.length === 0 || key === "constructor") return;
         const { get, value, initializer } = descriptor;
         if (!get && !value && !initializer) return;
         const current = Metadata.getOrCreateOwn(
-            constraintsMetadataKey, target, key, () => ({}));
-        _mergeConstraints(current, constraints);
-    };
-}
+            constraintMetadataKey, target, key, () => ({}));
+        constraints.forEach(constraint => _mergeConstraints(current, constraint));
+    });
 
 export const applyConstraints = constraint({nested: true});
-
-constraint.get    = Metadata.getter(constraintsMetadataKey); 
-constraint.getOwn = Metadata.getter(constraintsMetadataKey, true);
 
 function _mergeConstraints(target, source) {
     Reflect.ownKeys(source).forEach(key => {
         const newValue = source[key],
               curValue = target[key];
-        if ($isObject(curValue) && !Array.isArray(curValue)) {
+        if ($isPlainObject(curValue) && !Array.isArray(curValue)) {
             _mergeConstraints(curValue, newValue);
         } else {
             target[key] = Array.isArray(newValue)
@@ -498,14 +492,14 @@ export const ValidationCallbackHandler = CallbackHandler.extend(Validator, {
 });
 
 function _validateThat(validation, asyncResults, composer) {
-    const object  = validation.object,
-          matches = validateThat.get(object, (_, key) => {
-              const validator   = object[key],
-                    returnValue = validator.call(object, validation, composer);
-              if (asyncResults && $isPromise(returnValue)) {
-                  asyncResults.push(returnValue);
-              }
-          });
+    const object  = validation.object;
+    validateThat.getKeys(object, (_, key) => {
+        const validator   = object[key],
+              returnValue = validator.call(object, validation, composer);
+        if (asyncResults && $isPromise(returnValue)) {
+            asyncResults.push(returnValue);
+        }
+    });
 }
 
 function _bindValidationResults(object, results) {
@@ -628,7 +622,7 @@ function mapResults(results, errors) {
 
 function buildConstraints(target, nested) {
     let constraints; 
-    constraint.get(target, (criteria, key) => {
+    constraint.getKeys(target, (criteria, key) => {
         (constraints || (constraints = {}))[key] = criteria;
         for (let name in criteria) {
             if (name === "nested") {

@@ -104,7 +104,7 @@ function mapResults(results, errors) {
 
 function buildConstraints(target, nested) {
     let constraints; 
-    constraint.get(target, (criteria, key) => {
+    constraint.getKeys(target, (criteria, key) => {
         (constraints || (constraints = {}))[key] = criteria;
         for (let name in criteria) {
             if (name === "nested") {

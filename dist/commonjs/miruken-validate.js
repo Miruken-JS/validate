@@ -3,14 +3,12 @@
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.ValidateJsCallbackHandler = exports.ValidationCallbackHandler = exports.Validator = exports.Validating = exports.url = exports.required = exports.number = exports.length = exports.email = exports.Validation = exports.$validate = exports.applyConstraints = exports.ValidationResult = undefined;
+exports.ValidateJsCallbackHandler = exports.ValidationCallbackHandler = exports.Validator = exports.Validating = exports.url = exports.required = exports.number = exports.length = exports.email = exports.Validation = exports.$validate = exports.applyConstraints = exports.constraint = exports.ValidationResult = exports.validateThat = undefined;
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
 var _desc, _value, _obj;
 
-exports.validateThat = validateThat;
-exports.constraint = constraint;
 exports.customValidator = customValidator;
 exports.matches = matches;
 exports.includes = includes;
@@ -60,7 +58,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 var validateThatMetadataKey = Symbol();
 
-function validateThat(target, key, descriptor) {
+var validateThat = exports.validateThat = _mirukenCore.Metadata.decorator(validateThatMetadataKey, function (target, key, descriptor) {
     if (!key || key === "constructor") return;
     var fn = descriptor.value;
     if (!(0, _mirukenCore.$isFunction)(fn)) return;
@@ -74,10 +72,7 @@ function validateThat(target, key, descriptor) {
             };
         }
     });
-}
-
-validateThat.getOwn = _mirukenCore.Metadata.getter(validateThatMetadataKey, true);
-validateThat.get = _mirukenCore.Metadata.getter(validateThatMetadataKey);
+});
 
 exports.default = validateThat;
 var ValidationResult = exports.ValidationResult = _mirukenCore.Base.extend({
@@ -182,33 +177,30 @@ function _isReservedKey(key) {
 exports.default = ValidationResult;
 
 
-var constraintsMetadataKey = Symbol();
+var constraintMetadataKey = Symbol();
 
-function constraint(constraints) {
-    return function (target, key, descriptor) {
-        if (!constraints || key === "constructor") return;
-        var get = descriptor.get;
-        var value = descriptor.value;
-        var initializer = descriptor.initializer;
+var constraint = exports.constraint = _mirukenCore.Metadata.decorator(constraintMetadataKey, function (target, key, descriptor, constraints) {
+    if (constraints.length === 0 || key === "constructor") return;
+    var get = descriptor.get;
+    var value = descriptor.value;
+    var initializer = descriptor.initializer;
 
-        if (!get && !value && !initializer) return;
-        var current = _mirukenCore.Metadata.getOrCreateOwn(constraintsMetadataKey, target, key, function () {
-            return {};
-        });
-        _mergeConstraints(current, constraints);
-    };
-}
+    if (!get && !value && !initializer) return;
+    var current = _mirukenCore.Metadata.getOrCreateOwn(constraintMetadataKey, target, key, function () {
+        return {};
+    });
+    constraints.forEach(function (constraint) {
+        return _mergeConstraints(current, constraint);
+    });
+});
 
 var applyConstraints = exports.applyConstraints = constraint({ nested: true });
-
-constraint.get = _mirukenCore.Metadata.getter(constraintsMetadataKey);
-constraint.getOwn = _mirukenCore.Metadata.getter(constraintsMetadataKey, true);
 
 function _mergeConstraints(target, source) {
     Reflect.ownKeys(source).forEach(function (key) {
         var newValue = source[key],
             curValue = target[key];
-        if ((0, _mirukenCore.$isObject)(curValue) && !Array.isArray(curValue)) {
+        if ((0, _mirukenCore.$isPlainObject)(curValue) && !Array.isArray(curValue)) {
             _mergeConstraints(curValue, newValue);
         } else {
             target[key] = Array.isArray(newValue) ? newValue.slice() : newValue;
@@ -457,8 +449,8 @@ var ValidationCallbackHandler = exports.ValidationCallbackHandler = _mirukenCall
 });
 
 function _validateThat(validation, asyncResults, composer) {
-    var object = validation.object,
-        matches = validateThat.get(object, function (_, key) {
+    var object = validation.object;
+    validateThat.getKeys(object, function (_, key) {
         var validator = object[key],
             returnValue = validator.call(object, validation, composer);
         if (asyncResults && (0, _mirukenCore.$isPromise)(returnValue)) {
@@ -573,7 +565,7 @@ function mapResults(results, errors) {
 
 function buildConstraints(target, nested) {
     var constraints = void 0;
-    constraint.get(target, function (criteria, key) {
+    constraint.getKeys(target, function (criteria, key) {
         (constraints || (constraints = {}))[key] = criteria;
 
         var _loop = function _loop(_name2) {

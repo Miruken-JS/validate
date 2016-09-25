@@ -59,19 +59,26 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 var validateThatMetadataKey = Symbol();
 
 var validateThat = exports.validateThat = _mirukenCore.Metadata.decorator(validateThatMetadataKey, function (target, key, descriptor) {
-    if (!key || key === "constructor") return;
-    var fn = descriptor.value;
-    if (!(0, _mirukenCore.$isFunction)(fn)) return;
+    if (!(0, _mirukenCore.isDescriptor)(descriptor)) {
+        throw new SyntaxError("@validateThat cannot be applied to classes");
+    }
+    if (key === "constructor") {
+        throw new SyntaxError("@validateThat cannot be applied to constructors");
+    }
+    var value = descriptor.value;
+
+    if (!(0, _mirukenCore.$isFunction)(value)) {
+        throw new SyntaxError("@validateThat cannot be applied to methods");
+    }
     _mirukenCore.Metadata.getOrCreateOwn(validateThatMetadataKey, target, key, _mirukenCore.True);
-    _mirukenCore.inject.get(target, key, function (dependencies) {
-        if (dependencies.length > 0) {
-            descriptor.value = function (validation, composer) {
-                var args = Array.prototype.slice.call(arguments),
-                    deps = dependencies.concat(args.map(_mirukenCore.$use));
-                return (0, _mirukenCore.Invoking)(composer).invoke(fn, deps, this);
-            };
-        }
-    });
+    var dependencies = _mirukenCore.inject.get(target, key);
+    if (dependencies && dependencies.length > 0) {
+        descriptor.value = function (validation, composer) {
+            var args = Array.prototype.slice.call(arguments),
+                deps = dependencies.concat(args.map(_mirukenCore.$use));
+            return (0, _mirukenCore.Invoking)(composer).invoke(value, deps, this);
+        };
+    }
 });
 
 exports.default = validateThat;
@@ -265,7 +272,7 @@ var validators = _validate2.default.validators;
 
 function customValidator(target) {
     if (arguments.length > 1) {
-        throw new SyntaxError("customValidator can only be applied to a class");
+        throw new SyntaxError("@customValidator can only be applied to a class");
     }
 
     var prototype = target.prototype;
@@ -280,22 +287,21 @@ function _customValidatorMethod(target, prototype, key, descriptor) {
     if (!descriptor.enumerable || key === "constructor") return;
     var fn = descriptor.value;
     if (!(0, _mirukenCore.$isFunction)(fn)) return;
-    _mirukenCore.inject.get(prototype, key, function (dependencies) {
-        if (dependencies.length > 0) {
-            descriptor.value = function () {
-                if (!_mirukenCallback.$composer) {
-                    throw new Error('Unable to invoke validator \'' + key + '\'.');
-                }
+    var dependencies = _mirukenCore.inject.get(prototype, key);
+    if (dependencies && dependencies.length > 0) {
+        descriptor.value = function () {
+            if (!_mirukenCallback.$composer) {
+                throw new Error('Unable to invoke validator \'' + key + '\'.');
+            }
 
-                for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-                    args[_key] = arguments[_key];
-                }
+            for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+                args[_key] = arguments[_key];
+            }
 
-                var deps = dependencies.concat(args.map(_mirukenCore.$use));
-                return (0, _mirukenCore.Invoking)(_mirukenCallback.$composer).invoke(fn, deps);
-            };
-        }
-    });
+            var deps = dependencies.concat(args.map(_mirukenCore.$use));
+            return (0, _mirukenCore.Invoking)(_mirukenCallback.$composer).invoke(fn, deps);
+        };
+    };
 
     var tag = key;
     if (validators.hasOwnProperty(tag)) {
@@ -407,7 +413,7 @@ function validate() {
         types[_key5] = arguments[_key5];
     }
 
-    return (0, _mirukenCore.decorate)((0, _mirukenCallback.addDefinition)($validate), types);
+    return (0, _mirukenCore.decorate)((0, _mirukenCallback.addDefinition)("validate", $validate), types);
 }
 
 exports.default = validate;

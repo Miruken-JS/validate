@@ -3,7 +3,7 @@
 System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_export, _context) {
     "use strict";
 
-    var validatejs, True, Invoking, Metadata, inject, $isFunction, $use, Base, pcopy, $isPlainObject, Variance, $isPromise, $classOf, decorate, $flatten, Protocol, StrictProtocol, $isNothing, Undefined, CallbackHandler, $define, $handle, $composer, addDefinition, _typeof, _desc, _value, _obj, validateThatMetadataKey, validateThat, ValidationResult, IGNORE, constraintMetadataKey, constraint, applyConstraints, $validate, Validation, counter, validators, email, length, number, required, url, Validating, Validator, ValidationCallbackHandler, detailed, validatable, ValidateJsCallbackHandler;
+    var validatejs, True, Invoking, Metadata, inject, isDescriptor, $isFunction, $use, Base, pcopy, $isPlainObject, Variance, $isPromise, $classOf, decorate, $flatten, Protocol, StrictProtocol, $isNothing, Undefined, CallbackHandler, $define, $handle, $composer, addDefinition, _typeof, _desc, _value, _obj, validateThatMetadataKey, validateThat, ValidationResult, IGNORE, constraintMetadataKey, constraint, applyConstraints, $validate, Validation, counter, validators, email, length, number, required, url, Validating, Validator, ValidationCallbackHandler, detailed, validatable, ValidateJsCallbackHandler;
 
     function _applyDecoratedDescriptor(target, property, decorators, descriptor, context) {
         var desc = {};
@@ -69,22 +69,21 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
         if (!descriptor.enumerable || key === "constructor") return;
         var fn = descriptor.value;
         if (!$isFunction(fn)) return;
-        inject.get(prototype, key, function (dependencies) {
-            if (dependencies.length > 0) {
-                descriptor.value = function () {
-                    if (!$composer) {
-                        throw new Error('Unable to invoke validator \'' + key + '\'.');
-                    }
+        var dependencies = inject.get(prototype, key);
+        if (dependencies && dependencies.length > 0) {
+            descriptor.value = function () {
+                if (!$composer) {
+                    throw new Error('Unable to invoke validator \'' + key + '\'.');
+                }
 
-                    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-                        args[_key] = arguments[_key];
-                    }
+                for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+                    args[_key] = arguments[_key];
+                }
 
-                    var deps = dependencies.concat(args.map($use));
-                    return Invoking($composer).invoke(fn, deps);
-                };
-            }
-        });
+                var deps = dependencies.concat(args.map($use));
+                return Invoking($composer).invoke(fn, deps);
+            };
+        };
 
         var tag = key;
         if (validators.hasOwnProperty(tag)) {
@@ -192,6 +191,7 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
             Invoking = _mirukenCore.Invoking;
             Metadata = _mirukenCore.Metadata;
             inject = _mirukenCore.inject;
+            isDescriptor = _mirukenCore.isDescriptor;
             $isFunction = _mirukenCore.$isFunction;
             $use = _mirukenCore.$use;
             Base = _mirukenCore.Base;
@@ -222,19 +222,26 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
             validateThatMetadataKey = Symbol();
 
             _export('validateThat', validateThat = Metadata.decorator(validateThatMetadataKey, function (target, key, descriptor) {
-                if (!key || key === "constructor") return;
-                var fn = descriptor.value;
-                if (!$isFunction(fn)) return;
+                if (!isDescriptor(descriptor)) {
+                    throw new SyntaxError("@validateThat cannot be applied to classes");
+                }
+                if (key === "constructor") {
+                    throw new SyntaxError("@validateThat cannot be applied to constructors");
+                }
+                var value = descriptor.value;
+
+                if (!$isFunction(value)) {
+                    throw new SyntaxError("@validateThat cannot be applied to methods");
+                }
                 Metadata.getOrCreateOwn(validateThatMetadataKey, target, key, True);
-                inject.get(target, key, function (dependencies) {
-                    if (dependencies.length > 0) {
-                        descriptor.value = function (validation, composer) {
-                            var args = Array.prototype.slice.call(arguments),
-                                deps = dependencies.concat(args.map($use));
-                            return Invoking(composer).invoke(fn, deps, this);
-                        };
-                    }
-                });
+                var dependencies = inject.get(target, key);
+                if (dependencies && dependencies.length > 0) {
+                    descriptor.value = function (validation, composer) {
+                        var args = Array.prototype.slice.call(arguments),
+                            deps = dependencies.concat(args.map($use));
+                        return Invoking(composer).invoke(value, deps, this);
+                    };
+                }
             }));
 
             _export('validateThat', validateThat);
@@ -423,7 +430,7 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
             validators = validatejs.validators;
             function customValidator(target) {
                 if (arguments.length > 1) {
-                    throw new SyntaxError("customValidator can only be applied to a class");
+                    throw new SyntaxError("@customValidator can only be applied to a class");
                 }
 
                 var prototype = target.prototype;
@@ -551,7 +558,7 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
                     types[_key5] = arguments[_key5];
                 }
 
-                return decorate(addDefinition($validate), types);
+                return decorate(addDefinition("validate", $validate), types);
             }
 
             _export('validate', validate);

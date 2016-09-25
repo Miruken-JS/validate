@@ -1,5 +1,5 @@
 import validatejs from "validate.js";
-import {True,Invoking,Metadata,inject,$isFunction,$use,Base,pcopy,$isPlainObject,Variance,$isPromise,$classOf,decorate,$flatten,Protocol,StrictProtocol,$isNothing,Undefined} from 'miruken-core';
+import {True,Invoking,Metadata,inject,isDescriptor,$isFunction,$use,Base,pcopy,$isPlainObject,Variance,$isPromise,$classOf,decorate,$flatten,Protocol,StrictProtocol,$isNothing,Undefined} from 'miruken-core';
 import {CallbackHandler,$define,$handle,$composer,addDefinition} from 'miruken-callback';
 
 const validateThatMetadataKey = Symbol();
@@ -10,19 +10,25 @@ const validateThatMetadataKey = Symbol();
  */
 export const validateThat = Metadata.decorator(validateThatMetadataKey,
     (target, key, descriptor) => {
-        if (!key || key === "constructor") return;
-        const fn = descriptor.value;
-        if (!$isFunction(fn)) return;
+        if (!isDescriptor(descriptor)) {
+            throw new SyntaxError("@validateThat cannot be applied to classes");
+        }
+        if (key === "constructor") {
+            throw new SyntaxError("@validateThat cannot be applied to constructors");
+        }
+        const { value } = descriptor;
+        if (!$isFunction(value)) {
+            throw new SyntaxError("@validateThat cannot be applied to methods");
+        }
         Metadata.getOrCreateOwn(validateThatMetadataKey, target, key, True);
-        inject.get(target, key, dependencies => {
-            if (dependencies.length > 0) {
-                descriptor.value = function (validation, composer) {
-                    const args = Array.prototype.slice.call(arguments),
-                          deps = dependencies.concat(args.map($use));
-                    return Invoking(composer).invoke(fn, deps, this);
-                }
+        const dependencies = inject.get(target, key);
+        if (dependencies && dependencies.length > 0) {
+            descriptor.value = function (validation, composer) {
+                const args = Array.prototype.slice.call(arguments),
+                      deps = dependencies.concat(args.map($use));
+                return Invoking(composer).invoke(value, deps, this);
             }
-        });
+        }
     });
 
 export default validateThat;
@@ -298,7 +304,7 @@ const validators = validatejs.validators;
  */
 export function customValidator(target) {
     if (arguments.length > 1) {
-        throw new SyntaxError("customValidator can only be applied to a class");
+        throw new SyntaxError("@customValidator can only be applied to a class");
     }
 
     const prototype = target.prototype;
@@ -313,17 +319,16 @@ function _customValidatorMethod(target, prototype, key, descriptor) {
     if (!descriptor.enumerable || key === "constructor") return;    
     const fn = descriptor.value;
     if (!$isFunction(fn)) return;
-    inject.get(prototype, key, dependencies => {
-        if (dependencies.length > 0) {
-            descriptor.value = function (...args) {
-                if (!$composer) {
-                    throw new Error(`Unable to invoke validator '${key}'.`);
-                }
-                const deps = dependencies.concat(args.map($use));
-                return Invoking($composer).invoke(fn, deps);
+    const dependencies = inject.get(prototype, key);
+    if (dependencies && dependencies.length > 0) {
+        descriptor.value = function (...args) {
+            if (!$composer) {
+                throw new Error(`Unable to invoke validator '${key}'.`);
             }
+            const deps = dependencies.concat(args.map($use));
+            return Invoking($composer).invoke(fn, deps);
         }
-    });
+    };
 
     let tag = key;
     if (validators.hasOwnProperty(tag)) {
@@ -411,7 +416,7 @@ export default url;
  * @param  {Array}  ...types  -  types that can be validated
  */ 
 export function validate(...types) {
-    return decorate(addDefinition($validate), types);
+    return decorate(addDefinition("validate", $validate), types);
 }
 
 export default validate;

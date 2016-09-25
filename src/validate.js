@@ -8,7 +8,7 @@ import { decorate } from "miruken-core";
  * @param  {Array}  ...types  -  types that can be validated
  */ 
 export function validate(...types) {
-    return decorate(addDefinition($validate), types);
+    return decorate(addDefinition("validate", $validate), types);
 }
 
 export default validate;

@@ -32,4 +32,3 @@ export const validateThat = Metadata.decorator(validateThatMetadataKey,
         }
     });
 
-export default validateThat;

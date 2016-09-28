@@ -136,4 +136,3 @@ function _isReservedKey(key) {
     return IGNORE.indexOf(key) >= 0;
 }
 
-export default ValidationResult;

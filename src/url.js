@@ -1,4 +1,4 @@
-import constraint from "./constraint";
+import { constraint } from "./constraint";
 
 export const url = constraint({url: true});
 
@@ -7,4 +7,3 @@ Object.assign(url, {
     allowLocal(allowLocal) { return constraint({url: {allowLocal}}); }    
 });
 
-export default url;

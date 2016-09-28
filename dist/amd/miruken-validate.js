@@ -22,7 +22,7 @@ define(['exports', 'validate.js', 'miruken-core', 'miruken-callback'], function 
     var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
         return typeof obj;
     } : function (obj) {
-        return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj;
+        return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
     };
 
     function _applyDecoratedDescriptor(target, property, decorators, descriptor, context) {
@@ -96,7 +96,6 @@ define(['exports', 'validate.js', 'miruken-core', 'miruken-callback'], function 
         }
     });
 
-    exports.default = validateThat;
     var ValidationResult = exports.ValidationResult = _mirukenCore.Base.extend({
         constructor: function constructor() {
             var _errors = void 0,
@@ -196,9 +195,6 @@ define(['exports', 'validate.js', 'miruken-core', 'miruken-callback'], function 
         return IGNORE.indexOf(key) >= 0;
     }
 
-    exports.default = ValidationResult;
-
-
     var constraintMetadataKey = Symbol();
 
     var constraint = exports.constraint = _mirukenCore.Metadata.decorator(constraintMetadataKey, function (target, key, descriptor, constraints) {
@@ -230,7 +226,6 @@ define(['exports', 'validate.js', 'miruken-core', 'miruken-callback'], function 
         });
     }
 
-    exports.default = constraint;
     var $validate = exports.$validate = (0, _mirukenCallback.$define)(_mirukenCore.Variance.Contravariant);
 
     var Validation = exports.Validation = _mirukenCore.Base.extend({
@@ -278,9 +273,6 @@ define(['exports', 'validate.js', 'miruken-core', 'miruken-callback'], function 
             }
         }
     });
-
-    exports.default = Validation;
-
 
     var counter = 0;
     var validators = _validate2.default.validators;
@@ -335,10 +327,8 @@ define(['exports', 'validate.js', 'miruken-core', 'miruken-callback'], function 
         };
     }
 
-    exports.default = customValidator;
     var email = exports.email = constraint({ email: true });
 
-    exports.default = email;
     var length = exports.length = {
         is: function is(len) {
             return constraint({ length: { is: len } });
@@ -351,7 +341,6 @@ define(['exports', 'validate.js', 'miruken-core', 'miruken-callback'], function 
         }
     };
 
-    exports.default = length;
     function matches(pattern, flags) {
         var criteria = { format: pattern };
         if (flags) {
@@ -360,7 +349,6 @@ define(['exports', 'validate.js', 'miruken-core', 'miruken-callback'], function 
         return constraint(criteria);
     }
 
-    exports.default = matches;
     function includes() {
         for (var _len3 = arguments.length, members = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
             members[_key3] = arguments[_key3];
@@ -407,10 +395,8 @@ define(['exports', 'validate.js', 'miruken-core', 'miruken-callback'], function 
         even: constraint({ numericality: { even: true } })
     });
 
-    exports.default = number;
     var required = exports.required = constraint({ presence: true });
 
-    exports.default = required;
     var url = exports.url = constraint({ url: true });
 
     Object.assign(url, {
@@ -422,7 +408,6 @@ define(['exports', 'validate.js', 'miruken-core', 'miruken-callback'], function 
         }
     });
 
-    exports.default = url;
     function validate() {
         for (var _len5 = arguments.length, types = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
             types[_key5] = arguments[_key5];
@@ -431,7 +416,6 @@ define(['exports', 'validate.js', 'miruken-core', 'miruken-callback'], function 
         return (0, _mirukenCore.decorate)((0, _mirukenCallback.addDefinition)("validate", $validate), types);
     }
 
-    exports.default = validate;
     var Validating = exports.Validating = _mirukenCore.Protocol.extend({
         validate: function validate(object, scope, results) {},
         validateAsync: function validateAsync(object, scope, results) {}

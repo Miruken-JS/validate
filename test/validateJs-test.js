@@ -6,12 +6,12 @@ import { ValidateJsCallbackHandler } from '../src/validatorJs';
 import { customValidator } from '../src/customValidator';
 import { constraint, applyConstraints } from '../src/constraint';
 import { includes, excludes } from '../src/member';
-import required from '../src/required';
-import length from '../src/length';
-import number from '../src/number';
-import matches from '../src/matches';
-import email from '../src/email';
-import url from '../src/url';
+import { required } from '../src/required';
+import { length } from '../src/length';
+import { number } from '../src/number';
+import { matches } from '../src/matches';
+import { email } from '../src/email';
+import { url } from '../src/url';
 
 import validatejs from 'validate.js';
 

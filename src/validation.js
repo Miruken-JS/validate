@@ -6,7 +6,7 @@ import {
     Base, Variance, $isPromise, $classOf
 } from "miruken-core";
 
-import ValidationResult from "./result";
+import { ValidationResult } from "./result";
 
 /**
  * Validation definition group.
@@ -85,4 +85,3 @@ $handle(CallbackHandler.prototype, Validation, function (validation, composer) {
     }
 });
 
-export default Validation;

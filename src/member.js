@@ -1,4 +1,4 @@
-import constraint from "./constraint";
+import { constraint } from "./constraint";
 import { $flatten } from "miruken-core";
 
 export function includes(...members) {

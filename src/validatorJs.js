@@ -1,8 +1,8 @@
 import { Undefined, $isFunction} from "miruken-core";
 import { CallbackHandler, $composer } from "miruken-callback";
 import { Validator } from "./validator";
-import validate from "./validate";
-import constraint from "./constraint";
+import { validate } from "./validate";
+import {  constraint } from "./constraint";
 import validatejs from "validate.js";
 
 validatejs.Promise = Promise;

@@ -65,6 +65,21 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
         });
     }
 
+    function customValidator(target) {
+        if (arguments.length > 1) {
+            throw new SyntaxError("@customValidator can only be applied to a class");
+        }
+
+        var prototype = target.prototype;
+
+        Reflect.ownKeys(prototype).forEach(function (key) {
+            var descriptor = Object.getOwnPropertyDescriptor(prototype, key);
+            _customValidatorMethod(target, prototype, key, descriptor);
+        });
+    }
+
+    _export('customValidator', customValidator);
+
     function _customValidatorMethod(target, prototype, key, descriptor) {
         if (!descriptor.enumerable || key === "constructor") return;
         var fn = descriptor.value;
@@ -101,6 +116,48 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
             }, args);
         };
     }
+
+    function matches(pattern, flags) {
+        var criteria = { format: pattern };
+        if (flags) {
+            criteria.flags = flags;
+        }
+        return constraint(criteria);
+    }
+
+    _export('matches', matches);
+
+    function includes() {
+        for (var _len3 = arguments.length, members = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+            members[_key3] = arguments[_key3];
+        }
+
+        members = $flatten(members, true);
+        return constraint({ inclusion: members });
+    }
+
+    _export('includes', includes);
+
+    function excludes() {
+        for (var _len4 = arguments.length, members = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+            members[_key4] = arguments[_key4];
+        }
+
+        members = $flatten(members, true);
+        return constraint({ exclusion: members });
+    }
+
+    _export('excludes', excludes);
+
+    function validate() {
+        for (var _len5 = arguments.length, types = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+            types[_key5] = arguments[_key5];
+        }
+
+        return decorate(addDefinition("validate", $validate), types);
+    }
+
+    _export('validate', validate);
 
     function _validateThat(validation, asyncResults, composer) {
         var object = validation.object;
@@ -217,7 +274,7 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
             _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
                 return typeof obj;
             } : function (obj) {
-                return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj;
+                return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
             };
             validateThatMetadataKey = Symbol();
 
@@ -245,8 +302,6 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
             }));
 
             _export('validateThat', validateThat);
-
-            _export('default', validateThat);
 
             _export('ValidationResult', ValidationResult = Base.extend({
                 constructor: function constructor() {
@@ -344,9 +399,6 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
             _export('ValidationResult', ValidationResult);
 
             IGNORE = ["valid", "errors", "addKey", "addError", "reset"];
-
-            _export('default', ValidationResult);
-
             constraintMetadataKey = Symbol();
 
             _export('constraint', constraint = Metadata.decorator(constraintMetadataKey, function (target, key, descriptor, constraints) {
@@ -369,8 +421,6 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
             _export('applyConstraints', applyConstraints = constraint({ nested: true }));
 
             _export('applyConstraints', applyConstraints);
-
-            _export('default', constraint);
 
             _export('$validate', $validate = $define(Variance.Contravariant));
 
@@ -424,31 +474,12 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
                 }
             });
 
-            _export('default', Validation);
-
             counter = 0;
             validators = validatejs.validators;
-            function customValidator(target) {
-                if (arguments.length > 1) {
-                    throw new SyntaxError("@customValidator can only be applied to a class");
-                }
-
-                var prototype = target.prototype;
-
-                Reflect.ownKeys(prototype).forEach(function (key) {
-                    var descriptor = Object.getOwnPropertyDescriptor(prototype, key);
-                    _customValidatorMethod(target, prototype, key, descriptor);
-                });
-            }
-            _export('customValidator', customValidator);
-
-            _export('default', customValidator);
 
             _export('email', email = constraint({ email: true }));
 
             _export('email', email);
-
-            _export('default', email);
 
             _export('length', length = {
                 is: function is(len) {
@@ -463,42 +494,6 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
             });
 
             _export('length', length);
-
-            _export('default', length);
-
-            function matches(pattern, flags) {
-                var criteria = { format: pattern };
-                if (flags) {
-                    criteria.flags = flags;
-                }
-                return constraint(criteria);
-            }
-
-            _export('matches', matches);
-
-            _export('default', matches);
-
-            function includes() {
-                for (var _len3 = arguments.length, members = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-                    members[_key3] = arguments[_key3];
-                }
-
-                members = $flatten(members, true);
-                return constraint({ inclusion: members });
-            }
-
-            _export('includes', includes);
-
-            function excludes() {
-                for (var _len4 = arguments.length, members = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-                    members[_key4] = arguments[_key4];
-                }
-
-                members = $flatten(members, true);
-                return constraint({ exclusion: members });
-            }
-
-            _export('excludes', excludes);
 
             _export('number', number = constraint({ numericality: { noStrings: true } }));
 
@@ -530,13 +525,9 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
                 even: constraint({ numericality: { even: true } })
             });
 
-            _export('default', number);
-
             _export('required', required = constraint({ presence: true }));
 
             _export('required', required);
-
-            _export('default', required);
 
             _export('url', url = constraint({ url: true }));
 
@@ -550,20 +541,6 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
                     return constraint({ url: { allowLocal: _allowLocal } });
                 }
             });
-
-            _export('default', url);
-
-            function validate() {
-                for (var _len5 = arguments.length, types = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-                    types[_key5] = arguments[_key5];
-                }
-
-                return decorate(addDefinition("validate", $validate), types);
-            }
-
-            _export('validate', validate);
-
-            _export('default', validate);
 
             _export('Validating', Validating = Protocol.extend({
                 validate: function validate(object, scope, results) {},

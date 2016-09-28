@@ -359,7 +359,7 @@ describe("ValidationCallbackHandler", () => {
     });
 });
 
-describe("validateThat", () => {
+describe("@validateThat", () => {
     it("should extend validatorThat methods on instances", () => {
         const team   = new Team({name: "Liverpool", division: "U9"}),
               league = new Context()

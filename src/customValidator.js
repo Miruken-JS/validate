@@ -3,7 +3,7 @@ import {
 } from "miruken-core";
 
 import { $composer } from "miruken-callback";
-import constraint from "./constraint";
+import { constraint } from "./constraint";
 import validatejs from "validate.js";
 
 let counter = 0;
@@ -64,4 +64,3 @@ function _customValidatorMethod(target, prototype, key, descriptor) {
     };
 }
 
-export default customValidator;

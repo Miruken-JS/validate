@@ -31,7 +31,6 @@ export const validateThat = Metadata.decorator(validateThatMetadataKey,
         }
     });
 
-export default validateThat;
 
 /**
  * Captures structured validation errors.
@@ -169,7 +168,6 @@ function _isReservedKey(key) {
     return IGNORE.indexOf(key) >= 0;
 }
 
-export default ValidationResult;
 
 const constraintMetadataKey = Symbol();
 
@@ -202,8 +200,6 @@ function _mergeConstraints(target, source) {
         }
     });
 }
-
-export default constraint;
 
 /**
  * Validation definition group.
@@ -282,7 +278,6 @@ $handle(CallbackHandler.prototype, Validation, function (validation, composer) {
     }
 });
 
-export default Validation;
 
 let counter = 0;
 const validators = validatejs.validators;
@@ -342,19 +337,15 @@ function _customValidatorMethod(target, prototype, key, descriptor) {
     };
 }
 
-export default customValidator;
 
 export const email = constraint({email: true});
 
-export default email;
 
 export const length = {
     is(len)      { return constraint({length: {is: len}}) },
     atLeast(len) { return constraint({length: {minimum: len}}) },
     atMost(len)  { return constraint({length: {maximum: len}}) } 
 };
-
-export default length;
 
 export function matches(pattern, flags) {
     const criteria = { format: pattern };
@@ -363,8 +354,6 @@ export function matches(pattern, flags) {
     }
     return constraint(criteria);
 }
-
-export default matches;
 
 export function includes(...members) {
     members = $flatten(members, true);
@@ -391,7 +380,6 @@ Object.assign(number, {
     even:                     constraint({numericality: {even: true}})
 });
 
-export default number;
 
 
 
@@ -399,7 +387,6 @@ export default number;
 
 export const required = constraint({presence: true});
 
-export default required;
 
 export const url = constraint({url: true});
 
@@ -408,7 +395,6 @@ Object.assign(url, {
     allowLocal(allowLocal) { return constraint({url: {allowLocal}}); }    
 });
 
-export default url;
 
 /**
  * Marks method as providing validation capabilities.
@@ -419,7 +405,6 @@ export function validate(...types) {
     return decorate(addDefinition("validate", $validate), types);
 }
 
-export default validate;
 
 /**
  * Protocol for validating objects.

@@ -1,4 +1,4 @@
-import constraint from "./constraint";
+import { constraint } from "./constraint";
 
 export const number = constraint({numericality: {noStrings: true}});
 
@@ -15,7 +15,6 @@ Object.assign(number, {
     even:                     constraint({numericality: {even: true}})
 });
 
-export default number;
 
 
 

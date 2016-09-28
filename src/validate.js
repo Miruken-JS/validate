@@ -11,4 +11,3 @@ export function validate(...types) {
     return decorate(addDefinition("validate", $validate), types);
 }
 
-export default validate;

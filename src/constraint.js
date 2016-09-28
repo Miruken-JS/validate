@@ -31,5 +31,3 @@ function _mergeConstraints(target, source) {
         }
     });
 }
-
-export default constraint;

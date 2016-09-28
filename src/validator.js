@@ -3,8 +3,8 @@ import {
 } from "miruken-core";
 
 import { CallbackHandler, $composer } from "miruken-callback";
-import validateThat from "./validateThat";
-import Validation from "./validation";
+import { validateThat } from "./validateThat";
+import { Validation } from "./validation";
 
 /**
  * Protocol for validating objects.

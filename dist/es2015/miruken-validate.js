@@ -259,7 +259,7 @@ var Validation = exports.Validation = _mirukenCore.Base.extend({
     }
 });
 
-var counter = 0;
+var validatorsCount = 0;
 var validators = _validate2.default.validators;
 
 function customValidator(target) {
@@ -269,21 +269,37 @@ function customValidator(target) {
 
     var prototype = target.prototype;
 
+    Reflect.ownKeys(target).forEach(function (key) {
+        var descriptor = Object.getOwnPropertyDescriptor(target, key);
+        if (_isCustomValidator(key, descriptor)) {
+            _assignStaticCustomValidator(target, key, descriptor);
+        }
+    });
+
     Reflect.ownKeys(prototype).forEach(function (key) {
         var descriptor = Object.getOwnPropertyDescriptor(prototype, key);
-        _customValidatorMethod(target, prototype, key, descriptor);
+        if (_isCustomValidator(key, descriptor)) {
+            _assignInstanceCustomValidator(target, prototype, key, descriptor);
+        }
     });
 }
 
-function _customValidatorMethod(target, prototype, key, descriptor) {
-    if (!descriptor.enumerable || key === "constructor") return;
-    var fn = descriptor.value;
-    if (!(0, _mirukenCore.$isFunction)(fn)) return;
-    var dependencies = _mirukenCore.inject.get(prototype, key);
+function _isCustomValidator(key, descriptor) {
+    if (key === "constructor" || key.startsWith("_")) {
+        return false;
+    }
+    var value = descriptor.value;
+
+    return (0, _mirukenCore.$isFunction)(value) && value.length > 0;
+}
+
+function _assignStaticCustomValidator(target, key, descriptor) {
+    var value = descriptor.value;
+    var dependencies = _mirukenCore.inject.get(target, key);
     if (dependencies && dependencies.length > 0) {
         descriptor.value = function () {
             if (!_mirukenCallback.$composer) {
-                throw new Error('Unable to invoke validator \'' + key + '\'.');
+                throw new Error('@customValidator unable to invoke static method \'' + key + '\' on ' + target.name);
             }
 
             for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
@@ -291,19 +307,48 @@ function _customValidatorMethod(target, prototype, key, descriptor) {
             }
 
             var deps = dependencies.concat(args.map(_mirukenCore.$use));
-            return (0, _mirukenCore.Invoking)(_mirukenCallback.$composer).invoke(fn, deps);
+            return (0, _mirukenCore.Invoking)(_mirukenCallback.$composer).invoke(value, deps, target);
         };
     };
+    _assignCustomValidator(target, key, descriptor.value);
+}
 
-    var tag = key;
-    if (validators.hasOwnProperty(tag)) {
-        tag = tag + '-' + counter++;
+function _assignInstanceCustomValidator(target, prototype, key, descriptor) {
+    var dependencies = _mirukenCore.inject.get(prototype, key);
+    if (dependencies && dependencies.length > 0) {
+        throw new SyntaxError('@customValidator can\'t use dependencies for instance method \'' + key + '\' on ' + target.name);
     }
-    validators[tag] = descriptor.value;
+    descriptor.value = function () {
+        var validator = void 0;
+        if (_mirukenCallback.$composer) {
+            validator = _mirukenCallback.$composer.resolve(target);
+        }
+        if (!validator) {
+            validator = Reflect.construct(target, _mirukenCore.emptyArray);
+        }
+        if (!validator) {
+            throw Error('@customValidator unable to resolve or create validator ' + target.name);
+        }
 
-    target[key] = function () {
         for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
             args[_key2] = arguments[_key2];
+        }
+
+        return validator[key].apply(validator, args);
+    };
+    _assignCustomValidator(target, key, descriptor.value);
+}
+
+function _assignCustomValidator(target, key, fn) {
+    var tag = key;
+    if (validators.hasOwnProperty(tag)) {
+        tag = tag + '-' + validatorsCount++;
+    }
+    validators[tag] = fn;
+
+    target[key] = function () {
+        for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+            args[_key3] = arguments[_key3];
         }
 
         return (0, _mirukenCore.decorate)(function (t, k, d, options) {
@@ -335,8 +380,8 @@ function matches(pattern, flags) {
 }
 
 function includes() {
-    for (var _len3 = arguments.length, members = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-        members[_key3] = arguments[_key3];
+    for (var _len4 = arguments.length, members = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+        members[_key4] = arguments[_key4];
     }
 
     members = (0, _mirukenCore.$flatten)(members, true);
@@ -344,8 +389,8 @@ function includes() {
 }
 
 function excludes() {
-    for (var _len4 = arguments.length, members = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-        members[_key4] = arguments[_key4];
+    for (var _len5 = arguments.length, members = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+        members[_key5] = arguments[_key5];
     }
 
     members = (0, _mirukenCore.$flatten)(members, true);
@@ -394,8 +439,8 @@ Object.assign(url, {
 });
 
 function validate() {
-    for (var _len5 = arguments.length, types = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-        types[_key5] = arguments[_key5];
+    for (var _len6 = arguments.length, types = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+        types[_key6] = arguments[_key6];
     }
 
     return (0, _mirukenCore.decorate)((0, _mirukenCallback.addDefinition)("validate", $validate), types);

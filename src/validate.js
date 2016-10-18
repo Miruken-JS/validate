@@ -1,4 +1,4 @@
-import { $validate } from "./validation";
+import { $validate } from "./validator";
 import { addDefinition } from "miruken-callback";
 import { decorate } from "miruken-core";
 

@@ -175,7 +175,7 @@ describe("built-ins", () => {
     describe("email", () => {
         const Contact = Base.extend({
             @email
-            @customInstance.uniqueEmail            
+            @customInstance.uniqueEmail
             email: undefined
         });
 

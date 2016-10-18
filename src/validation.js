@@ -1,18 +1,5 @@
-import {
-    CallbackHandler, $define, $handle
-} from "miruken-callback";
-
-import {
-    Base, Variance, $isPromise, $classOf
-} from "miruken-core";
-
+import { Base, $isPromise } from "miruken-core";
 import { ValidationResult } from "./result";
-
-/**
- * Validation definition group.
- * @property {Function} $validate
- */
-export const $validate = $define(Variance.Contravariant);
 
 /**
  * Callback representing the validation of an object.
@@ -72,16 +59,3 @@ export const Validation = Base.extend({
         });
     }
 });
-
-$handle(CallbackHandler.prototype, Validation, function (validation, composer) {
-    const target = validation.object,
-          source = $classOf(target);
-    if (source) {
-        $validate.dispatch(this, validation, source, composer, true, validation.addAsyncResult);
-        var asyncResults = validation.asyncResults;
-        if (asyncResults) {
-            return Promise.all(asyncResults);
-        }
-    }
-});
-

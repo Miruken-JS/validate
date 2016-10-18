@@ -3,7 +3,7 @@
 System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_export, _context) {
     "use strict";
 
-    var validatejs, True, Invoking, Metadata, inject, isDescriptor, $isFunction, $use, Base, pcopy, $isPlainObject, Variance, $isPromise, $classOf, decorate, emptyArray, $flatten, Protocol, StrictProtocol, $isNothing, Undefined, CallbackHandler, $define, $handle, $composer, addDefinition, _typeof, _desc, _value, _obj, validateThatMetadataKey, validateThat, ValidationResult, IGNORE, constraintMetadataKey, constraint, applyConstraints, $validate, Validation, validatorsCount, validators, email, length, number, required, url, Validating, Validator, ValidationCallbackHandler, detailed, validatable, ValidateJsCallbackHandler;
+    var validatejs, True, Invoking, Metadata, inject, isDescriptor, $isFunction, $use, Base, pcopy, $isPlainObject, $isPromise, decorate, emptyArray, $flatten, Protocol, StrictProtocol, $isNothing, $classOf, Undefined, $composer, addDefinition, CallbackHandler, $define, $handle, _typeof, _desc, _value, _obj, validateThatMetadataKey, validateThat, ValidationResult, IGNORE, constraintMetadataKey, constraint, applyConstraints, Validation, validatorsCount, validators, email, length, number, required, url, $validate, Validating, Validator, ValidationCallbackHandler, detailed, validatable, ValidateJsCallbackHandler;
 
     function _applyDecoratedDescriptor(target, property, decorators, descriptor, context) {
         var desc = {};
@@ -70,19 +70,18 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
             throw new SyntaxError("@customValidator can only be applied to a class");
         }
 
-        var prototype = target.prototype;
-
         Reflect.ownKeys(target).forEach(function (key) {
             var descriptor = Object.getOwnPropertyDescriptor(target, key);
             if (_isCustomValidator(key, descriptor)) {
-                _assignStaticCustomValidator(target, key, descriptor);
+                _assignStaticValidator(target, key, descriptor);
             }
         });
 
+        var prototype = target.prototype;
         Reflect.ownKeys(prototype).forEach(function (key) {
             var descriptor = Object.getOwnPropertyDescriptor(prototype, key);
             if (_isCustomValidator(key, descriptor)) {
-                _assignInstanceCustomValidator(target, prototype, key, descriptor);
+                _assignInstanceValidator(target, prototype, key, descriptor);
             }
         });
     }
@@ -98,7 +97,7 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
         return $isFunction(value) && value.length > 0;
     }
 
-    function _assignStaticCustomValidator(target, key, descriptor) {
+    function _assignStaticValidator(target, key, descriptor) {
         var value = descriptor.value;
         var dependencies = inject.get(target, key);
         if (dependencies && dependencies.length > 0) {
@@ -118,22 +117,13 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
         _assignCustomValidator(target, key, descriptor.value);
     }
 
-    function _assignInstanceCustomValidator(target, prototype, key, descriptor) {
+    function _assignInstanceValidator(target, prototype, key, descriptor) {
         var dependencies = inject.get(prototype, key);
         if (dependencies && dependencies.length > 0) {
-            throw new SyntaxError('@customValidator can\'t use dependencies for instance method \'' + key + '\' on ' + target.name);
+            throw new SyntaxError('@customValidator can\'t have dependencies for instance method \'' + key + '\' on ' + target.name);
         }
         descriptor.value = function () {
-            var validator = void 0;
-            if ($composer) {
-                validator = $composer.resolve(target);
-            }
-            if (!validator) {
-                validator = Reflect.construct(target, emptyArray);
-            }
-            if (!validator) {
-                throw Error('@customValidator unable to resolve or create validator ' + target.name);
-            }
+            var validator = $composer && $composer.resolve(target) || Reflect.construct(target, emptyArray);
 
             for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
                 args[_key2] = arguments[_key2];
@@ -299,22 +289,21 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
             Base = _mirukenCore.Base;
             pcopy = _mirukenCore.pcopy;
             $isPlainObject = _mirukenCore.$isPlainObject;
-            Variance = _mirukenCore.Variance;
             $isPromise = _mirukenCore.$isPromise;
-            $classOf = _mirukenCore.$classOf;
             decorate = _mirukenCore.decorate;
             emptyArray = _mirukenCore.emptyArray;
             $flatten = _mirukenCore.$flatten;
             Protocol = _mirukenCore.Protocol;
             StrictProtocol = _mirukenCore.StrictProtocol;
             $isNothing = _mirukenCore.$isNothing;
+            $classOf = _mirukenCore.$classOf;
             Undefined = _mirukenCore.Undefined;
         }, function (_mirukenCallback) {
+            $composer = _mirukenCallback.$composer;
+            addDefinition = _mirukenCallback.addDefinition;
             CallbackHandler = _mirukenCallback.CallbackHandler;
             $define = _mirukenCallback.$define;
             $handle = _mirukenCallback.$handle;
-            $composer = _mirukenCallback.$composer;
-            addDefinition = _mirukenCallback.addDefinition;
         }],
         execute: function () {
             _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
@@ -468,10 +457,6 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
 
             _export('applyConstraints', applyConstraints);
 
-            _export('$validate', $validate = $define(Variance.Contravariant));
-
-            _export('$validate', $validate);
-
             _export('Validation', Validation = Base.extend({
                 constructor: function constructor(object, async, scope, results) {
                     var _asyncResults = void 0;
@@ -507,18 +492,6 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
             }));
 
             _export('Validation', Validation);
-
-            $handle(CallbackHandler.prototype, Validation, function (validation, composer) {
-                var target = validation.object,
-                    source = $classOf(target);
-                if (source) {
-                    $validate.dispatch(this, validation, source, composer, true, validation.addAsyncResult);
-                    var asyncResults = validation.asyncResults;
-                    if (asyncResults) {
-                        return Promise.all(asyncResults);
-                    }
-                }
-            });
 
             validatorsCount = 0;
             validators = validatejs.validators;
@@ -588,6 +561,10 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
                 }
             });
 
+            _export('$validate', $validate = $define(Variance.Contravariant));
+
+            _export('$validate', $validate);
+
             _export('Validating', Validating = Protocol.extend({
                 validate: function validate(object, scope, results) {},
                 validateAsync: function validateAsync(object, scope, results) {}
@@ -630,6 +607,18 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
             }));
 
             _export('ValidationCallbackHandler', ValidationCallbackHandler);
+
+            $handle(CallbackHandler.prototype, Validation, function (validation, composer) {
+                var target = validation.object,
+                    source = $classOf(target);
+                if (source) {
+                    $validate.dispatch(this, validation, source, composer, true, validation.addAsyncResult);
+                    var asyncResults = validation.asyncResults;
+                    if (asyncResults) {
+                        return Promise.all(asyncResults);
+                    }
+                }
+            });
 
             CallbackHandler.implement({
                 $valid: function $valid(target, scope) {

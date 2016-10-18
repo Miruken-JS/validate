@@ -1,10 +1,10 @@
 import { validate } from '../src/validate';
-import { Validation, $validate } from '../src/validation';
+import { Validation } from '../src/validation';
 import { validateThat } from '../src/validateThat';
 import { ValidationResult } from '../src/result';
 
 import {
-    Validator, ValidationCallbackHandler
+    Validator, ValidationCallbackHandler, $validate
 } from '../src/validator';
 
 import { Context } from 'miruken-context';

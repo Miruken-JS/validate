@@ -1,10 +1,20 @@
 import {
-    Protocol, StrictProtocol, $isNothing, $isPromise
+    Variance, Protocol, StrictProtocol,
+    $isNothing, $isPromise, $classOf
 } from "miruken-core";
 
-import { CallbackHandler, $composer } from "miruken-callback";
+import {
+    CallbackHandler, $define, $handle, $composer
+} from "miruken-callback";
+
 import { validateThat } from "./validateThat";
 import { Validation } from "./validation";
+
+/**
+ * Validation definition group.
+ * @property {Function} $validate
+ */
+export const $validate = $define(Variance.Contravariant);
 
 /**
  * Protocol for validating objects.
@@ -100,6 +110,19 @@ function _bindValidationResults(object, results) {
         value:        results
     });
 }
+
+
+$handle(CallbackHandler.prototype, Validation, function (validation, composer) {
+    const target = validation.object,
+          source = $classOf(target);
+    if (source) {
+        $validate.dispatch(this, validation, source, composer, true, validation.addAsyncResult);
+        var asyncResults = validation.asyncResults;
+        if (asyncResults) {
+            return Promise.all(asyncResults);
+        }
+    }
+});
 
 CallbackHandler.implement({
     $valid(target, scope) {

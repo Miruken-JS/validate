@@ -4,7 +4,7 @@ define(['exports', 'validate.js', 'miruken-core', 'miruken-callback'], function 
     Object.defineProperty(exports, "__esModule", {
         value: true
     });
-    exports.ValidateJsCallbackHandler = exports.ValidationCallbackHandler = exports.Validator = exports.Validating = exports.url = exports.required = exports.number = exports.length = exports.email = exports.Validation = exports.$validate = exports.applyConstraints = exports.constraint = exports.ValidationResult = exports.validateThat = undefined;
+    exports.ValidateJsCallbackHandler = exports.ValidationCallbackHandler = exports.Validator = exports.Validating = exports.$validate = exports.url = exports.required = exports.number = exports.length = exports.email = exports.Validation = exports.applyConstraints = exports.constraint = exports.ValidationResult = exports.validateThat = undefined;
     exports.customValidator = customValidator;
     exports.matches = matches;
     exports.includes = includes;
@@ -226,8 +226,6 @@ define(['exports', 'validate.js', 'miruken-core', 'miruken-callback'], function 
         });
     }
 
-    var $validate = exports.$validate = (0, _mirukenCallback.$define)(_mirukenCore.Variance.Contravariant);
-
     var Validation = exports.Validation = _mirukenCore.Base.extend({
         constructor: function constructor(object, async, scope, results) {
             var _asyncResults = void 0;
@@ -262,18 +260,6 @@ define(['exports', 'validate.js', 'miruken-core', 'miruken-callback'], function 
         }
     });
 
-    (0, _mirukenCallback.$handle)(_mirukenCallback.CallbackHandler.prototype, Validation, function (validation, composer) {
-        var target = validation.object,
-            source = (0, _mirukenCore.$classOf)(target);
-        if (source) {
-            $validate.dispatch(this, validation, source, composer, true, validation.addAsyncResult);
-            var asyncResults = validation.asyncResults;
-            if (asyncResults) {
-                return Promise.all(asyncResults);
-            }
-        }
-    });
-
     var validatorsCount = 0;
     var validators = _validate2.default.validators;
 
@@ -282,19 +268,18 @@ define(['exports', 'validate.js', 'miruken-core', 'miruken-callback'], function 
             throw new SyntaxError("@customValidator can only be applied to a class");
         }
 
-        var prototype = target.prototype;
-
         Reflect.ownKeys(target).forEach(function (key) {
             var descriptor = Object.getOwnPropertyDescriptor(target, key);
             if (_isCustomValidator(key, descriptor)) {
-                _assignStaticCustomValidator(target, key, descriptor);
+                _assignStaticValidator(target, key, descriptor);
             }
         });
 
+        var prototype = target.prototype;
         Reflect.ownKeys(prototype).forEach(function (key) {
             var descriptor = Object.getOwnPropertyDescriptor(prototype, key);
             if (_isCustomValidator(key, descriptor)) {
-                _assignInstanceCustomValidator(target, prototype, key, descriptor);
+                _assignInstanceValidator(target, prototype, key, descriptor);
             }
         });
     }
@@ -308,7 +293,7 @@ define(['exports', 'validate.js', 'miruken-core', 'miruken-callback'], function 
         return (0, _mirukenCore.$isFunction)(value) && value.length > 0;
     }
 
-    function _assignStaticCustomValidator(target, key, descriptor) {
+    function _assignStaticValidator(target, key, descriptor) {
         var value = descriptor.value;
         var dependencies = _mirukenCore.inject.get(target, key);
         if (dependencies && dependencies.length > 0) {
@@ -328,22 +313,13 @@ define(['exports', 'validate.js', 'miruken-core', 'miruken-callback'], function 
         _assignCustomValidator(target, key, descriptor.value);
     }
 
-    function _assignInstanceCustomValidator(target, prototype, key, descriptor) {
+    function _assignInstanceValidator(target, prototype, key, descriptor) {
         var dependencies = _mirukenCore.inject.get(prototype, key);
         if (dependencies && dependencies.length > 0) {
-            throw new SyntaxError('@customValidator can\'t use dependencies for instance method \'' + key + '\' on ' + target.name);
+            throw new SyntaxError('@customValidator can\'t have dependencies for instance method \'' + key + '\' on ' + target.name);
         }
         descriptor.value = function () {
-            var validator = void 0;
-            if (_mirukenCallback.$composer) {
-                validator = _mirukenCallback.$composer.resolve(target);
-            }
-            if (!validator) {
-                validator = Reflect.construct(target, _mirukenCore.emptyArray);
-            }
-            if (!validator) {
-                throw Error('@customValidator unable to resolve or create validator ' + target.name);
-            }
+            var validator = _mirukenCallback.$composer && _mirukenCallback.$composer.resolve(target) || Reflect.construct(target, _mirukenCore.emptyArray);
 
             for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
                 args[_key2] = arguments[_key2];
@@ -461,6 +437,8 @@ define(['exports', 'validate.js', 'miruken-core', 'miruken-callback'], function 
         return (0, _mirukenCore.decorate)((0, _mirukenCallback.addDefinition)("validate", $validate), types);
     }
 
+    var $validate = exports.$validate = (0, _mirukenCallback.$define)(Variance.Contravariant);
+
     var Validating = exports.Validating = _mirukenCore.Protocol.extend({
         validate: function validate(object, scope, results) {},
         validateAsync: function validateAsync(object, scope, results) {}
@@ -517,6 +495,18 @@ define(['exports', 'validate.js', 'miruken-core', 'miruken-callback'], function 
             value: results
         });
     }
+
+    (0, _mirukenCallback.$handle)(_mirukenCallback.CallbackHandler.prototype, Validation, function (validation, composer) {
+        var target = validation.object,
+            source = (0, _mirukenCore.$classOf)(target);
+        if (source) {
+            $validate.dispatch(this, validation, source, composer, true, validation.addAsyncResult);
+            var asyncResults = validation.asyncResults;
+            if (asyncResults) {
+                return Promise.all(asyncResults);
+            }
+        }
+    });
 
     _mirukenCallback.CallbackHandler.implement({
         $valid: function $valid(target, scope) {

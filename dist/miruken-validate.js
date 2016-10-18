@@ -1,6 +1,6 @@
 import validatejs from "validate.js";
-import {True,Invoking,Metadata,inject,isDescriptor,$isFunction,$use,Base,pcopy,$isPlainObject,Variance,$isPromise,$classOf,decorate,emptyArray,$flatten,Protocol,StrictProtocol,$isNothing,Undefined} from 'miruken-core';
-import {CallbackHandler,$define,$handle,$composer,addDefinition} from 'miruken-callback';
+import {True,Invoking,Metadata,inject,isDescriptor,$isFunction,$use,Base,pcopy,$isPlainObject,$isPromise,decorate,emptyArray,$flatten,Protocol,StrictProtocol,$isNothing,$classOf,Undefined} from 'miruken-core';
+import {$composer,addDefinition,CallbackHandler,$define,$handle} from 'miruken-callback';
 
 const validateThatMetadataKey = Symbol();
 
@@ -202,12 +202,6 @@ function _mergeConstraints(target, source) {
 }
 
 /**
- * Validation definition group.
- * @property {Function} $validate
- */
-export const $validate = $define(Variance.Contravariant);
-
-/**
  * Callback representing the validation of an object.
  * @class Validation
  * @constructor
@@ -266,19 +260,6 @@ export const Validation = Base.extend({
     }
 });
 
-$handle(CallbackHandler.prototype, Validation, function (validation, composer) {
-    const target = validation.object,
-          source = $classOf(target);
-    if (source) {
-        $validate.dispatch(this, validation, source, composer, true, validation.addAsyncResult);
-        var asyncResults = validation.asyncResults;
-        if (asyncResults) {
-            return Promise.all(asyncResults);
-        }
-    }
-});
-
-
 let validatorsCount = 0;
 const validators = validatejs.validators;
 
@@ -302,19 +283,18 @@ export function customValidator(target) {
         throw new SyntaxError("@customValidator can only be applied to a class");
     }
 
-    const prototype = target.prototype;
-    
     Reflect.ownKeys(target).forEach(key => {
         const descriptor = Object.getOwnPropertyDescriptor(target, key);
         if (_isCustomValidator(key, descriptor)) {
-            _assignStaticCustomValidator(target, key, descriptor);
+            _assignStaticValidator(target, key, descriptor);
         }
     });
-    
+
+    const prototype = target.prototype;
     Reflect.ownKeys(prototype).forEach(key => {
         const descriptor = Object.getOwnPropertyDescriptor(prototype, key);
         if (_isCustomValidator(key, descriptor)) {        
-            _assignInstanceCustomValidator(target, prototype, key, descriptor);
+            _assignInstanceValidator(target, prototype, key, descriptor);
         }
     });
 }
@@ -327,7 +307,7 @@ function _isCustomValidator(key, descriptor) {
     return $isFunction(value) && value.length > 0;
 }
 
-function _assignStaticCustomValidator(target, key, descriptor) {
+function _assignStaticValidator(target, key, descriptor) {
     const { value }    = descriptor,    
           dependencies = inject.get(target, key);
     if (dependencies && dependencies.length > 0) {
@@ -342,22 +322,14 @@ function _assignStaticCustomValidator(target, key, descriptor) {
     _assignCustomValidator(target, key, descriptor.value);
 }
 
-function _assignInstanceCustomValidator(target, prototype, key, descriptor) {
+function _assignInstanceValidator(target, prototype, key, descriptor) {
     const dependencies = inject.get(prototype, key);
     if (dependencies && dependencies.length > 0) {
-        throw new SyntaxError(`@customValidator can\'t use dependencies for instance method '${key}' on ${target.name}`);
+        throw new SyntaxError(`@customValidator can\'t have dependencies for instance method '${key}' on ${target.name}`);
     }    
     descriptor.value = function (...args) {
-        let validator;
-        if ($composer) {
-            validator = $composer.resolve(target);
-        }
-        if (!validator) {
-            validator = Reflect.construct(target, emptyArray);
-        }
-        if (!validator) {
-            throw Error(`@customValidator unable to resolve or create validator ${target.name}`);
-        }
+        const validator = ($composer && $composer.resolve(target))
+                       || Reflect.construct(target, emptyArray);
         return validator[key].apply(validator, args);
     }
     _assignCustomValidator(target, key, descriptor.value);
@@ -443,6 +415,12 @@ export function validate(...types) {
     return decorate(addDefinition("validate", $validate), types);
 }
 
+
+/**
+ * Validation definition group.
+ * @property {Function} $validate
+ */
+export const $validate = $define(Variance.Contravariant);
 
 /**
  * Protocol for validating objects.
@@ -538,6 +516,19 @@ function _bindValidationResults(object, results) {
         value:        results
     });
 }
+
+
+$handle(CallbackHandler.prototype, Validation, function (validation, composer) {
+    const target = validation.object,
+          source = $classOf(target);
+    if (source) {
+        $validate.dispatch(this, validation, source, composer, true, validation.addAsyncResult);
+        var asyncResults = validation.asyncResults;
+        if (asyncResults) {
+            return Promise.all(asyncResults);
+        }
+    }
+});
 
 CallbackHandler.implement({
     $valid(target, scope) {

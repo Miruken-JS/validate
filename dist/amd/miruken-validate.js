@@ -268,18 +268,18 @@ define(['exports', 'validate.js', 'miruken-core', 'miruken-callback'], function 
             throw new SyntaxError("@customValidator can only be applied to a class");
         }
 
-        Reflect.ownKeys(target).forEach(function (key) {
-            var descriptor = Object.getOwnPropertyDescriptor(target, key);
-            if (_isCustomValidator(key, descriptor)) {
-                _assignStaticValidator(target, key, descriptor);
-            }
-        });
-
         var prototype = target.prototype;
         Reflect.ownKeys(prototype).forEach(function (key) {
             var descriptor = Object.getOwnPropertyDescriptor(prototype, key);
             if (_isCustomValidator(key, descriptor)) {
                 _assignInstanceValidator(target, prototype, key, descriptor);
+            }
+        });
+
+        Reflect.ownKeys(target).forEach(function (key) {
+            var descriptor = Object.getOwnPropertyDescriptor(target, key);
+            if (_isCustomValidator(key, descriptor)) {
+                _assignStaticValidator(target, key, descriptor);
             }
         });
     }
@@ -337,14 +337,20 @@ define(['exports', 'validate.js', 'miruken-core', 'miruken-callback'], function 
         }
         validators[tag] = fn;
 
+        var method = target[key];
         target[key] = function () {
             for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
                 args[_key3] = arguments[_key3];
             }
 
-            return (0, _mirukenCore.decorate)(function (t, k, d, options) {
-                return constraint(_defineProperty({}, tag, options))(t, k, d);
-            }, args);
+            if (args.length === 3 && (0, _mirukenCore.isDescriptor)(args[2])) {
+                return (0, _mirukenCore.decorate)(function (t, k, d, options) {
+                    return constraint(_defineProperty({}, tag, options))(t, k, d);
+                }, args);
+            }
+            if ((0, _mirukenCore.$isFunction)(method)) {
+                return method.apply(target, args);
+            }
         };
     }
 
@@ -429,15 +435,7 @@ define(['exports', 'validate.js', 'miruken-core', 'miruken-callback'], function 
         }
     });
 
-    function validate() {
-        for (var _len6 = arguments.length, types = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-            types[_key6] = arguments[_key6];
-        }
-
-        return (0, _mirukenCore.decorate)((0, _mirukenCallback.addDefinition)("validate", $validate), types);
-    }
-
-    var $validate = exports.$validate = (0, _mirukenCallback.$define)(Variance.Contravariant);
+    var $validate = exports.$validate = (0, _mirukenCallback.$define)(_mirukenCore.Variance.Contravariant);
 
     var Validating = exports.Validating = _mirukenCore.Protocol.extend({
         validate: function validate(object, scope, results) {},
@@ -522,6 +520,14 @@ define(['exports', 'validate.js', 'miruken-core', 'miruken-callback'], function 
             });
         }
     });
+
+    function validate() {
+        for (var _len6 = arguments.length, types = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+            types[_key6] = arguments[_key6];
+        }
+
+        return (0, _mirukenCore.decorate)((0, _mirukenCallback.addDefinition)("validate", $validate), types);
+    }
 
     _validate2.default.Promise = Promise;
     _validate2.default.validators.nested = _mirukenCore.Undefined;

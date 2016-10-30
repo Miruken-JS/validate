@@ -46,9 +46,14 @@ const customInstance = Base.extend(customValidator, {
         this.database = database;
     },
     uniqueEmail(email) {
-        if (email != null && this.database.hasEmail(email)) {
+        return customInstance.uniqueEmail(this.database, email);
+    }
+}, {
+    @inject(Database)    
+    uniqueEmail(database, email) {
+        if (email != null && database.hasEmail(email)) {
             return `${email} is already taken`;
-        }
+        }        
     }
 });
 
@@ -315,8 +320,21 @@ describe("customValidator", () => {
         expect(validatejs.validators).to.have.property("uniqueUserName");
     });
 
+    it("should accept direct calls to static validator methods", () => {
+        const database = new Database(["hellboy", "razor"]),
+              errors   = customStatic.uniqueUserName(database, "razor");
+        expect(errors).to.equal("razor is already taken");
+    });
+    
     it("should register instance validators with dependencies", () => {
         expect(validatejs.validators).to.have.property("uniqueEmail");
+    });
+
+    it("should accept direct calls to static validator methods", () => {
+        const database  = new Database([], ["miruken@gmail.com"]),
+              validator = new customInstance(database),
+              errors    = validator.uniqueEmail("miruken@gmail.com");
+        expect(errors).to.equal("miruken@gmail.com is already taken");
     });
     
     it("should handle naming conflicts", () => {

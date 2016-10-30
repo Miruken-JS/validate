@@ -1,6 +1,6 @@
 import validatejs from "validate.js";
-import {True,Invoking,Metadata,inject,isDescriptor,$isFunction,$use,Base,pcopy,$isPlainObject,$isPromise,decorate,emptyArray,$flatten,Protocol,StrictProtocol,$isNothing,$classOf,Undefined} from 'miruken-core';
-import {$composer,addDefinition,CallbackHandler,$define,$handle} from 'miruken-callback';
+import {True,Invoking,Metadata,inject,isDescriptor,$isFunction,$use,Base,pcopy,$isPlainObject,$isPromise,decorate,emptyArray,$flatten,Variance,Protocol,StrictProtocol,$isNothing,$classOf,Undefined} from 'miruken-core';
+import {$composer,CallbackHandler,$define,$handle,addDefinition} from 'miruken-callback';
 
 const validateThatMetadataKey = Symbol();
 
@@ -239,7 +239,7 @@ export const Validation = Base.extend({
              * Gets the validation results.
              * @property {ValidationResult} results
              * @readOnly
-             */                                                                
+             */
             get results() { return results; },
             /**
              * Gets the async validation results.
@@ -283,13 +283,6 @@ export function customValidator(target) {
         throw new SyntaxError("@customValidator can only be applied to a class");
     }
 
-    Reflect.ownKeys(target).forEach(key => {
-        const descriptor = Object.getOwnPropertyDescriptor(target, key);
-        if (_isCustomValidator(key, descriptor)) {
-            _assignStaticValidator(target, key, descriptor);
-        }
-    });
-
     const prototype = target.prototype;
     Reflect.ownKeys(prototype).forEach(key => {
         const descriptor = Object.getOwnPropertyDescriptor(prototype, key);
@@ -297,6 +290,13 @@ export function customValidator(target) {
             _assignInstanceValidator(target, prototype, key, descriptor);
         }
     });
+
+    Reflect.ownKeys(target).forEach(key => {
+        const descriptor = Object.getOwnPropertyDescriptor(target, key);
+        if (_isCustomValidator(key, descriptor)) {
+            _assignStaticValidator(target, key, descriptor);
+        }
+    });    
 }
 
 function _isCustomValidator(key, descriptor) {
@@ -342,11 +342,16 @@ function _assignCustomValidator(target, key, fn) {
     }
     validators[tag] = fn;
 
+    const method = target[key];
     target[key] = function (...args) {
-        return decorate((t, k, d, options) => constraint({[tag]: options})(t, k, d), args);
+        if (args.length === 3 && isDescriptor(args[2])) {
+            return decorate((t, k, d, options) => constraint({[tag]: options})(t, k, d), args);
+        }
+        if ($isFunction(method)) {
+            return method.apply(target, args);
+        }
     };
 }
-
 
 export const email = constraint({email: true});
 
@@ -407,16 +412,6 @@ Object.assign(url, {
 
 
 /**
- * Marks method as providing validation capabilities.
- * @method validate
- * @param  {Array}  ...types  -  types that can be validated
- */ 
-export function validate(...types) {
-    return decorate(addDefinition("validate", $validate), types);
-}
-
-
-/**
  * Validation definition group.
  * @property {Function} $validate
  */
@@ -465,7 +460,6 @@ export const Validator = StrictProtocol.extend(Validating);
  * @class ValidationCallbackHandler
  * @extends CallbackHandler
  * @uses Validator
- * @uses Validating
  */        
 export const ValidationCallbackHandler = CallbackHandler.extend(Validator, {
     validate(object, scope, results) {
@@ -517,7 +511,6 @@ function _bindValidationResults(object, results) {
     });
 }
 
-
 $handle(CallbackHandler.prototype, Validation, function (validation, composer) {
     const target = validation.object,
           source = $classOf(target);
@@ -541,6 +534,16 @@ CallbackHandler.implement({
                  .then(results => results.valid));
     }
 });
+
+/**
+ * Marks method as providing validation capabilities.
+ * @method validate
+ * @param  {Array}  ...types  -  types that can be validated
+ */ 
+export function validate(...types) {
+    return decorate(addDefinition("validate", $validate), types);
+}
+
 
 validatejs.Promise = Promise;
 validatejs.validators.nested = Undefined;

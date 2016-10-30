@@ -3,7 +3,7 @@
 System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_export, _context) {
     "use strict";
 
-    var validatejs, True, Invoking, Metadata, inject, isDescriptor, $isFunction, $use, Base, pcopy, $isPlainObject, $isPromise, decorate, emptyArray, $flatten, Protocol, StrictProtocol, $isNothing, $classOf, Undefined, $composer, addDefinition, CallbackHandler, $define, $handle, _typeof, _desc, _value, _obj, validateThatMetadataKey, validateThat, ValidationResult, IGNORE, constraintMetadataKey, constraint, applyConstraints, Validation, validatorsCount, validators, email, length, number, required, url, $validate, Validating, Validator, ValidationCallbackHandler, detailed, validatable, ValidateJsCallbackHandler;
+    var validatejs, True, Invoking, Metadata, inject, isDescriptor, $isFunction, $use, Base, pcopy, $isPlainObject, $isPromise, decorate, emptyArray, $flatten, Variance, Protocol, StrictProtocol, $isNothing, $classOf, Undefined, $composer, CallbackHandler, $define, $handle, addDefinition, _typeof, _desc, _value, _obj, validateThatMetadataKey, validateThat, ValidationResult, IGNORE, constraintMetadataKey, constraint, applyConstraints, Validation, validatorsCount, validators, email, length, number, required, url, $validate, Validating, Validator, ValidationCallbackHandler, detailed, validatable, ValidateJsCallbackHandler;
 
     function _applyDecoratedDescriptor(target, property, decorators, descriptor, context) {
         var desc = {};
@@ -70,18 +70,18 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
             throw new SyntaxError("@customValidator can only be applied to a class");
         }
 
-        Reflect.ownKeys(target).forEach(function (key) {
-            var descriptor = Object.getOwnPropertyDescriptor(target, key);
-            if (_isCustomValidator(key, descriptor)) {
-                _assignStaticValidator(target, key, descriptor);
-            }
-        });
-
         var prototype = target.prototype;
         Reflect.ownKeys(prototype).forEach(function (key) {
             var descriptor = Object.getOwnPropertyDescriptor(prototype, key);
             if (_isCustomValidator(key, descriptor)) {
                 _assignInstanceValidator(target, prototype, key, descriptor);
+            }
+        });
+
+        Reflect.ownKeys(target).forEach(function (key) {
+            var descriptor = Object.getOwnPropertyDescriptor(target, key);
+            if (_isCustomValidator(key, descriptor)) {
+                _assignStaticValidator(target, key, descriptor);
             }
         });
     }
@@ -141,14 +141,20 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
         }
         validators[tag] = fn;
 
+        var method = target[key];
         target[key] = function () {
             for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
                 args[_key3] = arguments[_key3];
             }
 
-            return decorate(function (t, k, d, options) {
-                return constraint(_defineProperty({}, tag, options))(t, k, d);
-            }, args);
+            if (args.length === 3 && isDescriptor(args[2])) {
+                return decorate(function (t, k, d, options) {
+                    return constraint(_defineProperty({}, tag, options))(t, k, d);
+                }, args);
+            }
+            if ($isFunction(method)) {
+                return method.apply(target, args);
+            }
         };
     }
 
@@ -184,16 +190,6 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
 
     _export('excludes', excludes);
 
-    function validate() {
-        for (var _len6 = arguments.length, types = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-            types[_key6] = arguments[_key6];
-        }
-
-        return decorate(addDefinition("validate", $validate), types);
-    }
-
-    _export('validate', validate);
-
     function _validateThat(validation, asyncResults, composer) {
         var object = validation.object;
         validateThat.getKeys(object, function (_, key) {
@@ -213,6 +209,16 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
             value: results
         });
     }
+
+    function validate() {
+        for (var _len6 = arguments.length, types = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+            types[_key6] = arguments[_key6];
+        }
+
+        return decorate(addDefinition("validate", $validate), types);
+    }
+
+    _export('validate', validate);
 
     function validateNestedAsync(validator, scope, results, nested) {
         var pending = [];
@@ -293,6 +299,7 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
             decorate = _mirukenCore.decorate;
             emptyArray = _mirukenCore.emptyArray;
             $flatten = _mirukenCore.$flatten;
+            Variance = _mirukenCore.Variance;
             Protocol = _mirukenCore.Protocol;
             StrictProtocol = _mirukenCore.StrictProtocol;
             $isNothing = _mirukenCore.$isNothing;
@@ -300,10 +307,10 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
             Undefined = _mirukenCore.Undefined;
         }, function (_mirukenCallback) {
             $composer = _mirukenCallback.$composer;
-            addDefinition = _mirukenCallback.addDefinition;
             CallbackHandler = _mirukenCallback.CallbackHandler;
             $define = _mirukenCallback.$define;
             $handle = _mirukenCallback.$handle;
+            addDefinition = _mirukenCallback.addDefinition;
         }],
         execute: function () {
             _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {

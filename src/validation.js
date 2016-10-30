@@ -39,7 +39,7 @@ export const Validation = Base.extend({
              * Gets the validation results.
              * @property {ValidationResult} results
              * @readOnly
-             */                                                                
+             */
             get results() { return results; },
             /**
              * Gets the async validation results.

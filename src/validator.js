@@ -59,7 +59,6 @@ export const Validator = StrictProtocol.extend(Validating);
  * @class ValidationCallbackHandler
  * @extends CallbackHandler
  * @uses Validator
- * @uses Validating
  */        
 export const ValidationCallbackHandler = CallbackHandler.extend(Validator, {
     validate(object, scope, results) {
@@ -110,7 +109,6 @@ function _bindValidationResults(object, results) {
         value:        results
     });
 }
-
 
 $handle(CallbackHandler.prototype, Validation, function (validation, composer) {
     const target = validation.object,

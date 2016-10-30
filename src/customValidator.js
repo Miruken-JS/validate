@@ -1,6 +1,6 @@
 import {
-    Invoking, inject, decorate,
-    emptyArray, $isFunction, $use
+    Invoking, inject, decorate, emptyArray,
+    isDescriptor, $isFunction, $use
 } from "miruken-core";
 
 import { $composer } from "miruken-callback";
@@ -30,13 +30,6 @@ export function customValidator(target) {
         throw new SyntaxError("@customValidator can only be applied to a class");
     }
 
-    Reflect.ownKeys(target).forEach(key => {
-        const descriptor = Object.getOwnPropertyDescriptor(target, key);
-        if (_isCustomValidator(key, descriptor)) {
-            _assignStaticValidator(target, key, descriptor);
-        }
-    });
-
     const prototype = target.prototype;
     Reflect.ownKeys(prototype).forEach(key => {
         const descriptor = Object.getOwnPropertyDescriptor(prototype, key);
@@ -44,6 +37,13 @@ export function customValidator(target) {
             _assignInstanceValidator(target, prototype, key, descriptor);
         }
     });
+
+    Reflect.ownKeys(target).forEach(key => {
+        const descriptor = Object.getOwnPropertyDescriptor(target, key);
+        if (_isCustomValidator(key, descriptor)) {
+            _assignStaticValidator(target, key, descriptor);
+        }
+    });    
 }
 
 function _isCustomValidator(key, descriptor) {
@@ -89,8 +89,13 @@ function _assignCustomValidator(target, key, fn) {
     }
     validators[tag] = fn;
 
+    const method = target[key];
     target[key] = function (...args) {
-        return decorate((t, k, d, options) => constraint({[tag]: options})(t, k, d), args);
+        if (args.length === 3 && isDescriptor(args[2])) {
+            return decorate((t, k, d, options) => constraint({[tag]: options})(t, k, d), args);
+        }
+        if ($isFunction(method)) {
+            return method.apply(target, args);
+        }
     };
 }
-

@@ -1,5 +1,5 @@
 import { Undefined, $isFunction} from "miruken-core";
-import { CallbackHandler, $composer } from "miruken-callback";
+import { Handler, $composer } from "miruken-callback";
 import { Validator } from "./validator";
 import { validate } from "./validate";
 import {  constraint } from "./constraint";
@@ -12,7 +12,7 @@ const detailed    = { format: "detailed", cleanAttributes: false },
       validatable = { validate: undefined };
 
 /**
- * CallbackHandler for performing validation using [validate.js](http://validatejs.org)
+ * Handler for performing validation using [validate.js](http://validatejs.org)
  * <p>
  * Classes participate in validation by declaring specifying constraints on properties.
  * </p>
@@ -31,10 +31,10 @@ const detailed    = { format: "detailed", cleanAttributes: false },
  *     }
  * })
  * </pre>
- * @class ValidateJsCallbackHandler
- * @extends CallbackHandler
+ * @class ValidateJsHandler
+ * @extends Handler
  */            
-export const ValidateJsCallbackHandler = CallbackHandler.extend({
+export const ValidateJsHandler = Handler.extend({
     @validate
     validateJS(validation, composer) {
         const target      = validation.object,

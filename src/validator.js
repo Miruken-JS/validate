@@ -4,7 +4,7 @@ import {
 } from "miruken-core";
 
 import {
-    CallbackHandler, $define, $handle, $composer
+    Handler, $define, $handle, $composer
 } from "miruken-callback";
 
 import { validateThat } from "./validateThat";
@@ -52,15 +52,15 @@ export const Validating = Protocol.extend({
 export const Validator = StrictProtocol.extend(Validating);
 
 /**
- * CallbackHandler for performing validation.
+ * Handler for performing validation.
  * <p>
  * Once an object is validated, it will receive a **$validation** property containing the validation results.
  * </p>
- * @class ValidationCallbackHandler
- * @extends CallbackHandler
+ * @class ValidationHandler
+ * @extends Handler
  * @uses Validator
  */        
-export const ValidationCallbackHandler = CallbackHandler.extend(Validator, {
+export const ValidationHandler = Handler.extend(Validator, {
     validate(object, scope, results) {
         if ($isNothing(object)) {
             throw new TypeError("Missing object to validate.");
@@ -110,19 +110,18 @@ function _bindValidationResults(object, results) {
     });
 }
 
-$handle(CallbackHandler.prototype, Validation, function (validation, composer) {
+$handle(Handler.prototype, Validation, function (validation, composer) {
     const target = validation.object,
           source = $classOf(target);
-    if (source) {
-        $validate.dispatch(this, validation, source, composer, true, validation.addAsyncResult);
-        var asyncResults = validation.asyncResults;
-        if (asyncResults) {
-            return Promise.all(asyncResults);
-        }
+    if ($isNothing(source)) { return false; }
+    $validate.dispatch(this, validation, source, composer, true, validation.addAsyncResult);
+    var asyncResults = validation.asyncResults;
+    if (asyncResults) {
+        return Promise.all(asyncResults);
     }
 });
 
-CallbackHandler.implement({
+Handler.implement({
     $valid(target, scope) {
         return this.aspect((_, composer) =>
             Validator(composer).validate(target, scope).valid);

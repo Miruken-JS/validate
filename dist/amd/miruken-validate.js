@@ -4,7 +4,7 @@ define(['exports', 'validate.js', 'miruken-core', 'miruken-callback'], function 
     Object.defineProperty(exports, "__esModule", {
         value: true
     });
-    exports.ValidateJsCallbackHandler = exports.ValidationCallbackHandler = exports.Validator = exports.Validating = exports.$validate = exports.url = exports.required = exports.number = exports.length = exports.email = exports.Validation = exports.applyConstraints = exports.constraint = exports.ValidationResult = exports.validateThat = undefined;
+    exports.ValidateJsHandler = exports.ValidationHandler = exports.Validator = exports.Validating = exports.$validate = exports.url = exports.required = exports.number = exports.length = exports.email = exports.Validation = exports.applyConstraints = exports.constraint = exports.ValidationResult = exports.validateThat = undefined;
     exports.customValidator = customValidator;
     exports.matches = matches;
     exports.includes = includes;
@@ -444,7 +444,7 @@ define(['exports', 'validate.js', 'miruken-core', 'miruken-callback'], function 
 
     var Validator = exports.Validator = _mirukenCore.StrictProtocol.extend(Validating);
 
-    var ValidationCallbackHandler = exports.ValidationCallbackHandler = _mirukenCallback.CallbackHandler.extend(Validator, {
+    var ValidationHandler = exports.ValidationHandler = _mirukenCallback.Handler.extend(Validator, {
         validate: function validate(object, scope, results) {
             if ((0, _mirukenCore.$isNothing)(object)) {
                 throw new TypeError("Missing object to validate.");
@@ -494,19 +494,20 @@ define(['exports', 'validate.js', 'miruken-core', 'miruken-callback'], function 
         });
     }
 
-    (0, _mirukenCallback.$handle)(_mirukenCallback.CallbackHandler.prototype, Validation, function (validation, composer) {
+    (0, _mirukenCallback.$handle)(_mirukenCallback.Handler.prototype, Validation, function (validation, composer) {
         var target = validation.object,
             source = (0, _mirukenCore.$classOf)(target);
-        if (source) {
-            $validate.dispatch(this, validation, source, composer, true, validation.addAsyncResult);
-            var asyncResults = validation.asyncResults;
-            if (asyncResults) {
-                return Promise.all(asyncResults);
-            }
+        if ((0, _mirukenCore.$isNothing)(source)) {
+            return false;
+        }
+        $validate.dispatch(this, validation, source, composer, true, validation.addAsyncResult);
+        var asyncResults = validation.asyncResults;
+        if (asyncResults) {
+            return Promise.all(asyncResults);
         }
     });
 
-    _mirukenCallback.CallbackHandler.implement({
+    _mirukenCallback.Handler.implement({
         $valid: function $valid(target, scope) {
             return this.aspect(function (_, composer) {
                 return Validator(composer).validate(target, scope).valid;
@@ -535,7 +536,7 @@ define(['exports', 'validate.js', 'miruken-core', 'miruken-callback'], function 
     var detailed = { format: "detailed", cleanAttributes: false },
         validatable = { validate: undefined };
 
-    var ValidateJsCallbackHandler = exports.ValidateJsCallbackHandler = _mirukenCallback.CallbackHandler.extend((_obj = {
+    var ValidateJsHandler = exports.ValidateJsHandler = _mirukenCallback.Handler.extend((_obj = {
         validateJS: function validateJS(validation, composer) {
             var target = validation.object,
                 nested = {},

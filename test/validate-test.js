@@ -4,11 +4,11 @@ import { validateThat } from '../src/validateThat';
 import { ValidationResult } from '../src/result';
 
 import {
-    Validator, ValidationCallbackHandler, $validate
+    Validator, ValidationHandler, $validate
 } from '../src/validator';
 
 import { Context } from 'miruken-context';
-import { CallbackHandler } from 'miruken-callback';
+import { Handler } from 'miruken-callback';
 import { inject } from 'miruken-core';
 
 import {
@@ -145,26 +145,26 @@ describe("ValidationResult", () => {
     });
 });
 
-describe("ValidationCallbackHandler", () => {
+describe("ValidationHandler", () => {
     describe("#validate", () => {
         it("should invalidate object", () => {
             const team   = new Team({name: "Liverpool", division: "U8"}),
                   league = new Context()
-                  .addHandlers(team, new ValidationCallbackHandler()),
+                  .addHandlers(team, new ValidationHandler()),
                   player = new Player;
             expect(Validator(league).validate(player).valid).to.be.false;
         });
 
         it("should be valid if no validators", () => {
             const league = new Context()
-                  .addHandlers(new ValidationCallbackHandler()),
+                  .addHandlers(new ValidationHandler()),
                   player = new Player;
             expect(Validator(league).validate(player).valid).to.be.true;
         });
 
         it("should add $validation to target", () => {
             const league  = new Context()
-                  .addHandlers(new ValidationCallbackHandler()),
+                  .addHandlers(new ValidationHandler()),
                   player  = new Player,
                   results = Validator(league).validate(player);
             expect(results).to.equal(player.$validation);
@@ -172,7 +172,7 @@ describe("ValidationCallbackHandler", () => {
 
         it("should not enumerate $validation on target", () => {
             const league  = new Context()
-                  .addHandlers(new ValidationCallbackHandler()),
+                  .addHandlers(new ValidationHandler()),
                   player  = new Player;
             Validator(league).validate(player);
             for (let key in player) {
@@ -183,7 +183,7 @@ describe("ValidationCallbackHandler", () => {
         it("should provide key errors", () => {
             const team       = new Team({name: "Liverpool", division: "U8"}),
                   league     = new Context()
-                  .addHandlers(team, new ValidationCallbackHandler()),
+                  .addHandlers(team, new ValidationHandler()),
                   player     = new Player({firstName: "Matthew"});
             const results = Validator(league).validate(player);
             expect(results.valid).to.be.false;
@@ -198,7 +198,7 @@ describe("ValidationCallbackHandler", () => {
         it("should dynamically add validation", () => {
             const team   = new Team({name: "Liverpool", division: "U8"}),
                   league = new Context()
-                  .addHandlers(team, new ValidationCallbackHandler()),
+                  .addHandlers(team, new ValidationHandler()),
                   player = new Player({firstName: "Diego", lastName: "Morales", dob: new Date(2006, 7, 19)});
             $validate(league, Player, validation => {
                 const player = validation.object,
@@ -229,7 +229,7 @@ describe("ValidationCallbackHandler", () => {
         it("should validateThat instance", () => {
             const team       = new Team({name: "Liverpool", division: "U7"}),
                   league     = new Context()
-                  .addHandlers(new ValidationCallbackHandler());
+                  .addHandlers(new ValidationHandler());
             const results = Validator(league).validate(team);
             expect(results.valid).to.be.false;
             expect(results.division.errors.teamHasDivision).to.eql([{
@@ -241,8 +241,8 @@ describe("ValidationCallbackHandler", () => {
             const coach      = new Coach({firstName: "Jordan", license: "D"}),
                   httpClient = new HttpClient(),
                   league     = new Context()
-                  .addHandlers(new ValidationCallbackHandler(),
-                               new (CallbackHandler.extend(Invoking, {
+                  .addHandlers(new ValidationHandler(),
+                               new (Handler.extend(Invoking, {
                                    invoke(fn, dependencies, ctx) {
                                        expect(dependencies[0]).to.equal(HttpClient);
                                        dependencies[0] = httpClient;
@@ -258,7 +258,7 @@ describe("ValidationCallbackHandler", () => {
 
         it("should validate unknown sources", () => {
             const league = new Context()
-                  .addHandlers(new ValidationCallbackHandler());
+                  .addHandlers(new ValidationHandler());
             $validate(league, null, validation => {
                 const source = validation.object;
                 if ((source instanceof Team) &&
@@ -277,7 +277,7 @@ describe("ValidationCallbackHandler", () => {
         it("should roll up errors", () => {
             const team    = new Team({name: "Liverpool", division: "U8"}),
                   league  = new Context()
-                  .addHandlers(team, new ValidationCallbackHandler()),
+                  .addHandlers(team, new ValidationHandler()),
                   player  = new Player;
             const results = Validator(league).validate(player);
             expect(results.valid).to.be.false;
@@ -300,8 +300,8 @@ describe("ValidationCallbackHandler", () => {
         const httpClient = new HttpClient();
         beforeEach(() => {
             league = new Context()
-                .addHandlers(new ValidationCallbackHandler(),
-                             new (CallbackHandler.extend(Invoking, {
+                .addHandlers(new ValidationHandler(),
+                             new (Handler.extend(Invoking, {
                                  invoke(fn, dependencies, ctx) {
                                      expect(dependencies[0]).to.equal(HttpClient);
                                      dependencies[0] = httpClient;
@@ -363,7 +363,7 @@ describe("@validateThat", () => {
     it("should extend validatorThat methods on instances", () => {
         const team   = new Team({name: "Liverpool", division: "U9"}),
               league = new Context()
-              .addHandlers(team, new ValidationCallbackHandler());
+              .addHandlers(team, new ValidationHandler());
         team.extend({
             @validateThat
             teamHasAtLeastSevenPlayerWhenU9(validation) {

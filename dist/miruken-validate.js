@@ -1,6 +1,6 @@
 import validatejs from "validate.js";
 import {True,Invoking,Metadata,inject,isDescriptor,$isFunction,$use,Base,pcopy,$isPlainObject,$isPromise,decorate,emptyArray,$flatten,Variance,Protocol,StrictProtocol,$isNothing,$classOf,Undefined} from 'miruken-core';
-import {$composer,CallbackHandler,$define,$handle,addDefinition} from 'miruken-callback';
+import {$composer,Handler,$define,$handle,addDefinition} from 'miruken-callback';
 
 const validateThatMetadataKey = Symbol();
 
@@ -453,15 +453,15 @@ export const Validating = Protocol.extend({
 export const Validator = StrictProtocol.extend(Validating);
 
 /**
- * CallbackHandler for performing validation.
+ * Handler for performing validation.
  * <p>
  * Once an object is validated, it will receive a **$validation** property containing the validation results.
  * </p>
- * @class ValidationCallbackHandler
- * @extends CallbackHandler
+ * @class ValidationHandler
+ * @extends Handler
  * @uses Validator
  */        
-export const ValidationCallbackHandler = CallbackHandler.extend(Validator, {
+export const ValidationHandler = Handler.extend(Validator, {
     validate(object, scope, results) {
         if ($isNothing(object)) {
             throw new TypeError("Missing object to validate.");
@@ -511,19 +511,18 @@ function _bindValidationResults(object, results) {
     });
 }
 
-$handle(CallbackHandler.prototype, Validation, function (validation, composer) {
+$handle(Handler.prototype, Validation, function (validation, composer) {
     const target = validation.object,
           source = $classOf(target);
-    if (source) {
-        $validate.dispatch(this, validation, source, composer, true, validation.addAsyncResult);
-        var asyncResults = validation.asyncResults;
-        if (asyncResults) {
-            return Promise.all(asyncResults);
-        }
+    if ($isNothing(source)) { return false; }
+    $validate.dispatch(this, validation, source, composer, true, validation.addAsyncResult);
+    var asyncResults = validation.asyncResults;
+    if (asyncResults) {
+        return Promise.all(asyncResults);
     }
 });
 
-CallbackHandler.implement({
+Handler.implement({
     $valid(target, scope) {
         return this.aspect((_, composer) =>
             Validator(composer).validate(target, scope).valid);
@@ -552,7 +551,7 @@ const detailed    = { format: "detailed", cleanAttributes: false },
       validatable = { validate: undefined };
 
 /**
- * CallbackHandler for performing validation using [validate.js](http://validatejs.org)
+ * Handler for performing validation using [validate.js](http://validatejs.org)
  * <p>
  * Classes participate in validation by declaring specifying constraints on properties.
  * </p>
@@ -571,10 +570,10 @@ const detailed    = { format: "detailed", cleanAttributes: false },
  *     }
  * })
  * </pre>
- * @class ValidateJsCallbackHandler
- * @extends CallbackHandler
+ * @class ValidateJsHandler
+ * @extends Handler
  */            
-export const ValidateJsCallbackHandler = CallbackHandler.extend({
+export const ValidateJsHandler = Handler.extend({
     @validate
     validateJS(validation, composer) {
         const target      = validation.object,

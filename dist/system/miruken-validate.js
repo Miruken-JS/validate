@@ -3,7 +3,7 @@
 System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_export, _context) {
     "use strict";
 
-    var validatejs, True, Invoking, Metadata, inject, isDescriptor, $isFunction, $use, Base, pcopy, $isPlainObject, $isPromise, decorate, emptyArray, $flatten, Variance, Protocol, StrictProtocol, $isNothing, $classOf, Undefined, $composer, CallbackHandler, $define, $handle, addDefinition, _typeof, _desc, _value, _obj, validateThatMetadataKey, validateThat, ValidationResult, IGNORE, constraintMetadataKey, constraint, applyConstraints, Validation, validatorsCount, validators, email, length, number, required, url, $validate, Validating, Validator, ValidationCallbackHandler, detailed, validatable, ValidateJsCallbackHandler;
+    var validatejs, True, Invoking, Metadata, inject, isDescriptor, $isFunction, $use, Base, pcopy, $isPlainObject, $isPromise, decorate, emptyArray, $flatten, Variance, Protocol, StrictProtocol, $isNothing, $classOf, Undefined, $composer, Handler, $define, $handle, addDefinition, _typeof, _desc, _value, _obj, validateThatMetadataKey, validateThat, ValidationResult, IGNORE, constraintMetadataKey, constraint, applyConstraints, Validation, validatorsCount, validators, email, length, number, required, url, $validate, Validating, Validator, ValidationHandler, detailed, validatable, ValidateJsHandler;
 
     function _applyDecoratedDescriptor(target, property, decorators, descriptor, context) {
         var desc = {};
@@ -307,7 +307,7 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
             Undefined = _mirukenCore.Undefined;
         }, function (_mirukenCallback) {
             $composer = _mirukenCallback.$composer;
-            CallbackHandler = _mirukenCallback.CallbackHandler;
+            Handler = _mirukenCallback.Handler;
             $define = _mirukenCallback.$define;
             $handle = _mirukenCallback.$handle;
             addDefinition = _mirukenCallback.addDefinition;
@@ -583,7 +583,7 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
 
             _export('Validator', Validator);
 
-            _export('ValidationCallbackHandler', ValidationCallbackHandler = CallbackHandler.extend(Validator, {
+            _export('ValidationHandler', ValidationHandler = Handler.extend(Validator, {
                 validate: function validate(object, scope, results) {
                     if ($isNothing(object)) {
                         throw new TypeError("Missing object to validate.");
@@ -613,21 +613,22 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
                 }
             }));
 
-            _export('ValidationCallbackHandler', ValidationCallbackHandler);
+            _export('ValidationHandler', ValidationHandler);
 
-            $handle(CallbackHandler.prototype, Validation, function (validation, composer) {
+            $handle(Handler.prototype, Validation, function (validation, composer) {
                 var target = validation.object,
                     source = $classOf(target);
-                if (source) {
-                    $validate.dispatch(this, validation, source, composer, true, validation.addAsyncResult);
-                    var asyncResults = validation.asyncResults;
-                    if (asyncResults) {
-                        return Promise.all(asyncResults);
-                    }
+                if ($isNothing(source)) {
+                    return false;
+                }
+                $validate.dispatch(this, validation, source, composer, true, validation.addAsyncResult);
+                var asyncResults = validation.asyncResults;
+                if (asyncResults) {
+                    return Promise.all(asyncResults);
                 }
             });
 
-            CallbackHandler.implement({
+            Handler.implement({
                 $valid: function $valid(target, scope) {
                     return this.aspect(function (_, composer) {
                         return Validator(composer).validate(target, scope).valid;
@@ -648,7 +649,7 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
             detailed = { format: "detailed", cleanAttributes: false };
             validatable = { validate: undefined };
 
-            _export('ValidateJsCallbackHandler', ValidateJsCallbackHandler = CallbackHandler.extend((_obj = {
+            _export('ValidateJsHandler', ValidateJsHandler = Handler.extend((_obj = {
                 validateJS: function validateJS(validation, composer) {
                     var target = validation.object,
                         nested = {},
@@ -692,7 +693,7 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
                 }
             }, (_applyDecoratedDescriptor(_obj, 'validateJS', [validate], Object.getOwnPropertyDescriptor(_obj, 'validateJS'), _obj)), _obj)));
 
-            _export('ValidateJsCallbackHandler', ValidateJsCallbackHandler);
+            _export('ValidateJsHandler', ValidateJsHandler);
         }
     };
 });

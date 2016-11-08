@@ -1,8 +1,8 @@
 import { Base, Invoking, Modifier, inject } from "miruken-core";
-import { CallbackHandler, provide } from "miruken-callback";
+import { Handler, provide } from "miruken-callback";
 import { Context } from "miruken-context";
-import { Validator, ValidationCallbackHandler } from "../src/validator";
-import { ValidateJsCallbackHandler } from "../src/validatorJs";
+import { Validator, ValidationHandler } from "../src/validator";
+import { ValidateJsHandler } from "../src/validatorJs";
 import { customValidator } from "../src/customValidator";
 import { constraint, applyConstraints } from "../src/constraint";
 import { includes, excludes } from "../src/member";
@@ -104,8 +104,7 @@ describe("built-ins", () => {
     let context;
     beforeEach(() => {
         context = new Context();
-        context.addHandlers(new ValidationCallbackHandler(),
-                            new ValidateJsCallbackHandler());
+        context.addHandlers(new ValidationHandler(), new ValidateJsHandler());
     });
 
     describe("required", () => {
@@ -347,12 +346,11 @@ describe("customValidator", () => {
 
 });
 
-describe("ValidateJsCallbackHandler", () => {
+describe("ValidateJsHandler", () => {
     let context;
     beforeEach(() => {
         context = new Context();
-        context.addHandlers(new ValidationCallbackHandler(),
-                            new ValidateJsCallbackHandler());
+        context.addHandlers(new ValidationHandler(), new ValidateJsHandler());
     });
 
     describe("#validate", () => {
@@ -466,7 +464,7 @@ describe("ValidateJsCallbackHandler", () => {
         it("should validate with dependencies", () => {
             const user     = new User("neo"),
                   database = new Database(["hellboy", "razor"]);
-            context.addHandlers(new (CallbackHandler.extend(Invoking, {
+            context.addHandlers(new (Handler.extend(Invoking, {
                 invoke(fn, dependencies) {
                     expect(dependencies[0]).to.equal(Database);
                     dependencies[0] = database;
@@ -488,7 +486,7 @@ describe("ValidateJsCallbackHandler", () => {
                 @constraint({uniqueCode: true})
                 code: undefined
               });
-            context.addHandlers((new CallbackHandler).extend({
+            context.addHandlers((new Handler).extend({
                 @provide("uniqueCode")
                 uniqueCode() { return this; },
                 validate(value, options, key, attributes) {}

@@ -3,7 +3,7 @@
 System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_export, _context) {
     "use strict";
 
-    var validatejs, True, Invoking, Metadata, inject, isDescriptor, $isFunction, $use, Base, pcopy, $isPlainObject, $isPromise, decorate, emptyArray, $flatten, Variance, Protocol, StrictProtocol, $isNothing, $classOf, Undefined, $composer, Handler, $define, $handle, addDefinition, _typeof, _desc, _value, _obj, validateThatMetadataKey, validateThat, ValidationResult, IGNORE, constraintMetadataKey, constraint, applyConstraints, Validation, validatorsCount, validators, email, length, number, required, url, $validate, Validating, Validator, ValidationHandler, detailed, validatable, ValidateJsHandler;
+    var validatejs, True, Invoking, Metadata, inject, isDescriptor, $isFunction, $use, Variance, decorate, Base, pcopy, $isPlainObject, $isPromise, emptyArray, $flatten, Protocol, StrictProtocol, $isNothing, $classOf, Undefined, addDefinition, $define, $composer, Handler, $handle, _typeof, _desc, _value, _obj, validateThatMetadataKey, validateThat, $validate, ValidationResult, IGNORE, constraintMetadataKey, constraint, applyConstraints, Validation, validatorsCount, validators, email, length, number, required, url, Validating, Validator, ValidationHandler, detailed, validatable, ValidateJsHandler;
 
     function _applyDecoratedDescriptor(target, property, decorators, descriptor, context) {
         var desc = {};
@@ -48,6 +48,16 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
 
         return obj;
     }
+
+    function validate() {
+        for (var _len = arguments.length, types = Array(_len), _key = 0; _key < _len; _key++) {
+            types[_key] = arguments[_key];
+        }
+
+        return decorate(addDefinition("validate", $validate), types);
+    }
+
+    _export('validate', validate);
 
     function _isReservedKey(key) {
         return IGNORE.indexOf(key) >= 0;
@@ -106,8 +116,8 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
                     throw new Error('@customValidator unable to invoke static method \'' + key + '\' on ' + target.name);
                 }
 
-                for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-                    args[_key] = arguments[_key];
+                for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+                    args[_key2] = arguments[_key2];
                 }
 
                 var deps = dependencies.concat(args.map($use));
@@ -125,8 +135,8 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
         descriptor.value = function () {
             var validator = $composer && $composer.resolve(target) || Reflect.construct(target, emptyArray);
 
-            for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-                args[_key2] = arguments[_key2];
+            for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+                args[_key3] = arguments[_key3];
             }
 
             return validator[key].apply(validator, args);
@@ -143,8 +153,8 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
 
         var method = target[key];
         target[key] = function () {
-            for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-                args[_key3] = arguments[_key3];
+            for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+                args[_key4] = arguments[_key4];
             }
 
             if (args.length === 3 && isDescriptor(args[2])) {
@@ -169,8 +179,8 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
     _export('matches', matches);
 
     function includes() {
-        for (var _len4 = arguments.length, members = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-            members[_key4] = arguments[_key4];
+        for (var _len5 = arguments.length, members = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+            members[_key5] = arguments[_key5];
         }
 
         members = $flatten(members, true);
@@ -180,8 +190,8 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
     _export('includes', includes);
 
     function excludes() {
-        for (var _len5 = arguments.length, members = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-            members[_key5] = arguments[_key5];
+        for (var _len6 = arguments.length, members = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+            members[_key6] = arguments[_key6];
         }
 
         members = $flatten(members, true);
@@ -209,16 +219,6 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
             value: results
         });
     }
-
-    function validate() {
-        for (var _len6 = arguments.length, types = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-            types[_key6] = arguments[_key6];
-        }
-
-        return decorate(addDefinition("validate", $validate), types);
-    }
-
-    _export('validate', validate);
 
     function validateNestedAsync(validator, scope, results, nested) {
         var pending = [];
@@ -292,25 +292,25 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
             isDescriptor = _mirukenCore.isDescriptor;
             $isFunction = _mirukenCore.$isFunction;
             $use = _mirukenCore.$use;
+            Variance = _mirukenCore.Variance;
+            decorate = _mirukenCore.decorate;
             Base = _mirukenCore.Base;
             pcopy = _mirukenCore.pcopy;
             $isPlainObject = _mirukenCore.$isPlainObject;
             $isPromise = _mirukenCore.$isPromise;
-            decorate = _mirukenCore.decorate;
             emptyArray = _mirukenCore.emptyArray;
             $flatten = _mirukenCore.$flatten;
-            Variance = _mirukenCore.Variance;
             Protocol = _mirukenCore.Protocol;
             StrictProtocol = _mirukenCore.StrictProtocol;
             $isNothing = _mirukenCore.$isNothing;
             $classOf = _mirukenCore.$classOf;
             Undefined = _mirukenCore.Undefined;
         }, function (_mirukenCallback) {
+            addDefinition = _mirukenCallback.addDefinition;
+            $define = _mirukenCallback.$define;
             $composer = _mirukenCallback.$composer;
             Handler = _mirukenCallback.Handler;
-            $define = _mirukenCallback.$define;
             $handle = _mirukenCallback.$handle;
-            addDefinition = _mirukenCallback.addDefinition;
         }],
         execute: function () {
             _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
@@ -344,6 +344,10 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
             }));
 
             _export('validateThat', validateThat);
+
+            _export('$validate', $validate = $define(Variance.Contravariant));
+
+            _export('$validate', $validate);
 
             _export('ValidationResult', ValidationResult = Base.extend({
                 constructor: function constructor() {
@@ -567,10 +571,6 @@ System.register(['validate.js', 'miruken-core', 'miruken-callback'], function (_
                     return constraint({ url: { allowLocal: _allowLocal } });
                 }
             });
-
-            _export('$validate', $validate = $define(Variance.Contravariant));
-
-            _export('$validate', $validate);
 
             _export('Validating', Validating = Protocol.extend({
                 validate: function validate(object, scope, results) {},

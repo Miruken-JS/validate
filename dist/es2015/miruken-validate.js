@@ -3,17 +3,17 @@
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.ValidateJsHandler = exports.ValidationHandler = exports.Validator = exports.Validating = exports.$validate = exports.url = exports.required = exports.number = exports.length = exports.email = exports.Validation = exports.applyConstraints = exports.constraint = exports.ValidationResult = exports.validateThat = undefined;
+exports.ValidateJsHandler = exports.ValidationHandler = exports.Validator = exports.Validating = exports.url = exports.required = exports.number = exports.length = exports.email = exports.Validation = exports.applyConstraints = exports.constraint = exports.ValidationResult = exports.$validate = exports.validateThat = undefined;
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var _desc, _value, _obj;
 
+exports.validate = validate;
 exports.customValidator = customValidator;
 exports.matches = matches;
 exports.includes = includes;
 exports.excludes = excludes;
-exports.validate = validate;
 
 var _validate = require('validate.js');
 
@@ -80,6 +80,16 @@ var validateThat = exports.validateThat = _mirukenCore.Metadata.decorator(valida
         };
     }
 });
+
+var $validate = exports.$validate = (0, _mirukenCallback.$define)(_mirukenCore.Variance.Contravariant);
+
+function validate() {
+    for (var _len = arguments.length, types = Array(_len), _key = 0; _key < _len; _key++) {
+        types[_key] = arguments[_key];
+    }
+
+    return (0, _mirukenCore.decorate)((0, _mirukenCallback.addDefinition)("validate", $validate), types);
+}
 
 var ValidationResult = exports.ValidationResult = _mirukenCore.Base.extend({
     constructor: function constructor() {
@@ -287,8 +297,8 @@ function _assignStaticValidator(target, key, descriptor) {
                 throw new Error('@customValidator unable to invoke static method \'' + key + '\' on ' + target.name);
             }
 
-            for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-                args[_key] = arguments[_key];
+            for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+                args[_key2] = arguments[_key2];
             }
 
             var deps = dependencies.concat(args.map(_mirukenCore.$use));
@@ -306,8 +316,8 @@ function _assignInstanceValidator(target, prototype, key, descriptor) {
     descriptor.value = function () {
         var validator = _mirukenCallback.$composer && _mirukenCallback.$composer.resolve(target) || Reflect.construct(target, _mirukenCore.emptyArray);
 
-        for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-            args[_key2] = arguments[_key2];
+        for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+            args[_key3] = arguments[_key3];
         }
 
         return validator[key].apply(validator, args);
@@ -324,8 +334,8 @@ function _assignCustomValidator(target, key, fn) {
 
     var method = target[key];
     target[key] = function () {
-        for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-            args[_key3] = arguments[_key3];
+        for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+            args[_key4] = arguments[_key4];
         }
 
         if (args.length === 3 && (0, _mirukenCore.isDescriptor)(args[2])) {
@@ -362,8 +372,8 @@ function matches(pattern, flags) {
 }
 
 function includes() {
-    for (var _len4 = arguments.length, members = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-        members[_key4] = arguments[_key4];
+    for (var _len5 = arguments.length, members = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+        members[_key5] = arguments[_key5];
     }
 
     members = (0, _mirukenCore.$flatten)(members, true);
@@ -371,8 +381,8 @@ function includes() {
 }
 
 function excludes() {
-    for (var _len5 = arguments.length, members = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-        members[_key5] = arguments[_key5];
+    for (var _len6 = arguments.length, members = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+        members[_key6] = arguments[_key6];
     }
 
     members = (0, _mirukenCore.$flatten)(members, true);
@@ -419,8 +429,6 @@ Object.assign(url, {
         return constraint({ url: { allowLocal: _allowLocal } });
     }
 });
-
-var $validate = exports.$validate = (0, _mirukenCallback.$define)(_mirukenCore.Variance.Contravariant);
 
 var Validating = exports.Validating = _mirukenCore.Protocol.extend({
     validate: function validate(object, scope, results) {},
@@ -506,14 +514,6 @@ _mirukenCallback.Handler.implement({
         });
     }
 });
-
-function validate() {
-    for (var _len6 = arguments.length, types = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-        types[_key6] = arguments[_key6];
-    }
-
-    return (0, _mirukenCore.decorate)((0, _mirukenCallback.addDefinition)("validate", $validate), types);
-}
 
 _validate2.default.Promise = Promise;
 _validate2.default.validators.nested = _mirukenCore.Undefined;

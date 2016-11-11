@@ -1,5 +1,5 @@
 import {
-    Variance, Protocol, StrictProtocol,
+    Protocol, StrictProtocol,
     $isNothing, $isPromise, $classOf
 } from "miruken-core";
 
@@ -9,12 +9,7 @@ import {
 
 import { validateThat } from "./validateThat";
 import { Validation } from "./validation";
-
-/**
- * Validation definition group.
- * @property {Function} $validate
- */
-export const $validate = $define(Variance.Contravariant);
+import { $validate } from "./validate";
 
 /**
  * Protocol for validating objects.

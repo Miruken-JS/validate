@@ -1,6 +1,6 @@
 import validatejs from "validate.js";
-import {True,Invoking,Metadata,inject,isDescriptor,$isFunction,$use,Base,pcopy,$isPlainObject,$isPromise,decorate,emptyArray,$flatten,Variance,Protocol,StrictProtocol,$isNothing,$classOf,Undefined} from 'miruken-core';
-import {$composer,Handler,$define,$handle,addDefinition} from 'miruken-callback';
+import {True,Invoking,Metadata,inject,isDescriptor,$isFunction,$use,Variance,decorate,Base,pcopy,$isPlainObject,$isPromise,emptyArray,$flatten,Protocol,StrictProtocol,$isNothing,$classOf,Undefined} from 'miruken-core';
+import {addDefinition,$define,$composer,Handler,$handle} from 'miruken-callback';
 
 const validateThatMetadataKey = Symbol();
 
@@ -30,6 +30,22 @@ export const validateThat = Metadata.decorator(validateThatMetadataKey,
             }
         }
     });
+
+
+/**
+ * Definition for validating objects
+ * @property {Function} $validate
+ */
+export const $validate = $define(Variance.Contravariant);
+
+/**
+ * Marks method as providing validation capabilities.
+ * @method validate
+ * @param  {Array}  ...types  -  types that can be validated
+ */ 
+export function validate(...types) {
+    return decorate(addDefinition("validate", $validate), types);
+}
 
 
 /**
@@ -412,12 +428,6 @@ Object.assign(url, {
 
 
 /**
- * Validation definition group.
- * @property {Function} $validate
- */
-export const $validate = $define(Variance.Contravariant);
-
-/**
  * Protocol for validating objects.
  * @class Validating
  * @extends Protocol
@@ -533,16 +543,6 @@ Handler.implement({
                  .then(results => results.valid));
     }
 });
-
-/**
- * Marks method as providing validation capabilities.
- * @method validate
- * @param  {Array}  ...types  -  types that can be validated
- */ 
-export function validate(...types) {
-    return decorate(addDefinition("validate", $validate), types);
-}
-
 
 validatejs.Promise = Promise;
 validatejs.validators.nested = Undefined;

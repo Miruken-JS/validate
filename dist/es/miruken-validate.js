@@ -1,17 +1,17 @@
-define(['exports', 'miruken-core', 'miruken-callback', 'validate.js'], function (exports, mirukenCore, mirukenCallback, validatejs) { 'use strict';
-
-validatejs = 'default' in validatejs ? validatejs['default'] : validatejs;
+import { $classOf, $flatten, $isFunction, $isNothing, $isPlainObject, $isPromise, $use, Base, Invoking, Metadata, Protocol, StrictProtocol, True, Undefined, Variance, decorate, emptyArray, inject, isDescriptor, pcopy } from 'miruken-core';
+import { $composer, $define, $handle, Handler, addDefinition } from 'miruken-callback';
+import validatejs from 'validate.js';
 
 var constraintMetadataKey = Symbol();
 
-var constraint = mirukenCore.Metadata.decorator(constraintMetadataKey, function (target, key, descriptor, constraints) {
+var constraint = Metadata.decorator(constraintMetadataKey, function (target, key, descriptor, constraints) {
     if (constraints.length === 0 || key === "constructor") return;
     var get = descriptor.get,
         value = descriptor.value,
         initializer = descriptor.initializer;
 
     if (!get && !value && !initializer) return;
-    var current = mirukenCore.Metadata.getOrCreateOwn(constraintMetadataKey, target, key, function () {
+    var current = Metadata.getOrCreateOwn(constraintMetadataKey, target, key, function () {
         return {};
     });
     constraints.forEach(function (constraint) {
@@ -25,7 +25,7 @@ function _mergeConstraints(target, source) {
     Reflect.ownKeys(source).forEach(function (key) {
         var newValue = source[key],
             curValue = target[key];
-        if (mirukenCore.$isPlainObject(curValue) && !Array.isArray(curValue)) {
+        if ($isPlainObject(curValue) && !Array.isArray(curValue)) {
             _mergeConstraints(curValue, newValue);
         } else {
             target[key] = Array.isArray(newValue) ? newValue.slice() : newValue;
@@ -65,16 +65,16 @@ function _isCustomValidator(key, descriptor) {
     }
     var value = descriptor.value;
 
-    return mirukenCore.$isFunction(value) && value.length > 0;
+    return $isFunction(value) && value.length > 0;
 }
 
 function _assignStaticValidator(target, key, descriptor) {
     var value = descriptor.value,
-        dependencies = mirukenCore.inject.get(target, key);
+        dependencies = inject.get(target, key);
 
     if (dependencies && dependencies.length > 0) {
         descriptor.value = function () {
-            if (!mirukenCallback.$composer) {
+            if (!$composer) {
                 throw new Error("@customValidator unable to invoke static method '" + key + "' on " + target.name);
             }
 
@@ -82,20 +82,20 @@ function _assignStaticValidator(target, key, descriptor) {
                 args[_key] = arguments[_key];
             }
 
-            var deps = dependencies.concat(args.map(mirukenCore.$use));
-            return mirukenCore.Invoking(mirukenCallback.$composer).invoke(value, deps, target);
+            var deps = dependencies.concat(args.map($use));
+            return Invoking($composer).invoke(value, deps, target);
         };
     }
     _assignCustomValidator(target, key, descriptor.value);
 }
 
 function _assignInstanceValidator(target, prototype, key, descriptor) {
-    var dependencies = mirukenCore.inject.get(prototype, key);
+    var dependencies = inject.get(prototype, key);
     if (dependencies && dependencies.length > 0) {
         throw new SyntaxError("@customValidator can't have dependencies for instance method '" + key + "' on " + target.name);
     }
     descriptor.value = function () {
-        var validator = mirukenCallback.$composer && mirukenCallback.$composer.resolve(target) || Reflect.construct(target, mirukenCore.emptyArray);
+        var validator = $composer && $composer.resolve(target) || Reflect.construct(target, emptyArray);
 
         for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
             args[_key2] = arguments[_key2];
@@ -119,12 +119,12 @@ function _assignCustomValidator(target, key, fn) {
             args[_key3] = arguments[_key3];
         }
 
-        if (args.length === 3 && mirukenCore.isDescriptor(args[2])) {
-            return mirukenCore.decorate(function (t, k, d, options) {
+        if (args.length === 3 && isDescriptor(args[2])) {
+            return decorate(function (t, k, d, options) {
                 return constraint(_defineProperty({}, tag, options))(t, k, d);
             }, args);
         }
-        if (mirukenCore.$isFunction(method)) {
+        if ($isFunction(method)) {
             return method.apply(target, args);
         }
     };
@@ -157,7 +157,7 @@ function includes() {
         members[_key] = arguments[_key];
     }
 
-    members = mirukenCore.$flatten(members, true);
+    members = $flatten(members, true);
     return constraint({ inclusion: members });
 }
 
@@ -166,7 +166,7 @@ function excludes() {
         members[_key2] = arguments[_key2];
     }
 
-    members = mirukenCore.$flatten(members, true);
+    members = $flatten(members, true);
     return constraint({ exclusion: members });
 }
 
@@ -200,7 +200,7 @@ Object.assign(number, {
 
 var required = constraint({ presence: true });
 
-var ValidationResult = mirukenCore.Base.extend({
+var ValidationResult = Base.extend({
     constructor: function constructor() {
         var _errors = void 0,
             _summary = void 0;
@@ -247,7 +247,7 @@ var ValidationResult = mirukenCore.Base.extend({
                             var named = errors[name];
                             var existing = _summary[name];
                             for (var ii = 0; ii < named.length; ++ii) {
-                                var error = mirukenCore.pcopy(named[ii]);
+                                var error = pcopy(named[ii]);
                                 error.key = error.key ? key + "." + error.key : key;
                                 if (existing) {
                                     existing.push(error);
@@ -310,20 +310,20 @@ Object.assign(url, {
     }
 });
 
-var $validate = mirukenCallback.$define(mirukenCore.Variance.Contravariant);
+var $validate = $define(Variance.Contravariant);
 
 function validate$1() {
   for (var _len = arguments.length, types = Array(_len), _key = 0; _key < _len; _key++) {
     types[_key] = arguments[_key];
   }
 
-  return mirukenCore.decorate(mirukenCallback.addDefinition("validate", $validate), types);
+  return decorate(addDefinition("validate", $validate), types);
 }
 
 var validateThatMetadataKey = Symbol();
 
-var validateThat = mirukenCore.Metadata.decorator(validateThatMetadataKey, function (target, key, descriptor) {
-    if (!mirukenCore.isDescriptor(descriptor)) {
+var validateThat = Metadata.decorator(validateThatMetadataKey, function (target, key, descriptor) {
+    if (!isDescriptor(descriptor)) {
         throw new SyntaxError("@validateThat cannot be applied to classes");
     }
     if (key === "constructor") {
@@ -331,21 +331,21 @@ var validateThat = mirukenCore.Metadata.decorator(validateThatMetadataKey, funct
     }
     var value = descriptor.value;
 
-    if (!mirukenCore.$isFunction(value)) {
+    if (!$isFunction(value)) {
         throw new SyntaxError("@validateThat cannot be applied to methods");
     }
-    mirukenCore.Metadata.getOrCreateOwn(validateThatMetadataKey, target, key, mirukenCore.True);
-    var dependencies = mirukenCore.inject.get(target, key);
+    Metadata.getOrCreateOwn(validateThatMetadataKey, target, key, True);
+    var dependencies = inject.get(target, key);
     if (dependencies && dependencies.length > 0) {
         descriptor.value = function (validation, composer) {
             var args = Array.prototype.slice.call(arguments),
-                deps = dependencies.concat(args.map(mirukenCore.$use));
-            return mirukenCore.Invoking(composer).invoke(value, deps, this);
+                deps = dependencies.concat(args.map($use));
+            return Invoking(composer).invoke(value, deps, this);
         };
     }
 });
 
-var Validation = mirukenCore.Base.extend({
+var Validation = Base.extend({
   constructor: function constructor(object, async, scope, results) {
     var _asyncResults = void 0;
     async = !!async;
@@ -371,7 +371,7 @@ var Validation = mirukenCore.Base.extend({
         return _asyncResults;
       },
       addAsyncResult: function addAsyncResult(result) {
-        if (mirukenCore.$isPromise(result)) {
+        if ($isPromise(result)) {
           (_asyncResults || (_asyncResults = [])).push(result);
         }
       }
@@ -379,31 +379,31 @@ var Validation = mirukenCore.Base.extend({
   }
 });
 
-var Validating = mirukenCore.Protocol.extend({
+var Validating = Protocol.extend({
     validate: function validate(object, scope, results) {},
     validateAsync: function validateAsync(object, scope, results) {}
 });
 
-var Validator = mirukenCore.StrictProtocol.extend(Validating);
+var Validator = StrictProtocol.extend(Validating);
 
-var ValidationHandler = mirukenCallback.Handler.extend(Validator, {
+var ValidationHandler = Handler.extend(Validator, {
     validate: function validate(object, scope, results) {
-        if (mirukenCore.$isNothing(object)) {
+        if ($isNothing(object)) {
             throw new TypeError("Missing object to validate.");
         }
         var validation = new Validation(object, false, scope, results);
-        mirukenCallback.$composer.handle(validation, true);
+        $composer.handle(validation, true);
         results = validation.results;
         _bindValidationResults(object, results);
-        _validateThat(validation, null, mirukenCallback.$composer);
+        _validateThat(validation, null, $composer);
         return results;
     },
     validateAsync: function validateAsync(object, scope, results) {
-        if (mirukenCore.$isNothing(object)) {
+        if ($isNothing(object)) {
             throw new TypeError("Missing object to validate.");
         }
         var validation = new Validation(object, true, scope, results),
-            composer = mirukenCallback.$composer;
+            composer = $composer;
         return composer.deferAll(validation).then(function () {
             results = validation.results;
             _bindValidationResults(object, results);
@@ -421,7 +421,7 @@ function _validateThat(validation, asyncResults, composer) {
     validateThat.getKeys(object, function (_, key) {
         var validator = object[key],
             returnValue = validator.call(object, validation, composer);
-        if (asyncResults && mirukenCore.$isPromise(returnValue)) {
+        if (asyncResults && $isPromise(returnValue)) {
             asyncResults.push(returnValue);
         }
     });
@@ -436,10 +436,10 @@ function _bindValidationResults(object, results) {
     });
 }
 
-mirukenCallback.$handle(mirukenCallback.Handler.prototype, Validation, function (validation, composer) {
+$handle(Handler.prototype, Validation, function (validation, composer) {
     var target = validation.object,
-        source = mirukenCore.$classOf(target);
-    if (mirukenCore.$isNothing(source)) {
+        source = $classOf(target);
+    if ($isNothing(source)) {
         return false;
     }
     $validate.dispatch(this, validation, source, composer, true, validation.addAsyncResult);
@@ -449,7 +449,7 @@ mirukenCallback.$handle(mirukenCallback.Handler.prototype, Validation, function 
     }
 });
 
-mirukenCallback.Handler.implement({
+Handler.implement({
     $valid: function $valid(target, scope) {
         return this.aspect(function (_, composer) {
             return Validator(composer).validate(target, scope).valid;
@@ -498,11 +498,11 @@ function _applyDecoratedDescriptor(target, property, decorators, descriptor, con
 }
 
 validatejs.Promise = Promise;
-validatejs.validators.nested = mirukenCore.Undefined;
+validatejs.validators.nested = Undefined;
 
 var detailed = { format: "detailed", cleanAttributes: false };
 
-var ValidateJsHandler = mirukenCallback.Handler.extend((_obj = {
+var ValidateJsHandler = Handler.extend((_obj = {
     validateJS: function validateJS(validation, composer) {
         var target = validation.object,
             nested = {},
@@ -589,11 +589,11 @@ function buildConstraints(target, nested) {
                 }
             } else if (!(name in validatejs.validators)) {
                 validatejs.validators[name] = function () {
-                    var validator = mirukenCallback.$composer && mirukenCallback.$composer.resolve(name);
+                    var validator = $composer && $composer.resolve(name);
                     if (!validator) {
                         throw new Error("Unable to resolve validator '" + name + "'.");
                     }
-                    if (!mirukenCore.$isFunction(validator.validate)) {
+                    if (!$isFunction(validator.validate)) {
                         throw new Error("Validator '" + name + "' is missing 'validate' method.");
                     }
                     return validator.validate.apply(validator, arguments);
@@ -608,27 +608,4 @@ function buildConstraints(target, nested) {
     return constraints;
 }
 
-exports.constraint = constraint;
-exports.applyConstraints = applyConstraints;
-exports.customValidator = customValidator;
-exports.email = email;
-exports.length = length;
-exports.matches = matches;
-exports.includes = includes;
-exports.excludes = excludes;
-exports.number = number;
-exports.required = required;
-exports.ValidationResult = ValidationResult;
-exports.url = url;
-exports.$validate = $validate;
-exports.validate = validate$1;
-exports.validateThat = validateThat;
-exports.Validation = Validation;
-exports.Validating = Validating;
-exports.Validator = Validator;
-exports.ValidationHandler = ValidationHandler;
-exports.ValidateJsHandler = ValidateJsHandler;
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
-});
+export { constraint, applyConstraints, customValidator, email, length, matches, includes, excludes, number, required, ValidationResult, url, $validate, validate$1 as validate, validateThat, Validation, Validating, Validator, ValidationHandler, ValidateJsHandler };

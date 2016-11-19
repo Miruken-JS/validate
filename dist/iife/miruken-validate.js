@@ -1,4 +1,5 @@
-define(['exports', 'miruken-core', 'miruken-callback', 'validate.js'], function (exports, mirukenCore, mirukenCallback, validatejs) { 'use strict';
+(function (exports,mirukenCore,mirukenCallback,validatejs) {
+'use strict';
 
 validatejs = 'default' in validatejs ? validatejs['default'] : validatejs;
 
@@ -629,6 +630,4 @@ exports.Validator = Validator;
 exports.ValidationHandler = ValidationHandler;
 exports.ValidateJsHandler = ValidateJsHandler;
 
-Object.defineProperty(exports, '__esModule', { value: true });
-
-});
+}((this.miruken-validate = this.miruken-validate || {}),mirukenCore,mirukenCallback,validatejs));

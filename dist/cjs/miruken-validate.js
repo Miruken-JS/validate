@@ -1,6 +1,12 @@
-define(['exports', 'miruken-core', 'miruken-callback', 'validate.js'], function (exports, mirukenCore, mirukenCallback, validatejs) { 'use strict';
+'use strict';
 
-validatejs = 'default' in validatejs ? validatejs['default'] : validatejs;
+Object.defineProperty(exports, '__esModule', { value: true });
+
+function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
+
+var mirukenCore = require('miruken-core');
+var mirukenCallback = require('miruken-callback');
+var validatejs = _interopDefault(require('validate.js'));
 
 var constraintMetadataKey = Symbol();
 
@@ -628,7 +634,3 @@ exports.Validating = Validating;
 exports.Validator = Validator;
 exports.ValidationHandler = ValidationHandler;
 exports.ValidateJsHandler = ValidateJsHandler;
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
-});

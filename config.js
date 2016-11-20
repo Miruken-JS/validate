@@ -277,6 +277,13 @@ System.config({
       "brace-expansion": "npm:brace-expansion@1.1.6",
       "path": "github:jspm/nodelibs-path@0.1.0"
     },
+    "npm:miruken-callback@0.0.1": {
+      "miruken-core": "npm:miruken-core@0.0.1"
+    },
+    "npm:miruken-context@0.0.1": {
+      "miruken-callback": "npm:miruken-callback@0.0.1",
+      "miruken-core": "npm:miruken-core@0.0.1"
+    },
     "npm:miruken-core@0.0.1": {
       "reflect-metadata": "npm:reflect-metadata@0.1.8"
     },

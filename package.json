@@ -1,6 +1,6 @@
 {
   "name": "miruken-validate",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "registry": "npm",
   "description": "Provides validation support",
   "keywords": [

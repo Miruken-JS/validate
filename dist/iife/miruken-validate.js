@@ -630,4 +630,4 @@ exports.Validator = Validator;
 exports.ValidationHandler = ValidationHandler;
 exports.ValidateJsHandler = ValidateJsHandler;
 
-}((this.miruken-validate = this.miruken-validate || {}),mirukenCore,mirukenCallback,validatejs));
+}((this.mirukenValidate = this.mirukenValidate || {}),mirukenCore,mirukenCallback,validate));

@@ -1,6 +1,5 @@
 import {
-    Protocol, StrictProtocol,
-    $isNothing, $isPromise, $classOf
+    Protocol, $isNothing, $isPromise, $classOf
 } from "miruken-core";
 
 import {
@@ -39,12 +38,11 @@ export const Validating = Protocol.extend({
 });
 
 /**
- * Protocol for validating objects strictly.
+ * Protocol for validating objects.
  * @class Validator
- * @extends StrictProtocol
- * @uses Validating
+ * @extends Validating
  */        
-export const Validator = StrictProtocol.extend(Validating);
+export const Validator = Validating.extend();
 
 /**
  * Handler for performing validation.

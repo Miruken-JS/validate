@@ -384,7 +384,7 @@ var Validating = mirukenCore.Protocol.extend({
     validateAsync: function validateAsync(object, scope, results) {}
 });
 
-var Validator = mirukenCore.StrictProtocol.extend(Validating);
+var Validator = Validating.extend();
 
 var ValidationHandler = mirukenCallback.Handler.extend(Validator, {
     validate: function validate(object, scope, results) {

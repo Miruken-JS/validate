@@ -1,4 +1,4 @@
-import { $classOf, $flatten, $isFunction, $isNothing, $isPlainObject, $isPromise, $use, Base, Invoking, Metadata, Protocol, StrictProtocol, True, Undefined, Variance, decorate, emptyArray, inject, isDescriptor, pcopy } from 'miruken-core';
+import { $classOf, $flatten, $isFunction, $isNothing, $isPlainObject, $isPromise, $use, Base, Invoking, Metadata, Protocol, True, Undefined, Variance, decorate, emptyArray, inject, isDescriptor, pcopy } from 'miruken-core';
 import { $composer, $define, $handle, Handler, addDefinition } from 'miruken-callback';
 import validatejs from 'validate.js';
 
@@ -384,7 +384,7 @@ var Validating = Protocol.extend({
     validateAsync: function validateAsync(object, scope, results) {}
 });
 
-var Validator = StrictProtocol.extend(Validating);
+var Validator = Validating.extend();
 
 var ValidationHandler = Handler.extend(Validator, {
     validate: function validate(object, scope, results) {

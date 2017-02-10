@@ -313,7 +313,7 @@ Object.assign(url, {
 
 var $validate = mirukenCallback.$define(mirukenCore.Variance.Contravariant);
 
-function validate$1() {
+function validate() {
   for (var _len = arguments.length, types = Array(_len), _key = 0; _key < _len; _key++) {
     types[_key] = arguments[_key];
   }
@@ -381,14 +381,14 @@ var Validation = mirukenCore.Base.extend({
 });
 
 var Validating = mirukenCore.Protocol.extend({
-    validate: function validate(object, scope, results) {},
+    validate: function validate$$1(object, scope, results) {},
     validateAsync: function validateAsync(object, scope, results) {}
 });
 
 var Validator = Validating.extend();
 
 var ValidationHandler = mirukenCallback.Handler.extend(Validator, {
-    validate: function validate(object, scope, results) {
+    validate: function validate$$1(object, scope, results) {
         if (mirukenCore.$isNothing(object)) {
             throw new TypeError("Missing object to validate.");
         }
@@ -545,7 +545,7 @@ var ValidateJsHandler = mirukenCallback.Handler.extend((_obj = {
             if ((typeof _ret === "undefined" ? "undefined" : _typeof(_ret)) === "object") return _ret.v;
         }
     }
-}, (_applyDecoratedDescriptor(_obj, "validateJS", [validate$1], Object.getOwnPropertyDescriptor(_obj, "validateJS"), _obj)), _obj));
+}, (_applyDecoratedDescriptor(_obj, "validateJS", [validate], Object.getOwnPropertyDescriptor(_obj, "validateJS"), _obj)), _obj));
 
 function validateNestedAsync(validator, scope, results, nested) {
     var pending = [];
@@ -622,7 +622,7 @@ exports.required = required;
 exports.ValidationResult = ValidationResult;
 exports.url = url;
 exports.$validate = $validate;
-exports.validate = validate$1;
+exports.validate = validate;
 exports.validateThat = validateThat;
 exports.Validation = Validation;
 exports.Validating = Validating;

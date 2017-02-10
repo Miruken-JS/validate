@@ -312,7 +312,7 @@ Object.assign(url, {
 
 var $validate = $define(Variance.Contravariant);
 
-function validate$1() {
+function validate() {
   for (var _len = arguments.length, types = Array(_len), _key = 0; _key < _len; _key++) {
     types[_key] = arguments[_key];
   }
@@ -380,14 +380,14 @@ var Validation = Base.extend({
 });
 
 var Validating = Protocol.extend({
-    validate: function validate(object, scope, results) {},
+    validate: function validate$$1(object, scope, results) {},
     validateAsync: function validateAsync(object, scope, results) {}
 });
 
 var Validator = Validating.extend();
 
 var ValidationHandler = Handler.extend(Validator, {
-    validate: function validate(object, scope, results) {
+    validate: function validate$$1(object, scope, results) {
         if ($isNothing(object)) {
             throw new TypeError("Missing object to validate.");
         }
@@ -544,7 +544,7 @@ var ValidateJsHandler = Handler.extend((_obj = {
             if ((typeof _ret === "undefined" ? "undefined" : _typeof(_ret)) === "object") return _ret.v;
         }
     }
-}, (_applyDecoratedDescriptor(_obj, "validateJS", [validate$1], Object.getOwnPropertyDescriptor(_obj, "validateJS"), _obj)), _obj));
+}, (_applyDecoratedDescriptor(_obj, "validateJS", [validate], Object.getOwnPropertyDescriptor(_obj, "validateJS"), _obj)), _obj));
 
 function validateNestedAsync(validator, scope, results, nested) {
     var pending = [];
@@ -608,4 +608,4 @@ function buildConstraints(target, nested) {
     return constraints;
 }
 
-export { constraint, applyConstraints, customValidator, email, length, matches, includes, excludes, number, required, ValidationResult, url, $validate, validate$1 as validate, validateThat, Validation, Validating, Validator, ValidationHandler, ValidateJsHandler };
+export { constraint, applyConstraints, customValidator, email, length, matches, includes, excludes, number, required, ValidationResult, url, $validate, validate, validateThat, Validation, Validating, Validator, ValidationHandler, ValidateJsHandler };

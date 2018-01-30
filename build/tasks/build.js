@@ -1,8 +1,8 @@
-var gulp             = require('gulp');
-var runSequence      = require('run-sequence');
-var paths            = require('../paths');
-var compilerOptions  = require('../babel-options');
+var gulp             = require("gulp");
+var runSequence      = require("run-sequence");
+var paths            = require("../paths");
 var rollup           = require("rollup").rollup;
+var resolve          = require("rollup-plugin-node-resolve");
 var rollupMultiEntry = require("rollup-plugin-multi-entry");
 var rollupBabel      = require("rollup-plugin-babel");
 var camelCase        = require("camelcase");
@@ -11,23 +11,33 @@ var jsName = paths.packageName + '.js';
 
 gulp.task("rollup", function(done) {
     rollup({
-        entry:   paths.source,
+        input:   paths.source,
+        external: [
+            "miruken-core",
+            "miruken-callback",
+            "miruken-context",
+            "validate.js"
+        ],
         plugins: [
             rollupMultiEntry(),
-            rollupBabel(compilerOptions.es2015())
+            rollupBabel(),
+            resolve()
         ]
     })
     .then(function(bundle) {
-        var moduleTypes = ["amd", "cjs", "es", "iife"];
+        var moduleTypes = ["amd", "cjs", "es", "iife", "system", "umd"];
         moduleTypes.forEach(function(moduleType){
             bundle.write({
-                dest:       paths.output + moduleType + '/' + jsName,
+                file:       paths.output + moduleType + '/' + jsName,
                 format:     moduleType,
-                moduleName: camelCase(paths.packageName),
-                globals: {
-                    "miruken-core": "mirukenCore",
-                    "miruken-callback": "mirukenCallback",
-                    "validate.js": "validate"
+                name: camelCase(paths.packageName),
+                output: {
+                    globals: {
+                        "miruken-core": "mirukenCore",
+                        "miruken-callback": "mirukenCallback",
+                        "miruken-context": "mirukenContext",
+                        "validate.js": "validatejs",
+                    }
                 }
             });
         }); 

@@ -1,10 +1,10 @@
 import { Base, Invoking, Modifier, inject } from "miruken-core";
-import { Handler, provide } from "miruken-callback";
+import { Handler, provides } from "miruken-callback";
 import { Context } from "miruken-context";
 import { Validator, ValidationHandler } from "../src/validator";
 import { ValidateJsHandler } from "../src/validatorJs";
 import { customValidator } from "../src/customValidator";
-import { constraint, applyConstraints } from "../src/constraint";
+import { constraint, valid } from "../src/constraint";
 import { includes, excludes } from "../src/member";
 import { required } from "../src/required";
 import { length } from "../src/length";
@@ -81,10 +81,10 @@ const LineItem = Base.extend({
 
 const Order = Base.extend({
     @required
-    @applyConstraints
-    address: "",
+    @valid
+    address: undefined,
     @required
-    @applyConstraints    
+    @valid    
     lineItems: [],
     @email
     @customInstance.uniqueEmail
@@ -487,7 +487,7 @@ describe("ValidateJsHandler", () => {
                 code: undefined
               });
             context.addHandlers((new Handler).extend({
-                @provide("uniqueCode")
+                @provides("uniqueCode")
                 uniqueCode() { return this; },
                 validate(value, options, key, attributes) {}
             }));

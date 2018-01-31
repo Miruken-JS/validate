@@ -16,7 +16,7 @@ export const constraint = Metadata.decorator(constraintMetadataKey,
         constraints.forEach(constraint => _mergeConstraints(current, constraint));
     });
 
-export const applyConstraints = constraint({nested: true});
+export const valid = constraint({nested: true});
 
 function _mergeConstraints(target, source) {
     Reflect.ownKeys(source).forEach(key => {

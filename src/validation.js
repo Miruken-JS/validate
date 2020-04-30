@@ -1,5 +1,10 @@
-import { Base, $isPromise } from "miruken-core";
+import { 
+    Base, $isNothing, $classOf, $isPromise
+} from "miruken-core";
+
+import { DispatchingCallback } from "miruken-callback";
 import { ValidationResult } from "./result";
+import { $validate } from "./validates";
 
 /**
  * Callback representing the validation of an object.
@@ -11,9 +16,9 @@ import { ValidationResult } from "./result";
  * @param   {ValidationResult} results  -  results to validate to
  * @extends Base
  */
-export const Validation = Base.extend({
+export const Validation = Base.extend(DispatchingCallback, {
     constructor(object, async, scope, results) {
-        let _asyncResults;
+        let _promises = [], _result;
         async   = !!async;
         results = results || new ValidationResult();
         this.extend({
@@ -35,6 +40,12 @@ export const Validation = Base.extend({
              * @readOnly
              */                                                
             get scope() { return scope; },
+             /**
+             * Gets the policy.
+             * @property {Function} policy
+             * @readOnly
+             */         
+            get policy() { return $validate; },           
             /**
              * Gets the validation results.
              * @property {ValidationResult} results
@@ -42,19 +53,35 @@ export const Validation = Base.extend({
              */
             get results() { return results; },
             /**
-             * Gets the async validation results.
-             * @property {ValidationResult} results
-             * @readOnly
-             */                                                                                
-            get asyncResults() { return _asyncResults; },
+             * Gets/sets the effective callback result.
+             * @property {Any} callback result
+             */
+            get callbackResult() {
+                if (_result === undefined) {
+                    _result = _promises.length > 0
+                         ? Promise.all(_promises).then(res => results)
+                         : (async ? Promise.resolve(results) : results);
+                }
+                return _result;
+            },
+            set callbackResult(value) { _result = value; },            
             /**
              * Adds an async validation result. (internal)
              * @method addAsyncResult
              */                        
             addAsyncResult(result) {
                 if ($isPromise(result)) {
-                    (_asyncResults || (_asyncResults = [])).push(result);
+                    if (!async) return false;
+                    _promises.push(result);
                 }
+                _result = undefined;
+            },
+            dispatch(handler, greedy, composer) {
+                const target = this.object,
+                      source = $classOf(target);
+                if ($isNothing(source)) return false;
+                $validate.dispatch(handler, this, source, composer, true, this.addAsyncResult);
+                return true;              
             }
         });
     }

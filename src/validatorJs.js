@@ -1,8 +1,7 @@
 import { Undefined, $isFunction} from "miruken-core";
-import { Handler, $composer } from "miruken-callback";
-import { Validator } from "./validator";
-import { validate } from "./validate";
-import {  constraint } from "./constraint";
+import { Handler } from "miruken-callback";
+import { validates } from "./validates";
+import { constraint } from "./constraint";
 import validatejs from "validate.js";
 
 validatejs.Promise = Promise;
@@ -35,35 +34,36 @@ const detailed    = { format: "detailed", cleanAttributes: false },
  * @extends Handler
  */            
 export const ValidateJsHandler = Handler.extend({
-    @validate
+    @validates
     validateJS(validation, composer) {
         const target      = validation.object,
               nested      = {},
-              constraints = buildConstraints(target, nested);
+              constraints = buildConstraints(target, nested, composer);
         if (constraints) {
             const scope     = validation.scope,
-                  results   = validation.results,
-                  validator = Validator(composer); 
+                  results   = validation.results;
             if (validation.isAsync) {
-                return validatejs.async(target, constraints, detailed)
-                    .then(valid => validateNestedAsync(validator, scope, results, nested))
+                return composer.$compose(
+                    () => validatejs.async(target, constraints, detailed))
+                    .then(valid => validateNestedAsync(composer, scope, results, nested))
                     .catch(errors => {
                         if (errors instanceof Error) {
                             return Promise.reject(errors);
                         }
-                        return validateNestedAsync(validator, scope, results, nested)
+                        return validateNestedAsync(composer, scope, results, nested)
                             .then(() => mapResults(results, errors));
                     });
             } else {
-                const errors = validatejs(target, constraints, detailed);
+                const errors = composer.$compose(
+                    () => validatejs(target, constraints, detailed));
                 for (let key in nested) {
                     const child = nested[key];
                     if (Array.isArray(child)) {
                         for (let i = 0; i < child.length; ++i) {
-                            validator.validate(child[i], scope, results.addKey(key + "." + i));
+                            composer.validate(child[i], scope, results.addKey(key + "." + i));
                         }
                     } else {
-                        validator.validate(child, scope, results.addKey(key));
+                        composer.validate(child, scope, results.addKey(key));
                     }
                 }
                 mapResults(results, errors);
@@ -72,19 +72,19 @@ export const ValidateJsHandler = Handler.extend({
     }
 });
 
-function validateNestedAsync(validator, scope, results, nested) {
+function validateNestedAsync(composer, scope, results, nested) {
     const pending = [];
     for (let key in nested) {
         const child = nested[key];
         if (Array.isArray(child)) {
             for (let i = 0; i < child.length; ++i) {
                 let childResults = results.addKey(key + "." + i);
-                childResults = validator.validateAsync(child[i], scope, childResults);
+                childResults = composer.validateAsync(child[i], scope, childResults);
                 pending.push(childResults);
             }
         } else {
             let childResults = results.addKey(key);
-            childResults = validator.validateAsync(child, scope, childResults);
+            childResults = composer.validateAsync(child, scope, childResults);
             pending.push(childResults);
         }
     }
@@ -102,7 +102,7 @@ function mapResults(results, errors) {
     }
 }
 
-function buildConstraints(target, nested) {
+function buildConstraints(target, nested, composer) {
     let constraints; 
     constraint.getKeys(target, (criteria, key) => {
         (constraints || (constraints = {}))[key] = criteria;
@@ -114,7 +114,7 @@ function buildConstraints(target, nested) {
                 }
             } else if (!(name in validatejs.validators)) {
                 validatejs.validators[name] = function (...args) {
-                    const validator = $composer && $composer.resolve(name);
+                    const validator = composer.resolve(name);
                     if (!validator) {
                         throw new Error(`Unable to resolve validator '${name}'.`);
                     }

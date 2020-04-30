@@ -1,9 +1,8 @@
 import { Base, Invoking, Modifier, inject } from "miruken-core";
 import { Handler, provides } from "miruken-callback";
 import { Context } from "miruken-context";
-import { Validator, ValidationHandler } from "../src/validator";
 import { ValidateJsHandler } from "../src/validatorJs";
-import { customValidator } from "../src/customValidator";
+import { customValidator } from "../src/custom-validator";
 import { constraint, valid } from "../src/constraint";
 import { includes, excludes } from "../src/member";
 import { required } from "../src/required";
@@ -104,7 +103,7 @@ describe("built-ins", () => {
     let context;
     beforeEach(() => {
         context = new Context();
-        context.addHandlers(new ValidationHandler(), new ValidateJsHandler());
+        context.addHandlers(new ValidateJsHandler());
     });
 
     describe("required", () => {
@@ -113,13 +112,13 @@ describe("built-ins", () => {
                       line: "abc", city: "Rockwall",
                       state: "TX", zipcode: "75032"
                   }),
-                  results = Validator(context).validate(address);
+                  results = context.validate(address);
             expect(results.valid).to.be.true;
         });    
         
         it("should fail if not provided", () => {
             const address = new Address(),
-                  results = Validator(context).validate(address);
+                  results = context.validate(address);
             expect(results["city"].errors.presence).to.eql([{
                 message: "City can't be blank", 
                 value:   ""
@@ -133,7 +132,7 @@ describe("built-ins", () => {
                       line: "abc", city: "Rockwall",
                       state: "TX", zipcode: "75032"
                   }),
-                  results = Validator(context).validate(address);
+                  results = context.validate(address);
             expect(results.valid).to.be.true;
         });    
         
@@ -142,7 +141,7 @@ describe("built-ins", () => {
                       line: "abc", city: "Rockwall",
                       state: "T", zipcode: "7503"
                   }),
-                  results = Validator(context).validate(address);
+                  results = context.validate(address);
             expect(results["state"].errors.length).to.eql([{
                 message: "State is the wrong length (should be 2 characters)", 
                 value:   "T"
@@ -162,13 +161,13 @@ describe("built-ins", () => {
         
         it("should require typeof number", () => {
             const person = new Person({age: 7}),
-                  results = Validator(context).validate(person);
+                  results = context.validate(person);
             expect(results.valid).to.be.true;
         });    
         
         it("should fail if not typeof number", () => {
             const person = new Person({age: "7"}),
-                  results = Validator(context).validate(person);
+                  results = context.validate(person);
             expect(results["age"].errors.numericality).to.eql([{
                 message: "Age is not a number", 
                 value:   "7"
@@ -189,13 +188,13 @@ describe("built-ins", () => {
 
         it("should require valid email", () => {
             const contact = new Contact({email: "ric@miruken.com"}),
-                  results = Validator(context).validate(contact);
+                  results = context.validate(contact);
             expect(results.valid).to.be.true;            
         });
         
         it("should fail if not a valid email", () => {
             const contact = new Contact({email: "hello"}),
-                  results = Validator(context).validate(contact);
+                  results = context.validate(contact);
             expect(results["email"].errors.email).to.eql([{
                 message: "Email is not a valid email", 
                 value:   "hello"
@@ -204,7 +203,7 @@ describe("built-ins", () => {
 
         it("should fail if email already exists", () => {
             const contact = new Contact({email: "miruken@gmail.com"}),
-                  results = Validator(context).validate(contact);
+                  results = context.validate(contact);
             expect(results["email"].errors.uniqueEmail).to.eql([{
                 message: "Email miruken@gmail.com is already taken", 
                 value:   "miruken@gmail.com"
@@ -220,13 +219,13 @@ describe("built-ins", () => {
         
         it("should require valid url", () => {
             const site = new Site({url: "http://www.google.com"}),
-                  results = Validator(context).validate(site);
+                  results = context.validate(site);
             expect(results.valid).to.be.true;            
         });
         
         it("should fail if not a valid url", () => {
             const site = new Site({url: "www.google.com"}),
-                  results = Validator(context).validate(site);
+                  results = context.validate(site);
             expect(results["url"].errors.url).to.eql([{
                 message: "Url is not a valid url", 
                 value:   "www.google.com"
@@ -244,14 +243,14 @@ describe("built-ins", () => {
         
         it("should require valid match", () => {
             const login = new Login({userName: "my-us3r_n4m3", password: "myp4ssw0rd"}),
-                  results = Validator(context).validate(login);
+                  results = context.validate(login);
             expect(results.valid).to.be.true;            
         });
         
         it("should fail if not a valid match", () => {
             const login = new Login({
                 userName: "th1s1s-wayt00_l0ngt0beausername", password: "mypa$$w0rd"}),
-                  results = Validator(context).validate(login);
+                  results = context.validate(login);
             expect(results["userName"].errors.format).to.eql([{
                 message: "User name is invalid", 
                 value:   "th1s1s-wayt00_l0ngt0beausername"
@@ -273,13 +272,13 @@ describe("built-ins", () => {
         
         it("should require inclusion", () => {
             const cart = new ShoppingCart({purchase: "barbie"}),
-                  results = Validator(context).validate(cart);
+                  results = context.validate(cart);
             expect(results.valid).to.be.true;
         });    
         
         it("should fail if not included", () => {
             const cart = new ShoppingCart({purchase: "gun"}),
-                  results = Validator(context).validate(cart);
+                  results = context.validate(cart);
             expect(results["purchase"].errors.inclusion).to.eql([{
                 message: "gun is not included in the list", 
                 value:   "gun"
@@ -288,13 +287,13 @@ describe("built-ins", () => {
 
         it("should require exclusion", () => {
             const cart = new ShoppingCart({delivery: 75087}),
-                  results = Validator(context).validate(cart);
+                  results = context.validate(cart);
             expect(results.valid).to.be.true;
         });    
         
         it("should fail if not excluded", () => {
             const cart = new ShoppingCart({delivery: 75032}),
-                  results = Validator(context).validate(cart);
+                  results = context.validate(cart);
             expect(results["delivery"].errors.exclusion).to.eql([{
                 message: "75032 is restricted", 
                 value:   75032
@@ -350,13 +349,13 @@ describe("ValidateJsHandler", () => {
     let context;
     beforeEach(() => {
         context = new Context();
-        context.addHandlers(new ValidationHandler(), new ValidateJsHandler());
+        context.addHandlers(new ValidateJsHandler());
     });
 
     describe("#validate", () => {
         it("should validate simple objects", () => {
             const address = new Address(),
-                  results = Validator(context).validate(address);
+                  results = context.validate(address);
             expect(results.line.errors.presence).to.eql([{
                 message: "Line can't be blank",
                 value:   ""
@@ -384,7 +383,7 @@ describe("ValidateJsHandler", () => {
                 zipcode: "11580"
             });
             order.lineItems = [new LineItem({plu: "12345", quantity: 2})];
-            const results = Validator(context).validate(order);
+            const results = context.validate(order);
             expect(results.valid).to.be.true;
         });
 
@@ -392,7 +391,7 @@ describe("ValidateJsHandler", () => {
             const order     = new Order();
             order.address   = new Address;
             order.lineItems = [new LineItem];
-            const results = Validator(context).validate(order);
+            const results = context.validate(order);
             expect(results.address.line.errors.presence).to.eql([{
                 message: "Line can't be blank",
                 value:   ""
@@ -457,7 +456,7 @@ describe("ValidateJsHandler", () => {
                       bad: undefined
                   });                
             expect(() => {
-                Validator(context).validate(new ThrowOnValidation);
+                context.validate(new ThrowOnValidation);
             }).to.throw(Error, "Oh No!");
         });
 
@@ -474,10 +473,10 @@ describe("ValidateJsHandler", () => {
                     return fn.apply(null, dependencies);
                 }
             })));
-            let results = Validator(context).validate(user);
+            let results = context.validate(user);
             expect(results.valid).to.be.true;
             user.userName = "razor";
-            results = Validator(context).validate(user);
+            results = context.validate(user);
             expect(results.valid).to.be.false;
         });
 
@@ -491,16 +490,17 @@ describe("ValidateJsHandler", () => {
                 uniqueCode() { return this; },
                 validate(value, options, key, attributes) {}
             }));
-            expect(Validator(context).validate(new MissingValidator).valid).to.be.true;
+            expect(context.validate(new MissingValidator).valid).to.be.true;
         });
 
         it("should fail if missing validator", () => {
+            delete validatejs.validators.uniqueCode;
             const MissingValidator = Base.extend({
                 @constraint({uniqueCode: true})
                 code: undefined
               });
             expect(() => {
-                Validator(context).validate(new MissingValidator);
+                context.validate(new MissingValidator);
             }).to.throw(Error, "Unable to resolve validator 'uniqueCode'.");
         });    
     });
@@ -508,7 +508,7 @@ describe("ValidateJsHandler", () => {
     describe("#validateAsync", () => {
         it("should validate simple objects", () => {
             const address = new Address();
-            Validator(context).validateAsync(address).then(results => {
+            context.validateAsync(address).then(results => {
                 expect(results.line.errors.presence).to.eql([{
                     message: "Line can't be blank",
                     value:   ""
@@ -532,7 +532,7 @@ describe("ValidateJsHandler", () => {
             const order = new Order();
             order.address   = new Address;
             order.lineItems = [new LineItem];
-            Validator(context).validateAsync(order).then(results => {
+            context.validateAsync(order).then(results => {
                 expect(results.address.line.errors.presence).to.eql([{
                     message: "Line can't be blank",
                     value:   ""
@@ -598,7 +598,7 @@ describe("ValidateJsHandler", () => {
                       @ex.throwsAsync
                       bad: undefined
                   });
-            Validator(context).validateAsync(new ThrowOnValidation).catch(error => {
+            context.validateAsync(new ThrowOnValidation).catch(error => {
                 expect(error.message).to.equal("Oh No!");
                 done();
             });

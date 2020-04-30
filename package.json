@@ -25,7 +25,7 @@
       "miruken-callback": "0.0.5-alpha.31",
       "miruken-context": "0.0.5-alpha.10",
       "miruken-core": "0.0.5-alpha.6",
-      "validate.js": "0.10.0"
+      "validate.js": "0.13.1"
     },
     "devDependencies": {
       "chai": "^3.5.0"

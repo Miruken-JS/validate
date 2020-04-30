@@ -58,21 +58,21 @@ const customInstance = Base.extend(customValidator, {
 
 const Address = Base.extend({
     @required
-    line: "",
+    line: undefined,
     @required    
-    city: "",
+    city: undefined,
     @required
     @length.is(2)
-    state: "",
+    state: undefined,
     @required
     @length.is(5)    
-    zipcode: "" 
+    zipcode: undefined 
 });
 
 const LineItem = Base.extend({
     @required
     @length.is(5)
-    plu: "",
+    plu: undefined,
     @number.onlyInteger
     @number.greaterThan(0)
     quantity: 0
@@ -121,7 +121,7 @@ describe("built-ins", () => {
                   results = context.validate(address);
             expect(results["city"].errors.presence).to.eql([{
                 message: "City can't be blank", 
-                value:   ""
+                value:   undefined
             }]);
         });    
     });
@@ -358,19 +358,19 @@ describe("ValidateJsHandler", () => {
                   results = context.validate(address);
             expect(results.line.errors.presence).to.eql([{
                 message: "Line can't be blank",
-                value:   ""
+                value:   undefined
             }]);
             expect(results.city.errors.presence).to.eql([{
                 message: "City can't be blank",
-                value:   ""
+                value:   undefined
             }]);
             expect(results.state.errors.presence).to.eql([{
                 message: "State can't be blank",
-                value:   ""
+                value:   undefined
             }]);
             expect(results.zipcode.errors.presence).to.eql([{
                 message: "Zipcode can't be blank",
-                value:   ""
+                value:   undefined
             }]);
         });
 
@@ -394,23 +394,23 @@ describe("ValidateJsHandler", () => {
             const results = context.validate(order);
             expect(results.address.line.errors.presence).to.eql([{
                 message: "Line can't be blank",
-                value:   ""
+                value:   undefined
             }]);
             expect(results.address.city.errors.presence).to.eql([{
                 message: "City can't be blank",
-                value:   ""
+                value:   undefined
             }]);
             expect(results.address.state.errors.presence).to.eql([{
                 message: "State can't be blank",
-                value:   ""
+                value:   undefined
             }]);
             expect(results.address.zipcode.errors.presence).to.eql([{
                 message: "Zipcode can't be blank",
-                value:   ""
+                value:   undefined
             }]);
             expect(results["lineItems.0"].plu.errors.presence).to.eql([{
                 message: "Plu can't be blank",
-                value:   ""
+                value:   undefined
             }]);
             expect(results["lineItems.0"].quantity.errors.numericality).to.eql([{
                 message: "Quantity must be greater than 0",
@@ -419,23 +419,23 @@ describe("ValidateJsHandler", () => {
             expect(results.errors.presence).to.deep.include.members([{
                 key:     "address.line",
                 message: "Line can't be blank",
-                value:   ""
+                value:   undefined
             }, {
                 key:     "address.city",
                 message: "City can't be blank",
-                value:   ""
+                value:   undefined
             }, {
                 key:     "address.state",
                 message: "State can't be blank",
-                value:   ""
+                value:   undefined
             }, {
                 key:     "address.zipcode",
                 message: "Zipcode can't be blank",
-                value:   ""
+                value:   undefined
             }, {
                 key:     "lineItems.0.plu",
                 message: "Plu can't be blank",
-                value:   ""
+                value:   undefined
             }
             ]);
             expect(results.errors.numericality).to.deep.include.members([{
@@ -511,19 +511,19 @@ describe("ValidateJsHandler", () => {
             context.validateAsync(address).then(results => {
                 expect(results.line.errors.presence).to.eql([{
                     message: "Line can't be blank",
-                    value:   ""
+                    value:   undefined
                 }]);
                 expect(results.city.errors.presence).to.eql([{
                     message: "City can't be blank",
-                    value:   ""
+                    value:   undefined
                 }]);
                 expect(results.state.errors.presence).to.eql([{
                     message: "State can't be blank",
-                    value:   ""
+                    value:   undefined
                 }]);
                 expect(results.zipcode.errors.presence).to.eql([{
                     message: "Zipcode can't be blank",
-                    value:   ""
+                    value:   undefined
                 }]);
             });
         });
@@ -535,23 +535,23 @@ describe("ValidateJsHandler", () => {
             context.validateAsync(order).then(results => {
                 expect(results.address.line.errors.presence).to.eql([{
                     message: "Line can't be blank",
-                    value:   ""
+                    value:   undefined
                 }]);
                 expect(results.address.city.errors.presence).to.eql([{
                     message: "City can't be blank",
-                    value:   ""
+                    value:   undefined
                 }]);
                 expect(results.address.state.errors.presence).to.eql([{
                     message: "State can't be blank",
-                    value:   ""
+                    value:   undefined
                 }]);
                 expect(results.address.zipcode.errors.presence).to.eql([{
                     message: "Zipcode can't be blank",
-                    value:   ""
+                    value:   undefined
                 }]);
                 expect(results["lineItems.0"].plu.errors.presence).to.eql([{
                     message: "Plu can't be blank",
-                    value:   ""
+                    value:   undefined
                 }]);
                 expect(results["lineItems.0"].quantity.errors.numericality).to.eql([{
                     message: "Quantity must be greater than 0",
@@ -560,23 +560,23 @@ describe("ValidateJsHandler", () => {
                 expect(results.errors.presence).to.deep.include.members([{
                     key:     "address.line",
                     message: "Line can't be blank",
-                    value:   ""
+                    value:   undefined
                 }, {
                     key:     "address.city",
                     message: "City can't be blank",
-                    value:   ""
+                    value:   undefined
                 }, {
                     key:     "address.state",
                     message: "State can't be blank",
-                    value:   ""
+                    value:   undefined
                 }, {
                     key:     "address.zipcode",
                     message: "Zipcode can't be blank",
-                    value:   ""
+                    value:   undefined
                 }, {
                     key:     "lineItems.0.plu",
                     message: "Plu can't be blank",
-                    value:   ""
+                    value:   undefined
                 }
                 ]);
                 expect(results.errors.numericality).to.deep.include.members([{

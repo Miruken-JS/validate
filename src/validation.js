@@ -77,6 +77,8 @@ export const Validation = Base.extend(DispatchingCallback, {
     },     
     get policy() { return $validate; },
     toString() {
-        return `Validation | ${this.object}`;
+        const scope = this.scope != null 
+                    ? ` scope '${String(this.scope)}'` : "";
+        return `Validation | ${this.object}${scope}`;
     }           
 });

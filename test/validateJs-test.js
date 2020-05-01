@@ -11,6 +11,7 @@ import { number } from "../src/number";
 import { matches } from "../src/matches";
 import { email } from "../src/email";
 import { url } from "../src/url";
+import "../src/validate-helper";
 
 import validatejs from "validate.js";
 

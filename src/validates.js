@@ -5,7 +5,7 @@ import { $policy, addPolicy } from "miruken-callback";
  * Definition for validating objects
  * @property {Function} $validate
  */
-export const $validate = $policy(Variance.Contravariant);
+export const $validate = $policy(Variance.Contravariant, "validate");
 
 /**
  * Marks method as providing validation capabilities.

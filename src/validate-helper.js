@@ -1,12 +1,7 @@
-import {
-    Protocol, $isNothing, $isPromise, $classOf
-} from "miruken-core";
-
-import { Handler, $define, $handle } from "miruken-callback";
-
-import { validateThat } from "./validate-that";
+import { $isNothing, $isPromise } from "miruken-core";
+import { Handler } from "miruken-callback";
 import { Validation } from "./validation";
-import { $validate } from "./validates";
+import { validateThat } from "./validate-that";
 
 Handler.implement({
     /**

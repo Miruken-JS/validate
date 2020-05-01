@@ -39,13 +39,7 @@ export const Validation = Base.extend(DispatchingCallback, {
              * @property {Any} scope
              * @readOnly
              */                                                
-            get scope() { return scope; },
-             /**
-             * Gets the policy.
-             * @property {Function} policy
-             * @readOnly
-             */         
-            get policy() { return $validate; },           
+            get scope() { return scope; },       
             /**
              * Gets the validation results.
              * @property {ValidationResult} results
@@ -64,25 +58,25 @@ export const Validation = Base.extend(DispatchingCallback, {
                 }
                 return _result;
             },
-            set callbackResult(value) { _result = value; },            
-            /**
-             * Adds an async validation result. (internal)
-             * @method addAsyncResult
-             */                        
-            addAsyncResult(result) {
-                if ($isPromise(result)) {
-                    if (!async) return false;
-                    _promises.push(result);
-                }
-                _result = undefined;
-            },
+            set callbackResult(value) { _result = value; },                      
             dispatch(handler, greedy, composer) {
                 const target = this.object,
                       source = $classOf(target);
                 if ($isNothing(source)) return false;
-                $validate.dispatch(handler, this, source, composer, true, this.addAsyncResult);
+                $validate.dispatch(handler, this, source, composer, true, addAsyncResult);
                 return true;              
             }
         });
-    }
+        function addAsyncResult(result) {
+            if ($isPromise(result)) {
+                if (!async) return false;
+                _promises.push(result);
+            }
+            _result = undefined;
+        }     
+    },     
+    get policy() { return $validate; },
+    toString() {
+        return `Validation | ${this.object}`;
+    }           
 });

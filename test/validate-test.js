@@ -10,7 +10,7 @@ import { Validation } from "../src/validation";
 import { validateThat } from "../src/validate-that";
 import { ValidationResult } from "../src/result";
 import { $validate } from "../src/validates";
-import "../src/validate-helper";
+import "../src/handler-validate";
 
 import { expect } from 'chai';
 

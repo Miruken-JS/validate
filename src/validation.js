@@ -18,64 +18,41 @@ import { $validate } from "./validates";
  */
 export const Validation = Base.extend(DispatchingCallback, {
     constructor(object, async, scope, results) {
-        let _promises = [], _result;
-        async   = !!async;
-        results = results || new ValidationResult();
-        this.extend({
-            /**
-             * true if asynchronous, false if synchronous.
-             * @property {boolean} async
-             * @readOnly
-             */                
-            get isAsync() { return async; },
-            /**
-             * Gets the target object to validate.
-             * @property {Object} object
-             * @readOnly
-             */                                
-            get object() { return object; },
-            /**
-             * Gets the scope of validation.
-             * @property {Any} scope
-             * @readOnly
-             */                                                
-            get scope() { return scope; },       
-            /**
-             * Gets the validation results.
-             * @property {ValidationResult} results
-             * @readOnly
-             */
-            get results() { return results; },
-            /**
-             * Gets/sets the effective callback result.
-             * @property {Any} callback result
-             */
-            get callbackResult() {
-                if (_result === undefined) {
-                    _result = _promises.length > 0
-                         ? Promise.all(_promises).then(res => results)
-                         : (async ? Promise.resolve(results) : results);
-                }
-                return _result;
-            },
-            set callbackResult(value) { _result = value; },                      
-            dispatch(handler, greedy, composer) {
-                const target = this.object,
-                      source = $classOf(target);
-                if ($isNothing(source)) return false;
-                $validate.dispatch(handler, this, source, composer, true, addAsyncResult);
-                return true;              
-            }
-        });
-        function addAsyncResult(result) {
-            if ($isPromise(result)) {
-                if (!async) return false;
-                _promises.push(result);
-            }
-            _result = undefined;
-        }     
-    },     
-    get policy() { return $validate; },
+        this._object   = object;
+        this._async    = !!async;    
+        this._scope    = scope;
+        this._results  = results || new ValidationResult();
+        this._promises = [];  
+    },                
+    get isAsync() { return this._async; },                              
+    get object()  { return this._object; },                                             
+    get scope()   { return this._scope; },       
+    get results() { return this._results; },
+    get policy()  { return $validate; },  
+    get callbackResult() {
+        if (this._result === undefined) {
+            this._result = this._promises.length > 0
+                ? Promise.all(this._promises).then(res => this.results)
+                : (this.isAsync ? Promise.resolve(this.results) : this.results);
+        }
+        return this._result;
+    },
+    set callbackResult(value) { this._result = value; },   
+    addAsyncResult(result) {
+        if ($isPromise(result)) {
+            if (!this.isAsync) return false;
+            this._promises.push(result);
+        }
+        this._result = undefined;
+    },           
+    dispatch(handler, greedy, composer) {
+        const target = this.object,
+              source = $classOf(target);
+        if ($isNothing(source)) return false;
+        $validate.dispatch(handler, this, source, composer,
+            true, this.addAsyncResult.bind(this));
+        return true;              
+    },   
     toString() {
         const scope = this.scope != null 
                     ? ` scope '${String(this.scope)}'` : "";

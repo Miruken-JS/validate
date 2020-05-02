@@ -27,7 +27,7 @@ const validators = validatejs.validators;
  */
 export function customValidator(target) {
     if (arguments.length > 1) {
-        throw new SyntaxError("@customValidator can only be applied to a class");
+        throw new SyntaxError("@customValidator can only be applied to a class.");
     }
 
     const prototype = target.prototype;
@@ -60,7 +60,7 @@ function _assignStaticValidator(target, key, descriptor) {
     if (dependencies && dependencies.length > 0) {
         descriptor.value = function (...args) {
             if (!$composer) {
-                throw new Error(`@customValidator unable to invoke static method '${key}' on ${target.name}`);
+                throw new Error(`@customValidator unable to invoke static method '${key}' on ${target.name}.`);
             }
             const deps = dependencies.concat(args.map($use));
             return Invoking($composer).invoke(value, deps, target);
@@ -72,7 +72,7 @@ function _assignStaticValidator(target, key, descriptor) {
 function _assignInstanceValidator(target, prototype, key, descriptor) {
     const dependencies = inject.get(prototype, key);
     if (dependencies && dependencies.length > 0) {
-        throw new SyntaxError(`@customValidator can\'t have dependencies for instance method '${key}' on ${target.name}`);
+        throw new SyntaxError(`@customValidator can\'t have dependencies for instance method '${key}' on ${target.name}.`);
     }    
     descriptor.value = function (...args) {
         const validator = ($composer && $composer.resolve(target))

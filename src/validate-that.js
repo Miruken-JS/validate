@@ -12,14 +12,14 @@ const validateThatMetadataKey = Symbol();
 export const validateThat = Metadata.decorator(validateThatMetadataKey,
     (target, key, descriptor) => {
         if (!isDescriptor(descriptor)) {
-            throw new SyntaxError("@validateThat cannot be applied to classes");
+            throw new SyntaxError("@validateThat cannot be applied to classes.");
         }
         if (key === "constructor") {
-            throw new SyntaxError("@validateThat cannot be applied to constructors");
+            throw new SyntaxError("@validateThat cannot be applied to constructors.");
         }
         const { value } = descriptor;
         if (!$isFunction(value)) {
-            throw new SyntaxError("@validateThat cannot be applied to methods");
+            throw new SyntaxError("@validateThat cannot be applied to methods.");
         }
         Metadata.getOrCreateOwn(validateThatMetadataKey, target, key, True);
         const dependencies = inject.get(target, key);

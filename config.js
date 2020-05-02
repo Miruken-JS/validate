@@ -9,7 +9,7 @@ System.config({
   map: {
     "chai": "npm:chai@3.5.0",
     "miruken-callback": "npm:miruken-callback@0.0.5-alpha.37",
-    "miruken-context": "npm:miruken-context@0.0.5-alpha.15",
+    "miruken-context": "npm:miruken-context@0.0.5-alpha.16",
     "miruken-core": "npm:miruken-core@0.0.5-alpha.6",
     "validate.js": "npm:validate.js@0.13.1",
     "github:jspm/nodelibs-assert@0.1.0": {
@@ -56,7 +56,7 @@ System.config({
     "npm:miruken-callback@0.0.5-alpha.37": {
       "miruken-core": "npm:miruken-core@0.0.5-alpha.6"
     },
-    "npm:miruken-context@0.0.5-alpha.15": {
+    "npm:miruken-context@0.0.5-alpha.16": {
       "miruken-callback": "npm:miruken-callback@0.0.5-alpha.37",
       "miruken-core": "npm:miruken-core@0.0.5-alpha.6"
     },

@@ -23,7 +23,8 @@ export const Validation = Base.extend(DispatchingCallback, {
         this._scope    = scope;
         this._results  = results || new ValidationResult();
         this._promises = [];  
-    },                
+    },
+
     get isAsync() { return this._async; },                              
     get object()  { return this._object; },                                             
     get scope()   { return this._scope; },       
@@ -37,7 +38,8 @@ export const Validation = Base.extend(DispatchingCallback, {
         }
         return this._result;
     },
-    set callbackResult(value) { this._result = value; },   
+    set callbackResult(value) { this._result = value; },
+    
     addAsyncResult(result) {
         if ($isPromise(result)) {
             if (!this.isAsync) return false;

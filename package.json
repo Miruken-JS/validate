@@ -22,8 +22,8 @@
       "dist": "dist/amd"
     },
     "dependencies": {
-      "miruken-callback": "0.0.5-alpha.38",
-      "miruken-context": "0.0.5-alpha.17",
+      "miruken-callback": "0.0.5-alpha.39",
+      "miruken-context": "0.0.5-alpha.18",
       "miruken-core": "0.0.5-alpha.8",
       "validate.js": "0.13.1"
     },

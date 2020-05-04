@@ -2,7 +2,7 @@ import {
     Base, $isNothing, $classOf, $isPromise
 } from "miruken-core";
 
-import { DispatchingCallback } from "miruken-callback";
+import { CallbackControl } from "miruken-callback";
 import { ValidationResult } from "./result";
 import { $validate } from "./validates";
 
@@ -16,7 +16,7 @@ import { $validate } from "./validates";
  * @param   {ValidationResult} results  -  results to validate to
  * @extends Base
  */
-export const Validation = Base.extend(DispatchingCallback, {
+export const Validation = Base.extend(CallbackControl, {
     constructor(object, async, scope, results) {
         this._object   = object;
         this._async    = !!async;    

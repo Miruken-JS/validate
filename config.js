@@ -8,8 +8,8 @@ System.config({
 
   map: {
     "chai": "npm:chai@3.5.0",
-    "miruken-callback": "npm:miruken-callback@0.0.5-alpha.38",
-    "miruken-context": "npm:miruken-context@0.0.5-alpha.17",
+    "miruken-callback": "npm:miruken-callback@0.0.5-alpha.39",
+    "miruken-context": "npm:miruken-context@0.0.5-alpha.18",
     "miruken-core": "npm:miruken-core@0.0.5-alpha.8",
     "validate.js": "npm:validate.js@0.13.1",
     "github:jspm/nodelibs-assert@0.1.0": {
@@ -53,11 +53,11 @@ System.config({
     "npm:inherits@2.0.1": {
       "util": "github:jspm/nodelibs-util@0.1.0"
     },
-    "npm:miruken-callback@0.0.5-alpha.38": {
+    "npm:miruken-callback@0.0.5-alpha.39": {
       "miruken-core": "npm:miruken-core@0.0.5-alpha.8"
     },
-    "npm:miruken-context@0.0.5-alpha.17": {
-      "miruken-callback": "npm:miruken-callback@0.0.5-alpha.38",
+    "npm:miruken-context@0.0.5-alpha.18": {
+      "miruken-callback": "npm:miruken-callback@0.0.5-alpha.39",
       "miruken-core": "npm:miruken-core@0.0.5-alpha.8"
     },
     "npm:miruken-core@0.0.5-alpha.8": {

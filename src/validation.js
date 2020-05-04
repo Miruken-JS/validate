@@ -29,7 +29,7 @@ export const Validation = Base.extend(DispatchingCallback, {
     get object()  { return this._object; },                                             
     get scope()   { return this._scope; },       
     get results() { return this._results; },
-    get policy()  { return $validate; },  
+    get callbackPolicy() { return $validate; },  
     get callbackResult() {
         if (this._result === undefined) {
             this._result = this._promises.length > 0

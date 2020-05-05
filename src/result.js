@@ -17,7 +17,8 @@ export const ValidationResult = Base.extend({
      * @readOnly
      */                
     get valid() {
-        if (_(this).errors || _(this).summary) {
+        const { errors, summary } = _(this);
+        if (errors || summary) {
             return false;
         }
         const ownKeys = Object.getOwnPropertyNames(this);
@@ -114,7 +115,8 @@ export const ValidationResult = Base.extend({
      * @chainable
      */
     reset() { 
-        _(this).errors = _(this).summary = undefined;
+        delete _(this).errors;
+        delete _(this).summary;
         const ownKeys = Object.getOwnPropertyNames(this);
         for (let i = 0; i < ownKeys.length; ++i) {
             const key = ownKeys[i];

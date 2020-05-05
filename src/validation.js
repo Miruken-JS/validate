@@ -21,11 +21,12 @@ const _ = createKeyChain();
  */
 export const Validation = Base.extend(CallbackControl, {
     constructor(object, async, scope, results) {
-        _(this).object   = object;
-        _(this).async    = !!async;    
-        _(this).scope    = scope;
-        _(this).results  = results || new ValidationResult();
-        _(this).promises = [];  
+        const _this = _(this);
+        _this.object   = object;
+        _this.async    = !!async;    
+        _this.scope    = scope;
+        _this.results  = results || new ValidationResult();
+        _this.promises = [];  
     },
 
     get isAsync()        { return _(this).async; },                       
@@ -35,9 +36,10 @@ export const Validation = Base.extend(CallbackControl, {
     get callbackPolicy() { return $validate; },  
     get callbackResult() {
         if (_(this).result === undefined) {
-            _(this).result = _(this).promises.length > 0
-                ? Promise.all(_(this).promises).then(res => this.results)
-                : (this.isAsync ? Promise.resolve(this.results) : this.results);
+            const { results, promises } = _(this);
+            _(this).result = promises.length > 0
+                ? Promise.all(promises).then(res => results)
+                : (this.isAsync ? Promise.resolve(results) : results);
         }
         return _(this).result;
     },

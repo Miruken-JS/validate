@@ -1,10 +1,13 @@
 import { 
-    Base, $isNothing, $classOf, $isPromise
+    Base, $isNothing, $classOf,
+    $isPromise, createKeyChain
 } from "miruken-core";
 
 import { CallbackControl } from "miruken-callback";
 import { ValidationResult } from "./result";
 import { $validate } from "./validates";
+
+const _ = createKeyChain();
 
 /**
  * Callback representing the validation of an object.
@@ -18,34 +21,34 @@ import { $validate } from "./validates";
  */
 export const Validation = Base.extend(CallbackControl, {
     constructor(object, async, scope, results) {
-        this._object   = object;
-        this._async    = !!async;    
-        this._scope    = scope;
-        this._results  = results || new ValidationResult();
-        this._promises = [];  
+        _(this).object   = object;
+        _(this).async    = !!async;    
+        _(this).scope    = scope;
+        _(this).results  = results || new ValidationResult();
+        _(this).promises = [];  
     },
 
-    get isAsync() { return this._async; },                              
-    get object()  { return this._object; },                                             
-    get scope()   { return this._scope; },       
-    get results() { return this._results; },
+    get isAsync()        { return _(this).async; },                       
+    get object()         { return _(this).object; },
+    get scope()          { return _(this).scope; },
+    get results()        { return _(this).results; },
     get callbackPolicy() { return $validate; },  
     get callbackResult() {
-        if (this._result === undefined) {
-            this._result = this._promises.length > 0
-                ? Promise.all(this._promises).then(res => this.results)
+        if (_(this).result === undefined) {
+            _(this).result = _(this).promises.length > 0
+                ? Promise.all(_(this).promises).then(res => this.results)
                 : (this.isAsync ? Promise.resolve(this.results) : this.results);
         }
-        return this._result;
+        return _(this).result;
     },
-    set callbackResult(value) { this._result = value; },
+    set callbackResult(value) { _(this).result = value; },
     
     addAsyncResult(result) {
         if ($isPromise(result)) {
             if (!this.isAsync) return false;
-            this._promises.push(result);
+            _(this).promises.push(result);
         }
-        this._result = undefined;
+        _(this).result = undefined;
     },           
     dispatch(handler, greedy, composer) {
         const target = this.object,

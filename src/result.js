@@ -1,4 +1,8 @@
-import { Base, pcopy } from "miruken-core";
+import { 
+    Base, pcopy, createKeyChain
+} from "miruken-core";
+
+const _ = createKeyChain();
 
 /**
  * Captures structured validation errors.
@@ -13,7 +17,7 @@ export const ValidationResult = Base.extend({
      * @readOnly
      */                
     get valid() {
-        if (this._errors || this._summary) {
+        if (_(this).errors || _(this).summary) {
             return false;
         }
         const ownKeys = Object.getOwnPropertyNames(this);
@@ -35,14 +39,14 @@ export const ValidationResult = Base.extend({
      * @readOnly
      */                             
     get errors() {
-        if (this._summary) {
-            return this._summary;
+        if (_(this).summary) {
+            return _(this).summary;
         }
-        const errors = this._errors;
+        const errors = _(this).errors;
         if (errors) {
-            this._summary = {};
+            _(this).summary = {};
             for (let name in errors) {
-                this._summary[name] = errors[name].slice();
+                _(this).summary[name] = errors[name].slice();
             }
         }
         const ownKeys = Object.getOwnPropertyNames(this);
@@ -54,23 +58,23 @@ export const ValidationResult = Base.extend({
             const result = this[key],
                   keyErrors = (result instanceof ValidationResult) && result.errors;
             if (keyErrors) {
-                this._summary = this._summary || {};
+                _(this).summary = _(this).summary || {};
                 for (name in keyErrors) {
                     const named    = keyErrors[name];
-                    let   existing = this._summary[name];
+                    let   existing = _(this).summary[name];
                     for (let ii = 0; ii < named.length; ++ii) {
                         const error = pcopy(named[ii]);
                         error.key = error.key ? (key + "." + error.key) : key;
                         if (existing) {
                             existing.push(error);
                         } else {
-                            this._summary[name] = existing = [error];
+                            _(this).summary[name] = existing = [error];
                         }
                     }
                 }
             }
         }
-        return this._summary;
+        return _(this).summary;
     },
     /**
      * Gets or adds validation results for the key.
@@ -93,14 +97,14 @@ export const ValidationResult = Base.extend({
      *        value    => contains the invalid valid
      */
     addError(name, error) {
-        const errors = (this._errors || (this._errors = {})),
+        const errors = (_(this).errors || (_(this).errors = {})),
               named  = errors[name];
         if (named) {
             named.push(error);
         } else {
             errors[name] = [error];
         }
-        this._summary = null;
+        _(this).summary = null;
         return this;
     },
     /**
@@ -110,7 +114,7 @@ export const ValidationResult = Base.extend({
      * @chainable
      */
     reset() { 
-        this._errors = this._summary = undefined;
+        _(this).errors = _(this).summary = undefined;
         const ownKeys = Object.getOwnPropertyNames(this);
         for (let i = 0; i < ownKeys.length; ++i) {
             const key = ownKeys[i];

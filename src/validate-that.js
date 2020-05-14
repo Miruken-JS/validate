@@ -3,7 +3,7 @@ import {
     isDescriptor, $isFunction, $use
 } from "miruken-core";
 
-const validateThatMetadataKey = Symbol();
+const validateThatMetadataKey = Symbol("validate-that-metadata");
 
 /**
  * Marks method as providing contextual validation.

@@ -1,6 +1,6 @@
 import { Metadata, $isPlainObject } from "miruken-core";
 
-const constraintMetadataKey = Symbol();
+const constraintMetadataKey = Symbol("constraint-metadata");
 
 /**
  * Specifies validation constraints on properties and methods.

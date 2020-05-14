@@ -1,4 +1,8 @@
-import { Base, Invoking, Modifier, inject } from "miruken-core";
+import {
+    Base, Invoking, inject,
+    $contents, createKeyChain
+} from "miruken-core";
+
 import { Handler, provides } from "miruken-callback";
 import { Context } from "miruken-context";
 import { ValidateJsHandler } from "../src/validatorJs";
@@ -11,22 +15,24 @@ import { number } from "../src/number";
 import { matches } from "../src/matches";
 import { email } from "../src/email";
 import { url } from "../src/url";
-import "../src/handler-validate";
 
 import validatejs from "validate.js";
 
 import { expect } from "chai";
 
+const _ = createKeyChain();
+
 const Database = Base.extend({
-    constructor(userNames,emails) {
-        this.extend({
-            hasUserName(userName) {
-                return userNames.indexOf(userName) >= 0;
-            },
-            hasEmail(email) {
-                return emails.indexOf(email) >= 0;
-            }
-        });
+    constructor(userNames, emails) {
+        _(this).userNames = userNames;
+        _(this).emails    = emails;
+    },
+
+    hasUserName(userName) {
+        return _(this).userNames.indexOf(userName) >= 0;
+    },
+    hasEmail(email) {
+        return _(this).emails.indexOf(email) >= 0;
     }
 });
 
@@ -469,7 +475,7 @@ describe("ValidateJsHandler", () => {
                     expect(dependencies[0]).to.equal(Database);
                     dependencies[0] = database;
                     for (let i = 1; i < dependencies.length; ++i) {
-                        dependencies[i] = Modifier.unwrap(dependencies[i]);
+                        dependencies[i] = $contents(dependencies[i]);
                     }
                     return fn.apply(null, dependencies);
                 }

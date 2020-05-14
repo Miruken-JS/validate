@@ -1,5 +1,5 @@
 import { 
-    True, Base, Invoking, Modifier, inject
+    True, Base, Invoking, inject, $contents
 } from "miruken-core";
 
 import { Handler } from "miruken-callback";
@@ -191,7 +191,7 @@ describe("ValidationHelper", () => {
             const team   = new Team({name: "Liverpool", division: "U8"}),
                   league = new Context().addHandlers(team),
                   player = new Player({firstName: "Diego", lastName: "Morales", dob: new Date(2006, 7, 19)});
-            $validate(league, Player, validation => {
+            $validate.addHandler(league, Player, validation => {
                 const player = validation.object,
                       start  = new Date(2006, 8, 1),
                       end    = new Date(2007, 7, 31);
@@ -236,7 +236,7 @@ describe("ValidationHelper", () => {
                                        expect(dependencies[0]).to.equal(HttpClient);
                                        dependencies[0] = httpClient;
                                        for (let i = 1; i < dependencies.length; ++i) {
-                                           dependencies[i] = Modifier.unwrap(dependencies[i]);
+                                           dependencies[i] = $contents(dependencies[i]);
                                        }
                                        return fn.apply(ctx, dependencies);
                                    }
@@ -247,7 +247,7 @@ describe("ValidationHelper", () => {
 
         it("should validate unknown sources", () => {
             const league = new Context();
-            $validate(league, null, validation => {
+            $validate.addHandler(league, null, validation => {
                 const source = validation.object;
                 if ((source instanceof Team) &&
                     (!source.name || source.name.length == 0)) {
@@ -292,7 +292,7 @@ describe("ValidationHelper", () => {
                                      expect(dependencies[0]).to.equal(HttpClient);
                                      dependencies[0] = httpClient;
                                      for (let i = 1; i < dependencies.length; ++i) {
-                                         dependencies[i] = Modifier.unwrap(dependencies[i]);
+                                         dependencies[i] = $contents(dependencies[i]);
                                      }
                                      return fn.apply(ctx, dependencies);
                                  }

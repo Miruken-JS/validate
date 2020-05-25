@@ -1,20 +1,8 @@
-import { decorate } from "miruken-core";
-
-import { 
-    ContravariantPolicy, registerHandlers
-} from "miruken-callback";
+import { ContravariantPolicy } from "miruken-callback";
 
 /**
- * Definition for validating objects
- * @property {Function} $validate
- */
-export const $validate = new ContravariantPolicy("validate");
+ * Policy for validating instnces.
+ * @property {Function} provides
+ */        
+export const validates = ContravariantPolicy.createDecorator("validates");
 
-/**
- * Marks method as providing validation capabilities.
- * @method validates
- * @param  {Array}  ...types  -  types that can be validated
- */ 
-export function validates(...types) {
-    return decorate(registerHandlers("validate", $validate), types);
-}

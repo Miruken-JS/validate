@@ -9,7 +9,7 @@ import { validates } from "../src/validates";
 import { Validation } from "../src/validation";
 import { validateThat } from "../src/validate-that";
 import { ValidationResult } from "../src/result";
-import { $validate } from "../src/validates";
+import { svalidates } from "../src/validates";
 import "../src/handler-validate";
 
 import { expect } from 'chai';
@@ -58,7 +58,7 @@ const Team = Base.extend({
         }
     },
     @validates(Player)
-    validatePlayer(validation, composer) {
+    validatePlayer(validation, { composer }) {
         const player = validation.object;
         if (!player.firstName || player.firstName.length == 0) {
             validation.results.addKey('firstName')
@@ -191,7 +191,7 @@ describe("ValidationHelper", () => {
             const team   = new Team({name: "Liverpool", division: "U8"}),
                   league = new Context().addHandlers(team),
                   player = new Player({firstName: "Diego", lastName: "Morales", dob: new Date(2006, 7, 19)});
-            $validate.addHandler(league, Player, validation => {
+            validates.addHandler(league, Player, validation => {
                 const player = validation.object,
                       start  = new Date(2006, 8, 1),
                       end    = new Date(2007, 7, 31);
@@ -247,7 +247,7 @@ describe("ValidationHelper", () => {
 
         it("should validate unknown sources", () => {
             const league = new Context();
-            $validate.addHandler(league, null, validation => {
+            validates.addHandler(league, null, validation => {
                 const source = validation.object;
                 if ((source instanceof Team) &&
                     (!source.name || source.name.length == 0)) {

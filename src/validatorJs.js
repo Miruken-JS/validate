@@ -35,7 +35,7 @@ const detailed    = { format: "detailed", cleanAttributes: false },
  */            
 export const ValidateJsHandler = Handler.extend({
     @validates
-    validateJS(validation, composer) {
+    validateJS(validation, { composer }) {
         const target      = validation.object,
               nested      = {},
               constraints = buildConstraints(target, nested, composer);

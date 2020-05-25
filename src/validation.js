@@ -5,7 +5,7 @@ import {
 
 import { CallbackControl } from "miruken-callback";
 import { ValidationResult } from "./result";
-import { $validate } from "./validates";
+import { validates } from "./validates";
 
 const _ = createKeyChain();
 
@@ -33,7 +33,7 @@ export const Validation = Base.extend(CallbackControl, {
     get object()         { return _(this).object; },
     get scope()          { return _(this).scope; },
     get results()        { return _(this).results; },
-    get callbackPolicy() { return $validate; },  
+    get callbackPolicy() { return validates.policy; },  
     get callbackResult() {
         if (_(this).result === undefined) {
             const { results, promises } = _(this);
@@ -56,7 +56,7 @@ export const Validation = Base.extend(CallbackControl, {
         const target = this.object,
               source = $classOf(target);
         if ($isNothing(source)) return false;
-        $validate.dispatch(handler, this, source, composer,
+        validates.dispatch(handler, this, source, composer,
             true, this.addAsyncResult.bind(this));
         return true;              
     },   

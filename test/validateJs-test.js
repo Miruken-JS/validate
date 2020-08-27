@@ -1,6 +1,6 @@
 import {
-    Base, Invoking, inject,
-    $contents, createKeyChain
+    Base, type, design, $contents,
+    createKeyChain
 } from "miruken-core";
 
 import { Handler, provides } from "miruken-callback";
@@ -22,89 +22,102 @@ import { expect } from "chai";
 
 const _ = createKeyChain();
 
-const Database = Base.extend({
+class Database {
     constructor(userNames, emails) {
         _(this).userNames = userNames;
         _(this).emails    = emails;
-    },
+    }
 
     hasUserName(userName) {
         return _(this).userNames.indexOf(userName) >= 0;
-    },
+    }
+
     hasEmail(email) {
         return _(this).emails.indexOf(email) >= 0;
     }
-});
+}
 
-const customStatic = Base.extend(customValidator, null, {
-    mustBeUpperCase(text) {},
-    @inject(Database)
-    uniqueUserName(database, userName) {
+@customValidator
+class customStatic {
+    static mustBeUpperCase(text) {}
+
+    @design(Database)
+    static uniqueUserName(database, userName) {
         if (userName != null && database.hasUserName(userName)) {
             return `${userName} is already taken`;
         }
     }
-});
+}
 
-const customInstance = Base.extend(customValidator, {
-    @inject(Database)    
-    constructor(database) {
+@customValidator 
+class customInstance {
+    constructor(@type(Database) database) {
         this.database = database;
-    },
+    }
+
     uniqueEmail(email) {
         return customInstance.uniqueEmail(this.database, email);
     }
-}, {
-    @inject(Database)    
-    uniqueEmail(database, email) {
+
+    @design(Database)
+    static uniqueEmail(database, email) {
         if (email != null && database.hasEmail(email)) {
             return `${email} is already taken`;
         }        
     }
-});
+}
 
-const Address = Base.extend({
+class Address extends Base {
     @required
-    line: undefined,
+    line;
+
     @required    
-    city: undefined,
+    city;
+
     @required
     @length.is(2)
-    state: undefined,
+    state;
+
     @required
     @length.is(5)    
-    zipcode: undefined 
-});
+    zipcode;
+}
 
-const LineItem = Base.extend({
+class LineItem extends Base {
     @required
     @length.is(5)
-    plu: undefined,
+    plu;
+
     @number.onlyInteger
     @number.greaterThan(0)
-    quantity: 0
-});
+    quantity = 0;
+}
 
-const Order = Base.extend({
+class Order extends Base {
     @required
     @valid
-    address: undefined,
+    address;
+
     @required
     @valid    
-    lineItems: [],
+    lineItems = [];
+
     @email
     @customInstance.uniqueEmail
-    email: undefined
-});
+    email;
+}
 
-const User = Base.extend({
+class User extends Base {
     @customStatic.uniqueUserName
-    userName: undefined,
-    orders: [],
+    userName;
+
+    orders = [];
+
     constructor(userName) {
+        super();
         this.userName = userName;
     }
-});
+}
 
 describe("built-ins", () => {
     let context;
@@ -115,7 +128,7 @@ describe("built-ins", () => {
 
     describe("required", () => {
         it("should require value", () => {
-            const address = new Address({
+            const address = new Address().extend({
                       line: "abc", city: "Rockwall",
                       state: "TX", zipcode: "75032"
                   }),
@@ -135,16 +148,16 @@ describe("built-ins", () => {
 
     describe("length", () => {
         it("should satisfy length", () => {
-            const address = new Address({
-                      line: "abc", city: "Rockwall",
-                      state: "TX", zipcode: "75032"
+            const address = new Address().extend({
+                      line:  "abc", city: "Rockwall",
+                      state: "TX",  zipcode: "75032"
                   }),
                   results = context.validate(address);
             expect(results.valid).to.be.true;
         });    
         
         it("should fail if length unsatisfied", () => {
-            const address = new Address({
+            const address = new Address().extend({
                       line: "abc", city: "Rockwall",
                       state: "T", zipcode: "7503"
                   }),
@@ -161,19 +174,18 @@ describe("built-ins", () => {
     });
     
     describe("number", () => {
-        const Person = Base.extend({
-            @number
-            age: undefined
-        });
+        class Person extends Base {
+            @number age;
+        }
         
         it("should require typeof number", () => {
-            const person = new Person({age: 7}),
+            const person = new Person().extend({age: 7}),
                   results = context.validate(person);
             expect(results.valid).to.be.true;
         });    
         
         it("should fail if not typeof number", () => {
-            const person = new Person({age: "7"}),
+            const person = new Person().extend({age: "7"}),
                   results = context.validate(person);
             expect(results["age"].errors.numericality).to.eql([{
                 message: "Age is not a number", 
@@ -183,24 +195,24 @@ describe("built-ins", () => {
     });
     
     describe("email", () => {
-        const Contact = Base.extend({
+        class Contact extends Base {
             @email
             @customInstance.uniqueEmail
-            email: undefined
-        });
+            email;
+        }
 
         beforeEach(() => {
             context.addHandlers(new customInstance(new Database([], ["miruken@gmail.com"])));
         });
 
         it("should require valid email", () => {
-            const contact = new Contact({email: "ric@miruken.com"}),
+            const contact = new Contact().extend({email: "ric@miruken.com"}),
                   results = context.validate(contact);
             expect(results.valid).to.be.true;            
         });
         
         it("should fail if not a valid email", () => {
-            const contact = new Contact({email: "hello"}),
+            const contact = new Contact().extend({email: "hello"}),
                   results = context.validate(contact);
             expect(results["email"].errors.email).to.eql([{
                 message: "Email is not a valid email", 
@@ -209,7 +221,7 @@ describe("built-ins", () => {
         });
 
         it("should fail if email already exists", () => {
-            const contact = new Contact({email: "miruken@gmail.com"}),
+            const contact = new Contact().extend({email: "miruken@gmail.com"}),
                   results = context.validate(contact);
             expect(results["email"].errors.uniqueEmail).to.eql([{
                 message: "Email miruken@gmail.com is already taken", 
@@ -219,19 +231,18 @@ describe("built-ins", () => {
     });
 
     describe("url", () => {
-        const Site = Base.extend({
-            @url
-            url: undefined
-        });
+        class Site extends Base {
+            @url url;
+        }
         
         it("should require valid url", () => {
-            const site = new Site({url: "http://www.google.com"}),
+            const site = new Site().extend({url: "http://www.google.com"}),
                   results = context.validate(site);
             expect(results.valid).to.be.true;            
         });
         
         it("should fail if not a valid url", () => {
-            const site = new Site({url: "www.google.com"}),
+            const site = new Site().extend({url: "www.google.com"}),
                   results = context.validate(site);
             expect(results["url"].errors.url).to.eql([{
                 message: "Url is not a valid url", 
@@ -241,22 +252,28 @@ describe("built-ins", () => {
     });
 
     describe("matches", () => {
-        const Login = Base.extend({
+        class Login extends Base {
             @matches(/^[a-z0-9_-]{3,16}$/)
-            userName: undefined,
+            userName;
+
             @matches(/^[a-z0-9_-]{6,18}$/)
-            password: undefined            
-        });
+            password;            
+        }
         
         it("should require valid match", () => {
-            const login = new Login({userName: "my-us3r_n4m3", password: "myp4ssw0rd"}),
+            const login = new Login().extend({
+                      userName: "my-us3r_n4m3",
+                      password: "myp4ssw0rd"
+                  }),
                   results = context.validate(login);
             expect(results.valid).to.be.true;            
         });
         
         it("should fail if not a valid match", () => {
-            const login = new Login({
-                userName: "th1s1s-wayt00_l0ngt0beausername", password: "mypa$$w0rd"}),
+            const login = new Login().extend({
+                      userName: "th1s1s-wayt00_l0ngt0beausername",
+                      password: "mypa$$w0rd"
+                  }),
                   results = context.validate(login);
             expect(results["userName"].errors.format).to.eql([{
                 message: "User name is invalid", 
@@ -270,21 +287,22 @@ describe("built-ins", () => {
     });
 
     describe("member", () => {
-        const ShoppingCart = Base.extend({
+        class ShoppingCart extends Base {
             @includes("ball", "barbie", "lego")
-            purchase: undefined,
+            purchase;
+
             @excludes(11580, 75032)
-            delivery: undefined          
-        });
+            delivery;          
+        }
         
         it("should require inclusion", () => {
-            const cart = new ShoppingCart({purchase: "barbie"}),
+            const cart = new ShoppingCart().extend({purchase: "barbie"}),
                   results = context.validate(cart);
             expect(results.valid).to.be.true;
         });    
         
         it("should fail if not included", () => {
-            const cart = new ShoppingCart({purchase: "gun"}),
+            const cart = new ShoppingCart().extend({purchase: "gun"}),
                   results = context.validate(cart);
             expect(results["purchase"].errors.inclusion).to.eql([{
                 message: "gun is not included in the list", 
@@ -293,13 +311,13 @@ describe("built-ins", () => {
         });
 
         it("should require exclusion", () => {
-            const cart = new ShoppingCart({delivery: 75087}),
+            const cart = new ShoppingCart().extend({delivery: 75087}),
                   results = context.validate(cart);
             expect(results.valid).to.be.true;
         });    
         
         it("should fail if not excluded", () => {
-            const cart = new ShoppingCart({delivery: 75032}),
+            const cart = new ShoppingCart().extend({delivery: 75032}),
                   results = context.validate(cart);
             expect(results["delivery"].errors.exclusion).to.eql([{
                 message: "75032 is restricted", 
@@ -383,13 +401,16 @@ describe("ValidateJsHandler", () => {
 
         it("should validate complex objects", () => {
             const order   = new Order();
-            order.address = new Address({
+            order.address = new Address().extend({
                 line:    "100 Tulip Ln",
                 city:    "Wantaugh",
                 state:   "NY",
                 zipcode: "11580"
             });
-            order.lineItems = [new LineItem({plu: "12345", quantity: 2})];
+            order.lineItems = [new LineItem().extend({
+                      plu:      "12345",
+                      quantity: 2
+                 })];
             const results = context.validate(order);
             expect(results.valid).to.be.true;
         });
@@ -454,14 +475,14 @@ describe("ValidateJsHandler", () => {
         });
 
         it("should pass exceptions through", () => {
-            const ex = Base.extend(customValidator, {
+            const ex = @customValidator class {
                   throws(value) {
                       throw new Error("Oh No!");
-                  }}),
-                  ThrowOnValidation = Base.extend({
+                  }},
+                  ThrowOnValidation = class {
                       @ex.throws
-                      bad: undefined
-                  });                
+                      bad;
+                  };                
             expect(() => {
                 context.validate(new ThrowOnValidation);
             }).to.throw(Error, "Oh No!");
@@ -469,29 +490,20 @@ describe("ValidateJsHandler", () => {
 
         it("should validate with dependencies", () => {
             const user     = new User("neo"),
-                  database = new Database(["hellboy", "razor"]);
-            context.addHandlers(new (Handler.extend(Invoking, {
-                invoke(fn, dependencies) {
-                    expect(dependencies[0]).to.equal(Database);
-                    dependencies[0] = database;
-                    for (let i = 1; i < dependencies.length; ++i) {
-                        dependencies[i] = $contents(dependencies[i]);
-                    }
-                    return fn.apply(null, dependencies);
-                }
-            })));
-            let results = context.validate(user);
+                  database = new Database(["hellboy", "razor"]),
+                  handler  = context.$with(new Database(["hellboy", "razor"]));
+            let results = handler.validate(user);
             expect(results.valid).to.be.true;
             user.userName = "razor";
-            results = context.validate(user);
+            results = handler.validate(user);
             expect(results.valid).to.be.false;
         });
 
         it("should dynamically find validators", () => {
-            const MissingValidator = Base.extend({
+            class MissingValidator {
                 @constraint({uniqueCode: true})
-                code: undefined
-              });
+                code;
+            }
             context.addHandlers((new Handler).extend({
                 @provides("uniqueCode")
                 uniqueCode() { return this; },
@@ -502,10 +514,10 @@ describe("ValidateJsHandler", () => {
 
         it("should fail if missing validator", () => {
             delete validatejs.validators.uniqueCode;
-            const MissingValidator = Base.extend({
+            class MissingValidator {
                 @constraint({uniqueCode: true})
-                code: undefined
-              });
+                code;
+            }
             expect(() => {
                 context.validate(new MissingValidator);
             }).to.throw(Error, "Unable to resolve validator 'uniqueCode'.");
@@ -597,14 +609,14 @@ describe("ValidateJsHandler", () => {
         });
         
         it("should pass exceptions through", done => {
-            const ex = Base.extend(customValidator, {
+            const ex = @customValidator class {
                   throwsAsync(value) {
                       return Promise.reject(new Error("Oh No!"));
-                  }}),
-                  ThrowOnValidation = Base.extend({
+                  }},
+                  ThrowOnValidation = class {
                       @ex.throwsAsync
-                      bad: undefined
-                  });
+                      bad;
+                  };
             context.validateAsync(new ThrowOnValidation).catch(error => {
                 expect(error.message).to.equal("Oh No!");
                 done();

@@ -4,7 +4,7 @@ import {
 } from "miruken-core";
 
 import { CallbackControl } from "miruken-callback";
-import { ValidationResult } from "./result";
+import { ValidationResult } from "./validation-result";
 import { validates } from "./validates";
 
 const _ = createKeyChain();
@@ -56,7 +56,7 @@ export const Validation = Base.extend(CallbackControl, {
         const target = this.object,
               source = $classOf(target);
         if ($isNothing(source)) return false;
-        validates.dispatch(handler, this, source, composer,
+        validates.dispatch(handler, this, this, source, composer,
             true, this.addAsyncResult.bind(this));
         return true;              
     },   

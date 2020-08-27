@@ -10,7 +10,7 @@ const _ = createKeyChain();
  * @constructor
  * @extends Base
  */    
-export const ValidationResult = Base.extend({
+export class ValidationResult extends Base {
     /**
      * true if object is valid, false otherwisw.
      * @property {boolean} valid
@@ -33,7 +33,8 @@ export const ValidationResult = Base.extend({
             }
         }
         return true;
-    },
+    }
+
     /**
      * Gets aggregated validation errors.
      * @property {Object} errors
@@ -76,7 +77,8 @@ export const ValidationResult = Base.extend({
             }
         }
         return _(this).summary;
-    },
+    }
+
     /**
      * Gets or adds validation results for the key.
      * @method addKey
@@ -85,7 +87,8 @@ export const ValidationResult = Base.extend({
      */                
     addKey(key) {
         return this[key] || (this[key] = new ValidationResult);
-    },
+    }
+
     /**
      * Adds a named validation error.
      * @method addError
@@ -107,7 +110,8 @@ export const ValidationResult = Base.extend({
         }
         _(this).summary = null;
         return this;
-    },
+    }
+
     /**
      * Clears all validation results.
      * @method reset
@@ -130,7 +134,7 @@ export const ValidationResult = Base.extend({
         }
         return this;
     }    
-});
+}
 
 const IGNORE = ["valid", "errors", "addKey", "addError", "reset"];
 

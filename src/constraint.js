@@ -1,4 +1,6 @@
-import { Metadata, $isPlainObject } from "miruken-core";
+import { 
+    Metadata, $isNothing, $isPlainObject 
+} from "miruken-core";
 
 const constraintMetadataKey = Symbol("constraint-metadata");
 
@@ -8,9 +10,10 @@ const constraintMetadataKey = Symbol("constraint-metadata");
  */
 export const constraint = Metadata.decorator(constraintMetadataKey,
     (target, key, descriptor, constraints) => {
-        if (constraints.length === 0 || key === "constructor") return;
-        const { get, value, initializer } = descriptor;
-        if (!get && !value && !initializer) return;
+        if ($isNothing(descriptor) || key === "constructor") {
+            throw new SyntaxError("Constraints cannot be applied to classes or constructors.");
+        }
+        if (constraints.length === 0) return;
         const current = Metadata.getOrCreateOwn(
             constraintMetadataKey, target, key, () => ({}));
         constraints.forEach(constraint => _mergeConstraints(current, constraint));

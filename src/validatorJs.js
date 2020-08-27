@@ -16,7 +16,7 @@ const detailed    = { format: "detailed", cleanAttributes: false },
  * Classes participate in validation by declaring specifying constraints on properties.
  * </p>
  * <pre>
- * const Address = Base.extend({
+ * class Address {
  *         @requried
  *         line:    "",
  *         @is.required
@@ -28,12 +28,12 @@ const detailed    = { format: "detailed", cleanAttributes: false },
  *         @required
  *         zipcode:
  *     }
- * })
+ * }
  * </pre>
  * @class ValidateJsHandler
  * @extends Handler
  */            
-export const ValidateJsHandler = Handler.extend({
+export class ValidateJsHandler extends Handler {
     @validates
     validateJS(validation, { composer }) {
         const target      = validation.object,
@@ -70,7 +70,7 @@ export const ValidateJsHandler = Handler.extend({
             }
         }
     }
-});
+}
 
 function validateNestedAsync(composer, scope, results, nested) {
     const pending = [];

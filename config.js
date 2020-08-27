@@ -7,10 +7,10 @@ System.config({
   },
 
   map: {
-    "chai": "npm:chai@3.5.0",
-    "miruken-callback": "npm:miruken-callback@0.0.5-alpha.49",
-    "miruken-context": "npm:miruken-context@0.0.5-alpha.24",
-    "miruken-core": "npm:miruken-core@0.0.5-alpha.28",
+    "chai": "npm:chai@4.2.0",
+    "miruken-callback": "npm:miruken-callback@0.0.5-alpha.54",
+    "miruken-context": "npm:miruken-context@0.0.5-alpha.25",
+    "miruken-core": "npm:miruken-core@0.0.5-alpha.40",
     "validate.js": "npm:validate.js@0.13.1",
     "github:jspm/nodelibs-assert@0.1.0": {
       "assert": "npm:assert@1.5.0"
@@ -38,29 +38,30 @@ System.config({
       "base64-js": "npm:base64-js@1.3.1",
       "ieee754": "npm:ieee754@1.1.13"
     },
-    "npm:chai@3.5.0": {
-      "assertion-error": "npm:assertion-error@1.0.2",
-      "buffer": "github:jspm/nodelibs-buffer@0.1.1",
-      "deep-eql": "npm:deep-eql@0.1.3",
+    "npm:chai@4.2.0": {
+      "assertion-error": "npm:assertion-error@1.1.0",
+      "check-error": "npm:check-error@1.0.2",
+      "deep-eql": "npm:deep-eql@3.0.1",
+      "get-func-name": "npm:get-func-name@2.0.0",
+      "pathval": "npm:pathval@1.1.0",
       "process": "github:jspm/nodelibs-process@0.1.2",
       "systemjs-json": "github:systemjs/plugin-json@0.1.2",
-      "type-detect": "npm:type-detect@1.0.0"
+      "type-detect": "npm:type-detect@4.0.8"
     },
-    "npm:deep-eql@0.1.3": {
-      "buffer": "github:jspm/nodelibs-buffer@0.1.1",
-      "type-detect": "npm:type-detect@0.1.1"
+    "npm:deep-eql@3.0.1": {
+      "type-detect": "npm:type-detect@4.0.8"
     },
     "npm:inherits@2.0.1": {
       "util": "github:jspm/nodelibs-util@0.1.0"
     },
-    "npm:miruken-callback@0.0.5-alpha.49": {
-      "miruken-core": "npm:miruken-core@0.0.5-alpha.28"
+    "npm:miruken-callback@0.0.5-alpha.54": {
+      "miruken-core": "npm:miruken-core@0.0.5-alpha.40"
     },
-    "npm:miruken-context@0.0.5-alpha.24": {
-      "miruken-callback": "npm:miruken-callback@0.0.5-alpha.49",
-      "miruken-core": "npm:miruken-core@0.0.5-alpha.28"
+    "npm:miruken-context@0.0.5-alpha.25": {
+      "miruken-callback": "npm:miruken-callback@0.0.5-alpha.54",
+      "miruken-core": "npm:miruken-core@0.0.5-alpha.40"
     },
-    "npm:miruken-core@0.0.5-alpha.28": {
+    "npm:miruken-core@0.0.5-alpha.40": {
       "reflect-metadata": "npm:reflect-metadata@0.1.13"
     },
     "npm:process@0.11.10": {

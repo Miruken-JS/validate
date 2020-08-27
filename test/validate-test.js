@@ -1,5 +1,5 @@
 import { 
-    True, Base, Invoking, inject, $contents
+    True, Base, type, $contents
 } from "miruken-core";
 
 import { Handler } from "miruken-callback";
@@ -8,31 +8,27 @@ import { Context } from "miruken-context";
 import { validates } from "../src/validates";
 import { Validation } from "../src/validation";
 import { validateThat } from "../src/validate-that";
-import { ValidationResult } from "../src/result";
+import { ValidationResult } from "../src/validation-result";
 import { svalidates } from "../src/validates";
 import "../src/handler-validate";
 
 import { expect } from 'chai';
 
-const HttpClient = Base.extend({
-});
+class HttpClient {}
 
-const Player = Base.extend({
-    $properties: {
-        firstName: '',
-        lastName:  '',
-        dob:       null
-    }
-});
+class Player extends Base {
+    firstName = ''
+    lastName  = ''
+    dob       = null
+}
 
-const Coach = Base.extend({
-    firstName: '',
-    lastName:  '',
-    license:   '',
+class Coach extends Base {
+    firstName = ''
+    lastName  = ''
+    license   = ''
 
     @validateThat
-    @inject(HttpClient)
-    coachPassedBackgroundCheck(http, validation) {
+    coachPassedBackgroundCheck(validation, @type(HttpClient) http) {
         return Promise.delay(10).then(() => {
             if (validation.object.lastName === 'Smith') {
                 validation.results.addError('coachPassedBackgroundCheck', { 
@@ -41,12 +37,12 @@ const Coach = Base.extend({
             }
         });
     }
-});
+}
 
-const Team = Base.extend({
-    name:     '',
-    division: '',
-    players:  [],
+class Team extends Base {
+    name     = ''
+    division = ''
+    players  = []
 
     @validateThat
     teamHasDivision(validation) {
@@ -56,7 +52,8 @@ const Team = Base.extend({
                     message: this.name + ' does not have division ' + this.division
                 });
         }
-    },
+    }
+
     @validates(Player)
     validatePlayer(validation, { composer }) {
         const player = validation.object;
@@ -72,7 +69,8 @@ const Team = Base.extend({
             validation.results.addKey('dob')
                 .addError('required', { message: 'DOB required' });
         }
-    },
+    }
+
     @validates(Coach)
     validateCoach(validation, composer) {
         const coach = validation.object;
@@ -90,12 +88,12 @@ const Team = Base.extend({
         }
         return Promise.delay(50).then(True);
     }
-});
+}
 
 describe("Validation", () => {
     describe("#object", () => {
         it("should get the validated object", () => {
-            const team       = new Team({name: "Aspros"}),
+            const team       = new Team().extend({name: "Aspros"}),
                   validation = new Validation(team);
             expect(validation.object).to.equal(team);
         });
@@ -103,7 +101,7 @@ describe("Validation", () => {
 
     describe("#scope", () => {
         it("should get the validation scope", () => {
-            const team       = new Team({name: "Aspros"}),
+            const team       = new Team().extend({name: "Aspros"}),
                   validation = new Validation(team, false, "players");
             expect(validation.scope).to.equal("players");
         });
@@ -145,7 +143,10 @@ describe("ValidationResult", () => {
 describe("ValidationHelper", () => {
     describe("#validate", () => {
         it("should invalidate object", () => {
-            const team   = new Team({name: "Liverpool", division: "U8"}),
+            const team   = new Team().extend({
+                      name:     "Liverpool",
+                      division: "U8"
+                  }),
                   league = new Context().addHandlers(team),
                   player = new Player;
             expect(league.validate(player).valid).to.be.false;
@@ -174,9 +175,12 @@ describe("ValidationHelper", () => {
         });
 
         it("should provide key errors", () => {
-            const team       = new Team({name: "Liverpool", division: "U8"}),
+            const team       = new Team().extend({
+                      name:     "Liverpool",
+                      division: "U8"
+                  }),
                   league     = new Context().addHandlers(team),
-                  player     = new Player({firstName: "Matthew"});
+                  player     = new Player().extend({firstName: "Matthew"});
             const results = league.validate(player);
             expect(results.valid).to.be.false;
             expect(results.lastName.errors.required).to.eql([{
@@ -188,9 +192,16 @@ describe("ValidationHelper", () => {
         });
 
         it("should dynamically add validation", () => {
-            const team   = new Team({name: "Liverpool", division: "U8"}),
+            const team   = new Team().extend({
+                      name:     "Liverpool",
+                      division: "U8"
+                  }),
                   league = new Context().addHandlers(team),
-                  player = new Player({firstName: "Diego", lastName: "Morales", dob: new Date(2006, 7, 19)});
+                  player = new Player().extend({
+                      firstName: "Diego",
+                      lastName:  "Morales", 
+                      dob:       new Date(2006, 7, 19)
+                  });
             validates.addHandler(league, Player, validation => {
                 const player = validation.object,
                       start  = new Date(2006, 8, 1),
@@ -218,7 +229,10 @@ describe("ValidationHelper", () => {
         });
 
         it("should validateThat instance", () => {
-            const team    = new Team({name: "Liverpool", division: "U7"}),
+            const team    = new Team().extend({
+                      name:     "Liverpool",
+                      division: "U7"
+                  }),
                   league  = new Context(),
                   results = league.validate(team);
             expect(results.valid).to.be.false;
@@ -228,20 +242,12 @@ describe("ValidationHelper", () => {
         });
 
         it("should validateThat instance with dependencies", () => {
-            const coach      = new Coach({firstName: "Jordan", license: "D"}),
-                  httpClient = new HttpClient(),
-                  league     = new Context()
-                  .addHandlers(new (Handler.extend(Invoking, {
-                                   invoke(fn, dependencies, ctx) {
-                                       expect(dependencies[0]).to.equal(HttpClient);
-                                       dependencies[0] = httpClient;
-                                       for (let i = 1; i < dependencies.length; ++i) {
-                                           dependencies[i] = $contents(dependencies[i]);
-                                       }
-                                       return fn.apply(ctx, dependencies);
-                                   }
-                               })));
-            const results = league.validate(coach);
+            const coach   = new Coach().extend({
+                      firstName: "Jordan",
+                      license:   "D"
+                  }),
+                  league  = new Context().$with(new HttpClient()),
+                  results = league.validate(coach);
             expect(results.valid).to.be.true;
         });
 
@@ -263,7 +269,10 @@ describe("ValidationHelper", () => {
         });
 
         it("should roll up errors", () => {
-            const team    = new Team({name: "Liverpool", division: "U8"}),
+            const team    = new Team().extend({
+                      name:     "Liverpool",
+                      division: "U8"
+                  }),
                   league  = new Context().addHandlers(team),
                   player  = new Player;
             const results = league.validate(player);
@@ -284,23 +293,15 @@ describe("ValidationHelper", () => {
 
     describe("#validateAsync", () => {
         let   league;
-        const httpClient = new HttpClient();
         beforeEach(() => {
-            league = new Context()
-                .addHandlers(new (Handler.extend(Invoking, {
-                                 invoke(fn, dependencies, ctx) {
-                                     expect(dependencies[0]).to.equal(HttpClient);
-                                     dependencies[0] = httpClient;
-                                     for (let i = 1; i < dependencies.length; ++i) {
-                                         dependencies[i] = $contents(dependencies[i]);
-                                     }
-                                     return fn.apply(ctx, dependencies);
-                                 }
-                             })));
+            league = new Context().$with(new HttpClient());
         });
 
         it("should invalidate object", done => {
-            const team  = new Team({name: "Liverpool", division: "U8"}),
+            const team  = new Team({
+                      name:     "Liverpool",
+                      division: "U8"
+                  }),
                   coach = new Coach;
             league.addHandlers(team);
             league.validateAsync(coach).then(results => {
@@ -318,8 +319,11 @@ describe("ValidationHelper", () => {
         });
 
         it("should provide key errors", done => {
-            const team  = new Team({name: "Liverpool", division: "U8"}),
-                  coach = new Coach({firstName: "Jonathan"});
+            const team  = new Team().extend({
+                      name:     "Liverpool",
+                      division: "U8"
+                  }),
+                  coach = new Coach().extend({firstName: "Jonathan"});
             league.addHandlers(team);
             league.validateAsync(coach).then(results => {
                 expect(results.valid).to.be.false;
@@ -331,8 +335,14 @@ describe("ValidationHelper", () => {
         });
 
         it("should validateThat instance", done => {
-            const team   = new Team({name: "Liverpool", division: "U8"}),
-                  coach  = new Coach({firstName: "John", lastName: "Smith"});
+            const team   = new Team().extend({
+                      name:     "Liverpool",
+                      division: "U8"
+                  }),
+                  coach  = new Coach().extend({
+                      firstName: "John",
+                      lastName: "Smith"
+                  });
             league.addHandlers(team);
             league.validateAsync(coach).then(results => {
                 expect(results.valid).to.be.false;
@@ -347,7 +357,10 @@ describe("ValidationHelper", () => {
 
 describe("@validateThat", () => {
     it("should extend validatorThat methods on instances", () => {
-        const team   = new Team({name: "Liverpool", division: "U9"}),
+        const team   = new Team().extend({
+                  name:     "Liverpool",
+                  division: "U9"
+              }),
               league = new Context().addHandlers(team);
         team.extend({
             @validateThat

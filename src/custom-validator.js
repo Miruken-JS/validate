@@ -1,9 +1,9 @@
 import {
-    Invoking, inject, decorate, emptyArray,
-    isDescriptor, $isFunction, $use
+    design, decorate, emptyArray,
+    isDescriptor, $isNothing, $isFunction
 } from "miruken-core";
 
-import { $composer } from "miruken-callback";
+import { $getComposer } from "miruken-callback";
 import { constraint } from "./constraint";
 import validatejs from "validate.js";
 
@@ -13,9 +13,9 @@ const validators = validatejs.validators;
 /**
  * Register custom validator with [validate.js](http://validatejs.org).
  * <pre>
- *    const CustomValidators = Base.extend(customValidator, null, {
- *        @inject(Database)
- *        uniqueUserName(db, userName) {
+ *    @customValidator
+ *    class CustomValidators {
+ *        static uniqueUserName(userName, @type(Database) db) {
  *            if (db.hasUserName(userName)) {
  *               return `UserName ${userName} is already taken`;
  *            }
@@ -55,28 +55,42 @@ function _isCustomValidator(key, descriptor) {
 }
 
 function _assignStaticValidator(target, key, descriptor) {
-    const { value }    = descriptor,    
-          dependencies = inject.get(target, key);
-    if (dependencies && dependencies.length > 0) {
+    const designArgs = design.get(target, key)?.args;
+    if (designArgs?.length > 0) {
+        const { value }  = descriptor;
         descriptor.value = function (...args) {
-            if (!$composer) {
-                throw new Error(`@customValidator unable to invoke static method '${key}' on ${target.name}.`);
+            const composer = $getComposer();
+            if ($isNothing(composer)) {
+                throw new Error(`@customValidator on static method '${target.name}.${key}' not invoked properly.`);
             }
-            const deps = dependencies.concat(args.map($use));
-            return Invoking($composer).invoke(value, deps, target);
-        }
+            if (designArgs?.length > 0) {
+                const deps = composer.resolveArgs(designArgs);
+                if ($isNothing(deps)) {
+                    throw new Error(`One or more dependencies could not be resolved for method '${target.name}.${key}'.`);
+                }
+                return value.call(this, ...deps, ...args);
+            }
+            return value.apply(this, deps);
+        };
     };
     _assignCustomValidator(target, key, descriptor.value);
 }
 
 function _assignInstanceValidator(target, prototype, key, descriptor) {
-    const dependencies = inject.get(prototype, key);
-    if (dependencies && dependencies.length > 0) {
-        throw new SyntaxError(`@customValidator can\'t have dependencies for instance method '${key}' on ${target.name}.`);
-    }    
+    const designArgs = design.get(prototype, key)?.args;  
     descriptor.value = function (...args) {
-        const validator = ($composer && $composer.resolve(target))
-                       || Reflect.construct(target, emptyArray);
+        const composer = $getComposer();
+        if ($isNothing(composer)) {
+            throw new Error(`@customValidator on instance method '${target.name}.${key}' not invoked properly.`);
+        }
+        const validator = composer.resolve(target) || Reflect.construct(target, emptyArray);
+        if (designArgs?.length > 0) {
+            const deps = composer.resolveArgs(designArgs);
+            if ($isNothing(deps)) {
+                throw new Error(`One or more dependencies could not be resolved for method '${target.name}.${key}'.`);
+            }
+            return validator[key].call(validator, ...deps, ...args);
+        }
         return validator[key].apply(validator, args);
     }
     _assignCustomValidator(target, key, descriptor.value);

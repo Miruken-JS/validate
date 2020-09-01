@@ -72,6 +72,6 @@
     "yargs": "^11.0.0"
   },
   "resolutions": {
-    "graceful-fs": "4.2.3"
+    "graceful-fs": "^4.2.4"
   }
 }

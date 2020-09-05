@@ -3,7 +3,7 @@ import {
     isDescriptor, $isNothing, $isFunction
 } from "miruken-core";
 
-import { $getComposer } from "miruken-callback";
+import { $composer } from "miruken-callback";
 import { constraint } from "./constraint";
 import validatejs from "validate.js";
 
@@ -59,7 +59,7 @@ function _assignStaticValidator(target, key, descriptor) {
     if (designArgs?.length > 0) {
         const { value }  = descriptor;
         descriptor.value = function (...args) {
-            const composer = $getComposer();
+            const composer = $composer;
             if ($isNothing(composer)) {
                 throw new Error(`@customValidator on static method '${target.name}.${key}' not invoked properly.`);
             }
@@ -79,7 +79,7 @@ function _assignStaticValidator(target, key, descriptor) {
 function _assignInstanceValidator(target, prototype, key, descriptor) {
     const designArgs = design.get(prototype, key)?.args;  
     descriptor.value = function (...args) {
-        const composer = $getComposer();
+        const composer = $composer;
         if ($isNothing(composer)) {
             throw new Error(`@customValidator on instance method '${target.name}.${key}' not invoked properly.`);
         }

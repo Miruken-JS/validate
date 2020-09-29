@@ -2,27 +2,36 @@ import {
     True, Base, type, $contents
 } from "miruken-core";
 
-import { Handler } from "miruken-callback";
+import { 
+    Handler, InferenceHandler, handles, provides
+} from "miruken-callback";
+
 import { Context } from "miruken-context";
 
 import { validates } from "../src/validates";
 import { Validation } from "../src/validation";
 import { validateThat } from "../src/validate-that";
 import { ValidationResult } from "../src/validation-result";
-import { svalidates } from "../src/validates";
+import { ValidateFilter } from "../src/validate-filter";
+import { ValidationError } from "../src/validation-error";
+import { ValidateProvider, validate } from "../src/validate";
 import "../src/handler-validate";
 
 import { expect } from 'chai';
 
 class HttpClient {}
 
-class Player extends Base {
+class Model extends Base {
+    id;
+}
+
+class Player extends Model {
     firstName = ''
     lastName  = ''
     dob       = null
 }
 
-class Coach extends Base {
+class Coach extends Model {
     firstName = ''
     lastName  = ''
     license   = ''
@@ -39,7 +48,7 @@ class Coach extends Base {
     }
 }
 
-class Team extends Base {
+class Team extends Model {
     name     = ''
     division = ''
     players  = []
@@ -378,6 +387,158 @@ describe("@validateThat", () => {
         expect(results.players.errors.teamHasAtLeastSevenPlayerWhenU9).to.eql([{
             message: "Liverpool must have at lease 7 players for division U9"
         }]);
+    });
+});
+
+class CreateTeam extends Base {
+    team;
+
+    @validateThat
+    validTeam(validation, composer) {
+        const results = validation.results;
+        if (this.team == null) {
+            results.addKey('team')
+                .addError('required', { message: 'Team is required' });
+        } else {
+            composer.validate(this.team, null, validation.results.addKey('team'));
+        }
+    }
+}
+
+class UpdateTeam extends Base {
+    team;
+
+    @validateThat
+    validTeam(validation, composer) {
+        const results = validation.results;
+        if (this.team == null) {
+            results.addKey('team')
+                .addError('required', { message: 'Team is required' });
+        } else if (this.team.id == null) {
+            results.addKey('team').addKey('id')
+                .addError('required', { message: 'Team Id is required' });
+        } else {
+            composer.validate(this.team, null, validation.results.addKey('team'));
+        }
+    }
+}
+
+let teamId = 0;
+
+@provides()
+class TeamHandler extends Handler {
+    @handles(CreateTeam)
+    create(create) {
+        const { team } = create;
+        team.id = ++teamId;
+        return team;
+    }
+
+    @handles(UpdateTeam)
+    @validate({ validateAsync: true })
+    update(create) {
+        const { team } = create;
+        return team;
+    } 
+}
+
+describe("ValidationFilter", () => {
+    describe("#sync", () => {
+        let context;
+        beforeEach(() => {
+            teamId = 0;
+            handles.policy.removeAllFilters();
+            handles.policy.addFilters(new ValidateProvider());
+
+            context = new Context().addHandlers(
+                new InferenceHandler(TeamHandler, ValidateFilter));
+        });
+
+        it("should validate valid requests", () => {
+            const team = new Team().extend({
+                name:     "Liverpool",
+                division: "U8"
+            });
+            const created = context.command(new CreateTeam().extend({ team }));
+            expect(created.id).to.equal(1);
+            expect(created).to.equal(team);
+        });
+
+        it("should validate invalid requests", () => {
+            const team = new Team().extend({
+                name:     "Liverpool",
+                division: "U9"
+            });
+            try {
+                context.command(new CreateTeam().extend({ team }));
+                expect.fail("Expected a ValidationError");
+            } catch (err) {
+                expect(err).to.be.instanceOf(ValidationError);
+                const results = err.results;
+                expect(results.valid).to.be.false;
+                expect(results.team.division.errors.teamHasDivision).to.eql([{
+                    message: "Liverpool does not have division U9"
+                }]);
+            }
+        });
+
+        it.only("should validate invalid requests with async override", async () => {
+            const team = new Team().extend({
+                name:     "Liverpool",
+                division: "U9"
+            });
+            try {
+                await context.command(new UpdateTeam().extend({ team }));
+                expect.fail("Expected a ValidationError");
+            } catch (err) {
+                expect(err).to.be.instanceOf(ValidationError);
+                const results = err.results;
+                expect(results.valid).to.be.false;
+                expect(results.team.id.errors.required).to.eql([{
+                    message: "Team Id is required"
+                }]);
+            }
+        });
+    });
+
+    describe("#async", () => {
+        let context;
+        beforeEach(() => {
+            teamId = 0;
+            handles.policy.removeAllFilters();
+            handles.policy.addFilters(new ValidateProvider({validateAsync: true}));
+
+            context = new Context().addHandlers(
+                new InferenceHandler(TeamHandler, ValidateFilter));
+        });
+
+        it("should validate valid requests", async () => {
+            const team = new Team().extend({
+                name:     "Liverpool",
+                division: "U8"
+            });
+            const created = await context.command(new CreateTeam().extend({ team }));
+            expect(created.id).to.equal(1);
+            expect(created).to.equal(team);
+        });
+
+        it("should validate invalid requests", async () => {
+            const team = new Team().extend({
+                name:     "Liverpool",
+                division: "U9"
+            });
+            try {
+                await context.command(new CreateTeam().extend({ team }));
+                expect.fail("Expected a ValidationError");
+            } catch (err) {
+                expect(err).to.be.instanceOf(ValidationError);
+                const results = err.results;
+                expect(results.valid).to.be.false;
+                expect(results.team.division.errors.teamHasDivision).to.eql([{
+                    message: "Liverpool does not have division U9"
+                }]);
+            }
+        });
     });
 });
 

@@ -3,10 +3,9 @@ import {
 } from "miruken-core";
 
 import { 
-    Handler, InferenceHandler, handles, provides
+    Handler, InferenceHandler, Context,
+    handles, provides
 } from "miruken-callback";
-
-import { Context } from "miruken-context";
 
 import { validates } from "../src/validates";
 import { Validation } from "../src/validation";
@@ -482,7 +481,7 @@ describe("ValidationFilter", () => {
             }
         });
 
-        it.only("should validate invalid requests with async override", async () => {
+        it("should validate invalid requests with async override", async () => {
             const team = new Team().extend({
                 name:     "Liverpool",
                 division: "U9"

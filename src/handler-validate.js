@@ -50,11 +50,11 @@ Handler.implement({
         });
     },
     $valid(target, scope) {
-        return this.aspect((_, composer) =>
+        return this.$aspect((_, composer) =>
             composer.validate(target, scope).valid);
     },
     $validAsync(target, scope) {
-        return this.aspect((_, composer) =>
+        return this.$aspect((_, composer) =>
              composer.validateAsync(target, scope)
                  .then(results => results.valid));
     }

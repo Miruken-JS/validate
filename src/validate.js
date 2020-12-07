@@ -10,7 +10,7 @@ const _ = createKey();
 
 export class ValidateProvider extends FilterSpecProvider {
     constructor({ validateResult, validateAsync } = {}) {
-        super(new FilterSpec(ValidateFilter, { multiple: false }));
+        super(new FilterSpec(ValidateFilter));
         const _this = _(this);
         _this.validateResult = validateResult === true;
         _this.validateAsync  = validateAsync === true;

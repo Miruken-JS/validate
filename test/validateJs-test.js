@@ -3,8 +3,7 @@ import {
     createKeyChain
 } from "miruken-core";
 
-import { Handler, provides } from "miruken-callback";
-import { Context } from "miruken-context";
+import { Handler, Context, provides } from "miruken-callback";
 import { ValidateJsHandler } from "../src/validatorJs";
 import { customValidator } from "../src/custom-validator";
 import { constraint, valid } from "../src/constraint";

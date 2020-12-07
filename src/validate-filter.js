@@ -1,10 +1,17 @@
-import { conformsTo, $isNothing, $isPromise } from "miruken-core";
-import { Filtering, Stage, provides } from "miruken-callback";
+import { 
+    conformsTo, $isNothing, $isPromise
+ } from "miruken-core";
+
+import { 
+    Filtering, Stage, provides, allowMultiple
+} from "miruken-callback";
+
 import { ValidateProvider } from "./validate";
 import { ValidationError } from "./validation-error";
 
 @provides()
 @conformsTo(Filtering)
+@allowMultiple(false)
 export class ValidateFilter {
     get order() { return Stage.Validation; }
 

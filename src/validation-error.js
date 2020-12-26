@@ -1,3 +1,7 @@
+import { createKey } from "miruken-core";
+
+const _ = createKey();
+
 /**
  * Identifies a validation failure.
  * @class ValidationError
@@ -6,20 +10,17 @@
  * @param {string}            message  -  message
  * @extends Error
  */
-export function ValidationError(results, message) {
-    /**
-     * Gets the validation results.
-     * @property {ValidationResult} results
-     */         
-    this.results = results;
+export class ValidationError extends Error {
+    constructor(results, message) {
+        super(message || "Validation error");
 
-    this.message = message || "Validation error";
+        _(this).results = results;
 
-    if (Error.captureStackTrace) {
-        Error.captureStackTrace(this, this.constructor);
-    } else {
-        Error.call(this);
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, this.constructor);
+        }
     }
+
+    get results() { return _(this).results; }
 }
-ValidationError.prototype             = new Error();
-ValidationError.prototype.constructor = ValidationError;
+

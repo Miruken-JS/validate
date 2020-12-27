@@ -4,14 +4,19 @@ import {
 
 import {
     Handler, provides, singleton,
-    mapsTo, mapsFrom, format, property,
-    typeId
+    mapsFrom, format, property, typeId
 } from "miruken-callback";
 
 import { ValidationError } from "./validation-error";
 import { ValidationResult } from "./validation-result";
 
 export class ValidationErrorData {
+    constructor(propertyName, errors, nested) {
+        this.propertyName = propertyName;
+        this.errors       = errors;
+        this.nested       = nested;
+    }
+
     propertyName;
     errors;
     @design([ValidationErrorData])
@@ -19,7 +24,11 @@ export class ValidationErrorData {
 }
 
 @typeId("Miruken.Validate.ValidationErrors[], Miruken.Validate")
-export class ValidationErrors {
+export class ValidationErrorDataArray {
+    constructor(errors) {
+        this.errors = errors;
+    }
+
     @property("$values")
     @design([ValidationErrorData])
     errors;
@@ -28,25 +37,21 @@ export class ValidationErrors {
 @format(Error)
 @provides() @singleton()
 export class ValidationMapping extends Handler {
-    @mapsFrom(ValidationErrors)
-    mapToValidationErrorData({ object }) {
-        const results = createResults(object);
-        return new ValidationError(results);
+    @mapsFrom(ValidationErrorDataArray)
+    mapToValidationErrorData({ object: { errors } }) {
+        return new ValidationError(createResults(errors));
     }
 
     @mapsFrom(ValidationError)
-    mapToValidationError({ object }) {
-        const wrapper = new ValidationErrors();
-        wrapper.errors = createErrors(object.results);
-        return wrapper;
+    mapToValidationError({ object: { results } }) {
+        return new ValidationErrorDataArray(createErrors(results));
     }
 }
 
 function createErrors(results) {
     return Object.getOwnPropertyNames(results).map(key => {
-        const errorData  = new ValidationErrorData(),
+        const errorData  = new ValidationErrorData(key),
               keyResults = results[key];
-        errorData.propertyName = key;
         const { errors } = keyResults;
         if (!$isNothing(errors)) {
             const messages = Object.values(errors)
@@ -65,15 +70,14 @@ function createErrors(results) {
     });
 }
 
-function createResults({ errors }, owner) {
+function createResults(errors, owner) {
     const results = owner || new ValidationResult();
     errors?.forEach(error => {
         const { propertyName, errors, nested } = error,
                 keyResults = results.addKey(propertyName);
-        errors?.forEach(err => keyResults
-            .addError("server", { message: err.message }));
+        errors?.forEach(message => keyResults.addError("server", { message }));
         if (nested?.length > 0) {
-            createResults(nested, results);
+            createResults(nested, keyResults);
         }
     });
     return results;

@@ -215,14 +215,14 @@ describe("ValidationHelper", () => {
                       start  = new Date(2006, 8, 1),
                       end    = new Date(2007, 7, 31);
                 if (player.dob < start) {
-                    validation.results.addKey('dob')
-                        .addError('playerAge', { 
+                    validation.results.addKey("dob")
+                        .addError("playerAge", { 
                             message: "Player too old for division " + team.division,
                             value:   player.dob
                         });
                 } else if (player.dob > end) {
-                    validation.results.addKey('dob')
-                        .addError('playerAge', { 
+                    validation.results.addKey("dob")
+                        .addError("playerAge", { 
                             message: "Player too young for division " + team.division,
                             value:   player.dob
                         });

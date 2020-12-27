@@ -3,15 +3,16 @@ import {
  } from "miruken-core";
 
 import { 
-    Filtering, Stage, provides, allowMultiple
+    Filtering, Stage, provides, singleton,
+    allowMultiple
 } from "miruken-callback";
 
 import { ValidateProvider } from "./validate";
 import { ValidationError } from "./validation-error";
 
-@provides()
-@conformsTo(Filtering)
 @allowMultiple(false)
+@conformsTo(Filtering)
+@provides() @singleton()
 export class ValidateFilter {
     get order() { return Stage.Validation; }
 

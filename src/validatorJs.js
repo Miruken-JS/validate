@@ -1,5 +1,5 @@
 import { Undefined, $isFunction} from "miruken-core";
-import { Handler } from "miruken-callback";
+import { Handler, provides, singleton } from "miruken-callback";
 import { validates } from "./validates";
 import { constraint } from "./constraint";
 import validatejs from "validate.js";
@@ -32,7 +32,8 @@ const detailed    = { format: "detailed", cleanAttributes: false },
  * </pre>
  * @class ValidateJsHandler
  * @extends Handler
- */            
+ */
+@provides() @singleton()   
 export class ValidateJsHandler extends Handler {
     @validates
     validateJS(validation, { composer }) {

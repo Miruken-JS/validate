@@ -26,7 +26,8 @@ describe("ValidationMapping", () => {
         address.addKey("city")
                .addError("required", { message: "City can't be blank" });
         const foo = results.errors;     
-        const errors = handler.$mapFrom(new ValidationError(results), Error);
+        const errors = handler.$mapFrom(
+            new ValidationError(results), ValidationErrorDataArray);
         expect(errors).to.be.instanceOf(ValidationErrorDataArray);
         expect(errors.errors.length).to.equal(1);
         const [result] = errors.errors;
@@ -53,7 +54,7 @@ describe("ValidationMapping", () => {
                 ]),
             ])
         ]);
-        const error = handler.$mapFrom(data, Error);
+        const error = handler.$mapFrom(data, ValidationError);
         expect(error).to.be.instanceOf(ValidationError);
         const { results } = error;
         expect(results).to.be.instanceOf(ValidationResult);

@@ -3,8 +3,8 @@ import {
 } from "miruken-core";
 
 import {
-    Handler, provides, singleton,
-    mapsFrom, format, property, typeId
+    Handler, provides, singleton, mapsFrom,
+    format, property, surrogate, typeId
 } from "miruken-callback";
 
 import { ValidationError } from "./validation-error";
@@ -23,6 +23,7 @@ export class ValidationErrorData {
     nested;
 }
 
+@surrogate(ValidationError)
 @typeId("Miruken.Validate.ValidationErrors[], Miruken.Validate")
 export class ValidationErrorDataArray {
     constructor(errors) {
@@ -34,14 +35,15 @@ export class ValidationErrorDataArray {
     errors;
 }
 
-@format(Error)
 @provides() @singleton()
 export class ValidationMapping extends Handler {
+    @format(ValidationError)
     @mapsFrom(ValidationErrorDataArray)
     mapToValidationErrorData({ object: { errors } }) {
         return new ValidationError(createResults(errors));
     }
 
+    @format(ValidationErrorDataArray)
     @mapsFrom(ValidationError)
     mapToValidationError({ object: { results } }) {
         return new ValidationErrorDataArray(createErrors(results));

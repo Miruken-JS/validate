@@ -23,7 +23,7 @@ gulp.task("rollup", function(done) {
             alias({
                 entries: [
                     { find: '@', replacement: path.resolve(root, 'src') },
-                    { find: 'validate', replacement: path.resolve(root, 'src/validate') },
+                    { find: 'validate', replacement: path.resolve(root, 'src') },
                 ]
             }),            
             resolve()            

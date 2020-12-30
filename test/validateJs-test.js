@@ -3,16 +3,16 @@ import {
     createKeyChain, Handler, Context, provides
 } from "miruken-core";
 
-import { ValidateJsHandler } from "../src/validatorJs";
-import { customValidator } from "../src/custom-validator";
-import { constraint, valid } from "../src/constraint";
-import { includes, excludes } from "../src/member";
-import { required } from "../src/required";
-import { length } from "../src/length";
-import { number } from "../src/number";
-import { matches } from "../src/matches";
-import { email } from "../src/email";
-import { url } from "../src/url";
+import { ValidateJsHandler } from "@/validatorJs";
+import { customValidator } from "@/custom-validator";
+import { constraint, valid } from "@/constraint";
+import { includes, excludes } from "@/member";
+import { required } from "@/required";
+import { length } from "@/length";
+import { number } from "@/number";
+import { matches } from "@/matches";
+import { email } from "@/email";
+import { url } from "@/url";
 
 import validatejs from "validate.js";
 

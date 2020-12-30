@@ -3,14 +3,14 @@ import {
     InferenceHandler, Context, handles, provides
 } from "miruken-core";
 
-import { validates } from "../src/validates";
-import { Validation } from "../src/validation";
-import { validateThat } from "../src/validate-that";
-import { ValidationResult } from "../src/validation-result";
-import { ValidateFilter } from "../src/validate-filter";
-import { ValidationError } from "../src/validation-error";
-import { ValidateProvider, validate } from "../src/validate";
-import "../src/handler-validate";
+import { validates } from "@/validates";
+import { Validation } from "@/validation";
+import { validateThat } from "@/validate-that";
+import { ValidationResult } from "@/validation-result";
+import { ValidateFilter } from "@/validate-filter";
+import { ValidationError } from "@/validation-error";
+import { ValidateProvider, validate } from "@/validate";
+import "@/handler-validate";
 
 import { expect } from 'chai';
 

@@ -1,9 +1,8 @@
-import {
+import { 
     Base, type, design, $contents,
-    createKeyChain
+    createKeyChain, Handler, Context, provides
 } from "miruken-core";
 
-import { Handler, Context, provides } from "miruken-callback";
 import { ValidateJsHandler } from "../src/validatorJs";
 import { customValidator } from "../src/custom-validator";
 import { constraint, valid } from "../src/constraint";

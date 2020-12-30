@@ -1,8 +1,7 @@
-import { createKey } from "miruken-core";
-
 import { 
-    FilterSpec, FilterSpecProvider, createFilterDecorator
-} from "miruken-callback";
+    createKey, FilterSpec, FilterSpecProvider,
+    createFilterDecorator,
+} from "miruken-core";
 
 import { ValidateFilter } from "./validate-filter";
 

@@ -1,9 +1,8 @@
 import { 
-    Base, $isNothing, $classOf,
-    $isPromise, createKeyChain
+    Base, $isNothing, $classOf, $isPromise,
+    createKeyChain, CallbackControl
 } from "miruken-core";
 
-import { CallbackControl } from "miruken-callback";
 import { ValidationResult } from "./validation-result";
 import { validates } from "./validates";
 

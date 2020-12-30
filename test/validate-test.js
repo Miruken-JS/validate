@@ -1,11 +1,7 @@
 import { 
-    True, Base, type, $contents
+    True, Base, type, $contents, Handler,
+    InferenceHandler, Context, handles, provides
 } from "miruken-core";
-
-import { 
-    Handler, InferenceHandler, Context,
-    handles, provides
-} from "miruken-callback";
 
 import { validates } from "../src/validates";
 import { Validation } from "../src/validation";

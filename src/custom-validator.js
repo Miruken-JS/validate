@@ -1,9 +1,9 @@
 import {
     design, decorate, emptyArray,
-    isDescriptor, $isNothing, $isFunction
+    isDescriptor, $isNothing, $isFunction,
+    $composer
 } from "miruken-core";
 
-import { $composer } from "miruken-callback";
 import { constraint } from "./constraint";
 import validatejs from "validate.js";
 

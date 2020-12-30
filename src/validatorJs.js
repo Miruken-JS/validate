@@ -1,5 +1,8 @@
-import { Undefined, $isFunction} from "miruken-core";
-import { Handler, provides, singleton } from "miruken-callback";
+import { 
+    Undefined, $isFunction, Handler,
+    provides, singleton
+} from "miruken-core";
+
 import { validates } from "./validates";
 import { constraint } from "./constraint";
 import validatejs from "validate.js";

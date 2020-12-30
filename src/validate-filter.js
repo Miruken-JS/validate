@@ -1,11 +1,8 @@
 import { 
-    conformsTo, $isNothing, $isPromise
- } from "miruken-core";
-
-import { 
+    conformsTo, $isNothing, $isPromise,
     Filtering, Stage, provides, singleton,
     allowMultiple
-} from "miruken-callback";
+} from "miruken-core";
 
 import { ValidateProvider } from "./validate";
 import { ValidationError } from "./validation-error";

@@ -1,4 +1,4 @@
-import { HandlerBuilder } from "miruken-callback";
+import { HandlerBuilder } from "miruken-core";
 import { ValidationResult } from "../src/validation-result";
 import { ValidationError } from "../src/validation-error";
 
@@ -51,7 +51,7 @@ describe("ValidationMapping", () => {
                 ]),
                 new ValidationErrorData("city", [
                     "City can't be blank"
-                ]),
+                ])
             ])
         ]);
         const error = handler.$mapFrom(data, ValidationError);

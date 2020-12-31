@@ -1,7 +1,7 @@
 import { 
     Base, type, design, $contents,
     createKeyChain, Handler, Context, provides
-} from "miruken-core";
+} from "@miruken/core";
 
 import { ValidateJsHandler } from "@/validatorJs";
 import { customValidator } from "@/custom-validator";

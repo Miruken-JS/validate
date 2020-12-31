@@ -1,7 +1,7 @@
 import { 
     Undefined, $isFunction, Handler,
     provides, singleton
-} from "miruken-core";
+} from "@miruken/core";
 
 import { validates } from "./validates";
 import { constraint } from "./constraint";

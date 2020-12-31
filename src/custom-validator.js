@@ -2,7 +2,7 @@ import {
     design, decorate, emptyArray,
     isDescriptor, $isNothing, $isFunction,
     $composer
-} from "miruken-core";
+} from "@miruken/core";
 
 import { constraint } from "./constraint";
 import validatejs from "validate.js";

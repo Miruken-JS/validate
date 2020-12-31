@@ -32,10 +32,14 @@ gulp.task("rollup", function(done) {
     .then(function(bundle) {
         var moduleTypes = ["amd", "cjs", "es", "iife", "system", "umd"];
         moduleTypes.forEach(function(moduleType){
+            var name = paths.packageName;
+            if (moduleType === "iife") {
+                name = name.replace('@', '').replace('/', '-');
+            }            
             bundle.write({
-                file:       paths.output + moduleType + '/' + jsName,
-                format:     moduleType,
-                name: camelCase(paths.packageName)
+                file:   paths.output + moduleType + '/' + jsName,
+                format: moduleType,
+                name:   camelCase(name)
             });
         }); 
         console.log('Build complete');

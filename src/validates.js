@@ -1,4 +1,4 @@
-import { ContravariantPolicy } from "miruken-core";
+import { ContravariantPolicy } from "@miruken/core";
 
 /**
  * Policy for validating instnces.

@@ -1,5 +1,5 @@
 import { constraint } from "./constraint";
-import { $flatten } from "miruken-core";
+import { $flatten } from "@miruken/core";
 
 export function includes(...members) {
     members = $flatten(members, true);

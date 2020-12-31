@@ -1,6 +1,6 @@
 import { 
     Base, pcopy, createKeyChain
-} from "miruken-core";
+} from "@miruken/core";
 
 const _ = createKeyChain();
 

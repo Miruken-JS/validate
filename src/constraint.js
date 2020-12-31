@@ -1,6 +1,6 @@
 import { 
     Metadata, $isNothing, $isPlainObject 
-} from "miruken-core";
+} from "@miruken/core";
 
 const constraintMetadataKey = Symbol("constraint-metadata");
 

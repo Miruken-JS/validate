@@ -1,7 +1,7 @@
 import {
     design, $isNothing, Handler, provides, singleton,
     mapsFrom, formats, property, surrogate, typeId
-} from "miruken-core";
+} from "@miruken/core";
 
 import { ValidationError } from "./validation-error";
 import { ValidationResult } from "./validation-result";

@@ -1,4 +1,4 @@
-import { Handler, $isNothing, $isPromise } from "miruken-core";
+import { Handler, $isNothing, $isPromise } from "@miruken/core";
 import { Validation } from "./validation";
 import { validateThat } from "./validate-that";
 

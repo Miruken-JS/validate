@@ -1,4 +1,4 @@
-import { createKey } from "miruken-core";
+import { createKey } from "@miruken/core";
 
 const _ = createKey();
 

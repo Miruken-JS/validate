@@ -1,7 +1,7 @@
 import {
     True, Metadata, design,
     $isNothing, $isFunction
-} from "miruken-core";
+} from "@miruken/core";
 
 const validateThatMetadataKey = Symbol("validate-that-metadata");
 

@@ -1,4 +1,4 @@
-import { HandlerBuilder } from "miruken-core";
+import { HandlerBuilder } from "@miruken/core";
 import { ValidateFilter } from "./validate-filter";
 import { ValidateJsHandler } from "./validatorJs";
 import { ValidationMapping } from "./validation-mapping";

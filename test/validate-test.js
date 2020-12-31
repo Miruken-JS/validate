@@ -1,7 +1,7 @@
 import { 
     True, Base, type, $contents, Handler,
     InferenceHandler, Context, handles, provides
-} from "miruken-core";
+} from "@miruken/core";
 
 import { validates } from "@/validates";
 import { Validation } from "@/validation";

@@ -1,4 +1,4 @@
-import { HandlerBuilder } from "miruken-core";
+import { HandlerBuilder } from "@miruken/core";
 import { ValidationResult } from "../src/validation-result";
 import { ValidationError } from "../src/validation-error";
 

@@ -1,7 +1,7 @@
 import { 
     createKey, FilterSpec, FilterSpecProvider,
     createFilterDecorator,
-} from "miruken-core";
+} from "@miruken/core";
 
 import { ValidateFilter } from "./validate-filter";
 

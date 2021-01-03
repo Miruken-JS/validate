@@ -25,7 +25,7 @@ export const validateThat = Metadata.decorator(validateThatMetadataKey,
         const args = design.get(target, key)?.args;
         if (args && args.length > 0) {
             descriptor.value = function (validation, composer) {
-                const deps = composer.resolveArgs(args);
+                const deps = composer.$resolveArgs(args);
                 if ($isNothing(deps)) {
                     throw new Error("One or more dependencies could not be resolved.");
                 }

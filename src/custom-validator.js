@@ -64,7 +64,7 @@ function _assignStaticValidator(target, key, descriptor) {
                 throw new Error(`@customValidator on static method '${target.name}.${key}' not invoked properly.`);
             }
             if (designArgs?.length > 0) {
-                const deps = composer.resolveArgs(designArgs);
+                const deps = composer.$resolveArgs(designArgs);
                 if ($isNothing(deps)) {
                     throw new Error(`One or more dependencies could not be resolved for method '${target.name}.${key}'.`);
                 }
@@ -85,7 +85,7 @@ function _assignInstanceValidator(target, prototype, key, descriptor) {
         }
         const validator = composer.resolve(target) || Reflect.construct(target, emptyArray);
         if (designArgs?.length > 0) {
-            const deps = composer.resolveArgs(designArgs);
+            const deps = composer.$resolveArgs(designArgs);
             if ($isNothing(deps)) {
                 throw new Error(`One or more dependencies could not be resolved for method '${target.name}.${key}'.`);
             }

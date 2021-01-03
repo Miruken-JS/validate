@@ -2,16 +2,17 @@
   "name": "@miruken/validate",
   "version": "0.0.3",
   "registry": "npm",
-  "description": "Provides validation support",
+  "description": "Miruken Validation integrations",
   "keywords": [
     "miruken",
-    "validate"
+    "validate",
+    "validatejs"
   ],
   "homepage": "http://miruken.com",
   "license": "MIT",
   "author": "Craig Neuwirt <Craig.Neuwirt@Improving.com>",
   "main": "dist/cjs/@miruken/validate.js",
-  "module": "dist/es/@miruken/validate.js",    
+  "module": "dist/es/@miruken/validate.js",
   "repository": {
     "type": "git",
     "url": "http://github.com/miruken/validate"
@@ -23,7 +24,7 @@
       "dist": "dist/amd/@miruken"
     },
     "dependencies": {
-      "@miruken/core": "@miruken/core@0.0.5-alpha.47",
+      "@miruken/core": "0.0.5-alpha.49",
       "validate.js": "0.13.1"
     },
     "devDependencies": {

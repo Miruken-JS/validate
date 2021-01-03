@@ -8,7 +8,7 @@
     ],
     "presets": [
         ["@babel/env", {
-            "modules": false,
+            "modules": "auto",
             "targets": {
                 "browsers": [ "last 2 Chrome versions" ]
             }

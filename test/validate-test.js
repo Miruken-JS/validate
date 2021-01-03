@@ -454,7 +454,7 @@ describe("ValidationFilter", () => {
                 name:     "Liverpool",
                 division: "U8"
             });
-            const created = context.command(new CreateTeam().extend({ team }));
+            const created = context.$command(new CreateTeam().extend({ team }));
             expect(created.id).to.equal(1);
             expect(created).to.equal(team);
         });
@@ -465,7 +465,7 @@ describe("ValidationFilter", () => {
                 division: "U9"
             });
             try {
-                context.command(new CreateTeam().extend({ team }));
+                context.$command(new CreateTeam().extend({ team }));
                 expect.fail("Expected a ValidationError");
             } catch (err) {
                 expect(err).to.be.instanceOf(ValidationError);
@@ -483,7 +483,7 @@ describe("ValidationFilter", () => {
                 division: "U9"
             });
             try {
-                await context.command(new UpdateTeam().extend({ team }));
+                await context.$command(new UpdateTeam().extend({ team }));
                 expect.fail("Expected a ValidationError");
             } catch (err) {
                 expect(err).to.be.instanceOf(ValidationError);
@@ -512,7 +512,7 @@ describe("ValidationFilter", () => {
                 name:     "Liverpool",
                 division: "U8"
             });
-            const created = await context.command(new CreateTeam().extend({ team }));
+            const created = await context.$command(new CreateTeam().extend({ team }));
             expect(created.id).to.equal(1);
             expect(created).to.equal(team);
         });
@@ -523,7 +523,7 @@ describe("ValidationFilter", () => {
                 division: "U9"
             });
             try {
-                await context.command(new CreateTeam().extend({ team }));
+                await context.$command(new CreateTeam().extend({ team }));
                 expect.fail("Expected a ValidationError");
             } catch (err) {
                 expect(err).to.be.instanceOf(ValidationError);

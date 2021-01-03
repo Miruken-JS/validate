@@ -11,7 +11,7 @@ var camelCase        = require("camelcase");
 var pkg              = require('../../package.json');
 
 var jsName           = paths.packageName + '.js';
-var root             = path.join(__dirname, '../..')
+var root             = path.join(__dirname, '../..');
 
 gulp.task("rollup", function(done) {
     rollup({

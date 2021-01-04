@@ -8,7 +8,7 @@ System.config({
 
   map: {
     "@": "src",
-    "@miruken/core": "npm:@miruken/core@0.0.5-alpha.49",
+    "@miruken/core": "npm:@miruken/core@2.0.0",
     "chai": "npm:chai@4.2.0",
     "validate": "src",
     "validate.js": "npm:validate.js@0.13.1",
@@ -27,7 +27,7 @@ System.config({
     "github:jspm/nodelibs-vm@0.1.0": {
       "vm-browserify": "npm:vm-browserify@0.0.4"
     },
-    "npm:@miruken/core@0.0.5-alpha.49": {
+    "npm:@miruken/core@2.0.0": {
       "reflect-metadata": "npm:reflect-metadata@0.1.13"
     },
     "npm:assert@1.5.0": {

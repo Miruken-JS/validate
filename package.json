@@ -24,8 +24,7 @@
       "dist": "dist/amd/@miruken"
     },
     "dependencies": {
-      "@miruken/core": "^2.0.0",
-      "@miruken/core@2.0.1": "@miruken/core@2.0.1",
+      "@miruken/core": "^2.0.1",
       "validate.js": "0.13.1"
     },
     "devDependencies": {

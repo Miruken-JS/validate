@@ -9,7 +9,6 @@ System.config({
   map: {
     "@": "src",
     "@miruken/core": "npm:@miruken/core@2.0.1",
-    "@miruken/core@2.0.1": "npm:@miruken/core@2.0.1",
     "chai": "npm:chai@4.2.0",
     "validate": "src",
     "validate.js": "npm:validate.js@0.13.1",

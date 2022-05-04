@@ -7,9 +7,9 @@ import { validates } from "@/validates";
 import { Validation } from "@/validation";
 import { validateThat } from "@/validate-that";
 import { ValidationResult } from "@/validation-result";
-import { ValidateFilter } from "@/validate-filter";
+import { ValidateFilter, ValidateProvider } from "@/validate-filter";
 import { ValidationError } from "@/validation-error";
-import { ValidateProvider, validate } from "@/validate";
+import { validate } from "@/validate";
 import "@/handler-validate";
 
 import { expect } from 'chai';

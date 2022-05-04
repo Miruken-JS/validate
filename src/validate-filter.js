@@ -1,11 +1,13 @@
 import { 
+    Filtering, FilterSpec, FilterSpecProvider,
     conformsTo, $isNothing, $isPromise,
-    Filtering, Stage, provides, singleton,
-    allowMultiple
+    Stage, provides, singleton, allowMultiple,
+    createKey
 } from "@miruken/core";
 
-import { ValidateProvider } from "./validate";
 import { ValidationError } from "./validation-error";
+
+const _ = createKey();
 
 @allowMultiple(false)
 @conformsTo(Filtering)
@@ -53,4 +55,16 @@ function validateAsync(target, handler) {
         }
         return target;
     });
+}
+
+export class ValidateProvider extends FilterSpecProvider {
+    constructor({ validateResult, validateAsync } = {}) {
+        super(new FilterSpec(ValidateFilter));
+        const _this = _(this);
+        _this.validateResult = validateResult === true;
+        _this.validateAsync  = validateAsync === true;
+    }
+
+    get validateResult() { return _(this).validateResult; }
+    get validateAsync()  { return _(this).validateAsync; }
 }

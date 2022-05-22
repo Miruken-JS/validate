@@ -18,7 +18,7 @@ Handler.implement({
         }
         const validation = new Validation(object, false, scope, results);
         this.handle(validation, true);
-        results = validation.results;
+        results = validation.getResult();
         _bindValidationResults(object, results);
         _validateThat(validation, null, this);
         return results;         
@@ -38,7 +38,7 @@ Handler.implement({
         }            
         const validation = new Validation(object, true, scope, results);
         this.handle(validation, true);
-        return Promise.resolve(validation.callbackResult).then(() => {
+        return validation.getResult(false, true).then(() => {
             results = validation.results;
             _bindValidationResults(object, results);
             const asyncResults = [];
@@ -60,10 +60,10 @@ Handler.implement({
 });
 
 function _validateThat(validation, asyncResults, composer) {
-    const object  = validation.object;
-    validateThat.getKeys(object, (_, key) => {
-        const validator   = object[key],
-              returnValue = validator.call(object, validation, composer);
+    const source  = validation.source;
+    validateThat.getKeys(source, (_, key) => {
+        const validator   = source[key],
+              returnValue = validator.call(source, validation, composer);
         if (asyncResults && $isPromise(returnValue)) {
             asyncResults.push(returnValue);
         }

@@ -1,6 +1,9 @@
 import { 
-    Undefined, $isFunction, Handler,
-    provides, singleton
+    Undefined,
+    $isFunction,
+    Handler,
+    provides,
+    singleton
 } from "@miruken/core";
 
 import { validates } from "./validates";
@@ -40,7 +43,7 @@ const detailed    = { format: "detailed", cleanAttributes: false },
 export class ValidateJsHandler extends Handler {
     @validates
     validateJS(validation, { composer }) {
-        const target      = validation.object,
+        const target      = validation.source,
               nested      = {},
               constraints = buildConstraints(target, nested, composer);
         if (constraints) {

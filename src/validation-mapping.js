@@ -35,13 +35,13 @@ export class ValidationErrorDataArray {
 export class ValidationMapping extends Handler {
     @formats(ValidationError)
     @mapsFrom(ValidationErrorDataArray)
-    mapToValidationErrorData({ object: { errors } }) {
+    mapToValidationErrorData({ errors }) {
         return new ValidationError(createResults(errors));
     }
 
     @formats(ValidationErrorDataArray)
     @mapsFrom(ValidationError)
-    mapToValidationError({ object: { results } }) {
+    mapToValidationError({ results }) {
         return new ValidationErrorDataArray(createErrors(results));
     }
 }

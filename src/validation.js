@@ -1,6 +1,9 @@
-import { 
-    Base, $isNothing, $classOf, $isPromise,
-    createKeyChain, CallbackControl
+import {
+    $isNothing,
+    $classOf,
+    $isPromise,
+    CallbackBase,
+    createKeyChain,
 } from "@miruken/core";
 
 import { ValidationResult } from "./validation-result";
@@ -18,50 +21,32 @@ const _ = createKeyChain();
  * @param   {ValidationResult} results  -  results to validate to
  * @extends Base
  */
-export const Validation = Base.extend(CallbackControl, {
-    constructor(object, async, scope, results) {
+export class Validation extends CallbackBase {
+    constructor(source, async, scope, results) {
+        super(source);
         const _this = _(this);
-        _this.object   = object;
-        _this.async    = !!async;    
+        _this.async    = !!async;
         _this.scope    = scope;
         _this.results  = results || new ValidationResult();
-        _this.promises = [];  
-    },
+        this.addResult(_this.results);
+    }
 
-    get isAsync()        { return _(this).async; },                       
-    get object()         { return _(this).object; },
-    get scope()          { return _(this).scope; },
-    get results()        { return _(this).results; },
-    get callbackPolicy() { return validates.policy; },  
-    get callbackResult() {
-        if (_(this).result === undefined) {
-            const { results, promises } = _(this);
-            _(this).result = promises.length > 0
-                ? Promise.all(promises).then(res => results)
-                : (this.isAsync ? Promise.resolve(results) : results);
-        }
-        return _(this).result;
-    },
-    set callbackResult(value) { _(this).result = value; },
-    
-    addAsyncResult(result) {
-        if ($isPromise(result)) {
-            if (!this.isAsync) return false;
-            _(this).promises.push(result);
-        }
-        _(this).result = undefined;
-    },           
+    get policy() { return validates.policy; }
+    get isAsync() { return _(this).async; }
+    get scope() { return _(this).scope; }
+    get results() { return _(this).results; }
+
     dispatch(handler, greedy, composer) {
-        const target = this.object,
+        const target = this.source,
               source = $classOf(target);
         if ($isNothing(source)) return false;
-        validates.dispatch(handler, this, this, source, composer,
-            true, this.addAsyncResult.bind(this));
-        return true;              
-    },   
+        validates.dispatch(handler, this, source, composer, true);
+        return true;
+    }
+
     toString() {
-        const scope = this.scope != null 
-                    ? ` scope '${String(this.scope)}'` : "";
-        return `Validation | ${this.object}${scope}`;
-    }           
-});
+        const scope = this.scope != null ?
+            ` scope '${String(this.scope)}'` : "";
+        return `Validation | ${this.source}${scope}`;
+    }
+}

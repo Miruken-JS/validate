@@ -34,7 +34,7 @@ class Coach extends Model {
     @validateThat
     coachPassedBackgroundCheck(validation, @type(HttpClient) http) {
         return Promise.delay(10).then(() => {
-            if (validation.object.lastName === 'Smith') {
+            if (validation.source.lastName === 'Smith') {
                 validation.results.addError('coachPassedBackgroundCheck', { 
                     message: 'Coach failed background check'
                 });
@@ -59,8 +59,7 @@ class Team extends Model {
     }
 
     @validates(Player)
-    validatePlayer(validation, { composer }) {
-        const player = validation.object;
+    validatePlayer(player, { callback: validation, composer }) {
         if (!player.firstName || player.firstName.length == 0) {
             validation.results.addKey('firstName')
                 .addError('required', { message: 'First name required' });
@@ -76,8 +75,7 @@ class Team extends Model {
     }
 
     @validates(Coach)
-    validateCoach(validation, composer) {
-        const coach = validation.object;
+    validateCoach(coach, { callback: validation, composer }) {
         if (!coach.firstName || coach.firstName.length == 0) {
             validation.results.addKey('firstName')
                 .addError('required', { message: 'First name required' });
@@ -99,7 +97,7 @@ describe("Validation", () => {
         it("should get the validated object", () => {
             const team       = new Team().extend({name: "Aspros"}),
                   validation = new Validation(team);
-            expect(validation.object).to.equal(team);
+            expect(validation.source).to.equal(team);
         });
     });
 
@@ -147,7 +145,7 @@ describe("ValidationResult", () => {
 describe("ValidationHelper", () => {
     describe("#validate", () => {
         it("should invalidate object", () => {
-            const team   = new Team().extend({
+            const team = new Team().extend({
                       name:     "Liverpool",
                       division: "U8"
                   }),
@@ -179,12 +177,12 @@ describe("ValidationHelper", () => {
         });
 
         it("should provide key errors", () => {
-            const team       = new Team().extend({
+            const team = new Team().extend({
                       name:     "Liverpool",
                       division: "U8"
                   }),
-                  league     = new Context().addHandlers(team),
-                  player     = new Player().extend({firstName: "Matthew"});
+                  league = new Context().addHandlers(team),
+                  player = new Player().extend({firstName: "Matthew"});
             const results = league.validate(player);
             expect(results.valid).to.be.false;
             expect(results.lastName.errors.required).to.eql([{
@@ -196,7 +194,7 @@ describe("ValidationHelper", () => {
         });
 
         it("should dynamically add validation", () => {
-            const team   = new Team().extend({
+            const team = new Team().extend({
                       name:     "Liverpool",
                       division: "U8"
                   }),
@@ -206,9 +204,8 @@ describe("ValidationHelper", () => {
                       lastName:  "Morales", 
                       dob:       new Date(2006, 7, 19)
                   });
-            validates.addHandler(league, Player, validation => {
-                const player = validation.object,
-                      start  = new Date(2006, 8, 1),
+            validates.addHandler(league, Player, (player, { callback: validation }) => {
+                const start  = new Date(2006, 8, 1),
                       end    = new Date(2007, 7, 31);
                 if (player.dob < start) {
                     validation.results.addKey("dob")
@@ -233,7 +230,7 @@ describe("ValidationHelper", () => {
         });
 
         it("should validateThat instance", () => {
-            const team    = new Team().extend({
+            const team = new Team().extend({
                       name:     "Liverpool",
                       division: "U7"
                   }),
@@ -246,7 +243,7 @@ describe("ValidationHelper", () => {
         });
 
         it("should validateThat instance with dependencies", () => {
-            const coach   = new Coach().extend({
+            const coach = new Coach().extend({
                       firstName: "Jordan",
                       license:   "D"
                   }),
@@ -258,7 +255,7 @@ describe("ValidationHelper", () => {
         it("should validate unknown sources", () => {
             const league = new Context();
             validates.addHandler(league, null, validation => {
-                const source = validation.object;
+                const source = validation.source;
                 if ((source instanceof Team) &&
                     (!source.name || source.name.length == 0)) {
                     validation.results.addKey('name')
@@ -302,7 +299,7 @@ describe("ValidationHelper", () => {
         });
 
         it("should invalidate object", done => {
-            const team  = new Team({
+            const team = new Team({
                       name:     "Liverpool",
                       division: "U8"
                   }),
@@ -323,7 +320,7 @@ describe("ValidationHelper", () => {
         });
 
         it("should provide key errors", done => {
-            const team  = new Team().extend({
+            const team = new Team().extend({
                       name:     "Liverpool",
                       division: "U8"
                   }),
@@ -339,7 +336,7 @@ describe("ValidationHelper", () => {
         });
 
         it("should validateThat instance", done => {
-            const team   = new Team().extend({
+            const team = new Team().extend({
                       name:     "Liverpool",
                       division: "U8"
                   }),
@@ -390,9 +387,8 @@ class CreateTeam extends Base {
 
     @validateThat
     validTeam(validation, composer) {
-        const results = validation.results;
         if (this.team == null) {
-            results.addKey('team')
+            validation.results.addKey('team')
                 .addError('required', { message: 'Team is required' });
         } else {
             composer.validate(this.team, null, validation.results.addKey('team'));
@@ -405,15 +401,14 @@ class UpdateTeam extends Base {
 
     @validateThat
     validTeam(validation, composer) {
-        const results = validation.results;
         if (this.team == null) {
-            results.addKey('team')
+            validation.results.addKey('team')
                 .addError('required', { message: 'Team is required' });
         } else if (this.team.id == null) {
-            results.addKey('team').addKey('id')
+            validation.results.addKey('team').addKey('id')
                 .addError('required', { message: 'Team Id is required' });
         } else {
-            composer.validate(this.team, null, validation.results.addKey('team'));
+            composer.validate(this.team, null, results.addKey('team'));
         }
     }
 }
